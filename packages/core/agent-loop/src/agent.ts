@@ -549,50 +549,68 @@ export class ReactLoopAgent implements Agent {
     step: number,
     signal: AbortSignal,
   ): Promise<{ config: LlmCallConfig; preparedCall?: PreparedLlmCall }> {
-    const { session } = this
+    while (true) {
+      signal.throwIfAborted()
+      const { session } = this
 
-    // A loop instance starts from its declared route, restoring only an explicit
-    // effort owned by that exact model. Later steps re-resolve marked defaults.
-    const persistedHeader = session.requestHeader()
-    const persistedConfig = persistedHeader?.config
-    const route = { provider: this.options.provider ?? '', model: this.options.model ?? '' }
-    const persistedReasoningEffort = persistedConfig?.provider === route.provider
-      && persistedConfig.model === route.model
-      && persistedHeader?.adapterDefaults?.reasoningEffort !== true
-      ? persistedConfig.reasoningEffort
-      : undefined
-    const reasoningEffort = this.options.reasoningEffort ?? persistedReasoningEffort
-    const maxTokens = this.options.maxTokens
-    const seedConfig = deepFreeze(structuredClone(
-      this.requestHeaderLogged
-        // oxlint-disable-next-line typescript/no-non-null-assertion -- the instance logged the header it now folds
-        ? requestProposal(persistedHeader!)
-        : {
-          ...route,
-          ...reasoningEffort === undefined ? {} : { reasoningEffort },
-          ...maxTokens === undefined ? {} : { maxTokens },
-        },
-    ))
-    const proposedConfig = await this.dispatch.waterfall(
-      'agent/request', { turn, step, signal },
-      () => Promise.resolve(seedConfig),
-    )
-    signal.throwIfAborted()
-    if (!proposedConfig.provider || !proposedConfig.model) {
-      throw new Error(`agent "${this.id}" has no provider/model: set AgentOptions.provider and AgentOptions.model or supply both via the agent/request waterfall`)
+      // A loop instance starts from its declared route, restoring only an explicit
+      // effort owned by that exact model. Later steps re-resolve marked defaults.
+      const persistedHeader = session.requestHeader()
+      const persistedConfig = persistedHeader?.config
+      const route = { provider: this.options.provider ?? '', model: this.options.model ?? '' }
+      const persistedReasoningEffort = persistedConfig?.provider === route.provider
+        && persistedConfig.model === route.model
+        && persistedHeader?.adapterDefaults?.reasoningEffort !== true
+        ? persistedConfig.reasoningEffort
+        : undefined
+      const reasoningEffort = this.options.reasoningEffort ?? persistedReasoningEffort
+      const maxTokens = this.options.maxTokens
+      const seedConfig = deepFreeze(structuredClone(
+        this.requestHeaderLogged
+          // oxlint-disable-next-line typescript/no-non-null-assertion -- the instance logged the header it now folds
+          ? requestProposal(persistedHeader!)
+          : {
+            ...route,
+            ...reasoningEffort === undefined ? {} : { reasoningEffort },
+            ...maxTokens === undefined ? {} : { maxTokens },
+          },
+      ))
+      const proposedConfig = await this.dispatch.waterfall(
+        'agent/request', { turn, step, signal },
+        () => Promise.resolve(seedConfig),
+      )
+      signal.throwIfAborted()
+      if (!proposedConfig.provider || !proposedConfig.model) {
+        throw new Error(`agent "${this.id}" has no provider/model: set AgentOptions.provider and AgentOptions.model or supply both via the agent/request waterfall`)
+      }
+      let config: LlmCallConfig
+      let preparedCall: PreparedLlmCall | undefined
+      try {
+        preparedCall = await this.loopCtx.llm.prepareCall(proposedConfig, signal)
+        config = preparedCall.config
+      } catch (error: unknown) {
+        signal.throwIfAborted()
+        if (!(error instanceof LlmError)) throw error
+        let delegated = false
+        const action = await this.dispatch.waterfall(
+          'agent/request-prepare-error', {
+            turn, step, provider: proposedConfig.provider, failure: error.failure, signal,
+          },
+          () => {
+            delegated = true
+            return Promise.resolve<RequestErrorAction>(undefined)
+          },
+        )
+        signal.throwIfAborted()
+        if (action?.kind === 'retry') continue
+        // Only delegated failures retain middleware's unregistered-route compatibility.
+        // oxlint-disable-next-line typescript/no-unnecessary-condition -- the awaited waterfall callback can set delegated.
+        if (!delegated || error.code !== 'NO_ADAPTER') throw error
+        config = proposedConfig
+      }
+      signal.throwIfAborted()
+      return { config, ...preparedCall === undefined ? {} : { preparedCall } }
     }
-    let config: LlmCallConfig
-    let preparedCall: PreparedLlmCall | undefined
-    try {
-      preparedCall = await this.loopCtx.llm.prepareCall(proposedConfig, signal)
-      config = preparedCall.config
-    } catch (error: unknown) {
-      // Middleware may serve an unregistered route; terminal dispatch still requires an adapter.
-      if (!(error instanceof LlmError) || error.code !== 'NO_ADAPTER') throw error
-      config = proposedConfig
-    }
-    signal.throwIfAborted()
-    return { config, ...preparedCall === undefined ? {} : { preparedCall } }
   }
 
   /** Log the resolved envelope and derive a frozen request from the admitted surface. */

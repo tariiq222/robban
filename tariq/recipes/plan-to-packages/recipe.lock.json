@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "name": "plan-to-packages",
+  "sha256": {
+    "meta": "39d3f8b63911c8c53b1e7dfff49f4dfd806f99f4684805c82977bf0204b746cc",
+    "script": "095bfb2fcff520e07736387553ef040fe0300469d6a5adecd33004abd8ba0d5e"
+  },
+  "approvedAt": "2026-10-03T17:37:19.627Z",
+  "approvedBy": "independently-reviewed-plan-to-packages"
+}

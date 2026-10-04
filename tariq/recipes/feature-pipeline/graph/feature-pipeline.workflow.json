@@ -1,0 +1,274 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "feature-pipeline: من الطلب إلى كود معتمد",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    {
+      "id": "prep",
+      "label": "التحضير"
+    },
+    {
+      "id": "design",
+      "label": "حلقة التصميم"
+    },
+    {
+      "id": "code",
+      "label": "الخطة والتنفيذ"
+    },
+    {
+      "id": "review",
+      "label": "مراجعة متوازية"
+    },
+    {
+      "id": "decide",
+      "label": "القرار"
+    },
+    {
+      "id": "finish",
+      "label": "التحقق النهائي"
+    }
+  ],
+  "phases": [
+    {
+      "id": "p_prep",
+      "label": "فهم المهمة",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "p_design",
+      "label": "design-loop · max 3",
+      "fromCol": 2,
+      "toCol": 3,
+      "variant": "dashed"
+    },
+    {
+      "id": "p_code",
+      "label": "code-loop · max 3",
+      "fromCol": 4,
+      "toCol": 5,
+      "variant": "emphasis"
+    }
+  ],
+  "groups": [
+    {
+      "id": "g_par",
+      "label": "parallel",
+      "lane": "review",
+      "fromCol": 4,
+      "toCol": 5,
+      "variant": "dashed"
+    }
+  ],
+  "mainPath": [
+    "setup",
+    "requirements",
+    "design_draft",
+    "design_review",
+    "plan",
+    "implement",
+    "review_b",
+    "aggregate",
+    "validate"
+  ],
+  "nodes": [
+    {
+      "id": "setup",
+      "lane": "prep",
+      "col": 0,
+      "type": "backend",
+      "label": "setup",
+      "sublabel": "أوامر الاختبار والأعراف"
+    },
+    {
+      "id": "requirements",
+      "lane": "prep",
+      "col": 1,
+      "type": "frontend",
+      "label": "requirements",
+      "sublabel": "معايير قبول قابلة للفحص"
+    },
+    {
+      "id": "design_draft",
+      "lane": "design",
+      "col": 2,
+      "type": "frontend",
+      "label": "design-draft",
+      "sublabel": "تصميم + تحليل أثر"
+    },
+    {
+      "id": "design_review",
+      "lane": "design",
+      "col": 3,
+      "type": "security",
+      "label": "design-review",
+      "sublabel": "مراجع مستقل"
+    },
+    {
+      "id": "plan",
+      "lane": "code",
+      "col": 4,
+      "type": "frontend",
+      "label": "plan",
+      "sublabel": "خطوات + inScope"
+    },
+    {
+      "id": "implement",
+      "lane": "code",
+      "col": 5,
+      "type": "backend",
+      "label": "implement",
+      "sublabel": "ينفّذ ويشغّل التحقق"
+    },
+    {
+      "id": "aggregate",
+      "lane": "decide",
+      "col": 5,
+      "type": "messagebus",
+      "label": "aggregate",
+      "sublabel": "يدمج ويقرر"
+    },
+    {
+      "id": "review_a",
+      "lane": "review",
+      "col": 4,
+      "type": "security",
+      "label": "review-a",
+      "sublabel": "موديل 1"
+    },
+    {
+      "id": "review_b",
+      "lane": "review",
+      "col": 5,
+      "type": "security",
+      "label": "review-b",
+      "sublabel": "موديل 2"
+    },
+    {
+      "id": "validate",
+      "lane": "finish",
+      "col": 5,
+      "type": "cloud",
+      "label": "validate",
+      "sublabel": "مقابل المتطلبات الأصلية"
+    }
+  ],
+  "edges": [
+    {
+      "from": "setup",
+      "to": "requirements"
+    },
+    {
+      "from": "requirements",
+      "to": "design_draft",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "design_draft",
+      "to": "design_review"
+    },
+    {
+      "from": "design_review",
+      "to": "design_draft",
+      "label": "NEEDS_REVISION",
+      "variant": "dashed",
+      "role": "return",
+      "route": "bottom-channel",
+      "fromSide": "bottom",
+      "toSide": "bottom"
+    },
+    {
+      "from": "design_review",
+      "to": "plan",
+      "label": "APPROVED",
+      "variant": "emphasis",
+      "route": "drop",
+      "fromSide": "right",
+      "toSide": "top"
+    },
+    {
+      "from": "plan",
+      "to": "implement"
+    },
+    {
+      "from": "implement",
+      "to": "review_b",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "implement",
+      "to": "review_a",
+      "role": "branch",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "review_b",
+      "to": "aggregate",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "review_a",
+      "to": "aggregate",
+      "role": "branch",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "left"
+    },
+    {
+      "from": "aggregate",
+      "to": "implement",
+      "label": "retry",
+      "variant": "dashed",
+      "role": "return",
+      "route": "outside-right",
+      "fromSide": "right",
+      "toSide": "right"
+    },
+    {
+      "from": "aggregate",
+      "to": "validate",
+      "label": "APPROVED",
+      "variant": "emphasis",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "سياق جديد لكل خطوة",
+      "items": [
+        "كل عقدة agent مستقل",
+        "المراجع لا يرى تفكير المنفّذ ويعيد تشغيل التحقق"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "إيقاف حتمي",
+      "items": [
+        "الحلقة تتوقف على حقل verdict = APPROVED",
+        "high أو blocker أو أمر فاشل يعني NEEDS_REVISION"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "حدود الأمان",
+      "items": [
+        "3 دورات بلا APPROVED تعني status: aborted",
+        "لا commit ولا push ولا merge"
+      ]
+    }
+  ]
+}

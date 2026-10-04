@@ -1,0 +1,2 @@
+name: Auto Subagents
+description: Standard coding mode with automatic delegation to Subagent settings models; independent tasks run in parallel and dependent tasks run sequentially.

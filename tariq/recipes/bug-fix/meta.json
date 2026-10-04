@@ -1,0 +1,19 @@
+{
+  "name": "bug-fix",
+  "version": "1.0.0",
+  "description": "Narrow source diagnosis -> regression RED before production fix -> GREEN and existing verification -> two independent reviews with bounded repair -> exact final validation.",
+  "whenToUse": "Repair a reported, source-confirmed defect with a regression test. Not for adding new features, speculative refactors or unreproducible reports.",
+  "roles": {
+    "setup": { "tier": "light" },
+    "analysis": { "tier": "medium" },
+    "implementer": { "tier": "strong" },
+    "reviewer": { "tier": "strong" },
+    "validate": { "tier": "strong" }
+  },
+  "phases": [
+    { "title": "setup", "detail": "Read manifests and exact existing verification commands; no execution" },
+    { "title": "analysis", "detail": "Narrow source diagnosis, behavior contract and decision boundary" },
+    { "title": "code-loop", "detail": "Regression RED -> fix GREEN -> independent reviews, at most three attempts" },
+    { "title": "validate", "detail": "Fresh regression and verify runs, exact acceptance coverage" }
+  ]
+}

@@ -1,0 +1,9 @@
+node_modules/
+*.log
+.DS_Store
+
+# Hand-authored plugin modules live in lib; only the browser bundle is generated.
+!lib/
+!lib/*.mjs
+!lib/index.js
+lib/client.js

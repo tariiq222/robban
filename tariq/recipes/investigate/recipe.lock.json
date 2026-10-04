@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "name": "investigate",
+  "sha256": {
+    "meta": "54f999116180a6684be0b84f4d1d2e0db8589063fadc0d134b877fda87638dce",
+    "script": "bf48fbbc7035ad2268caf2d0848b26fd601e8165469255ad6a29e04a409cf69d"
+  },
+  "approvedAt": "2026-10-03T17:30:44.371Z",
+  "approvedBy": "independently-reviewed-investigate"
+}

@@ -1,0 +1,15 @@
+{
+  "name": "investigate",
+  "version": "1.0.0",
+  "description": "Source-only scope, bounded hypotheses/evidence gathering, independent accounting and explicit confirmed/rejected/inconclusive cause with next actions. Never repairs or claims runtime reproduction.",
+  "whenToUse": "Investigate a specific problem whose cause is unclear before deciding whether to run bug-fix; source inspection only.",
+  "roles": {
+    "investigator": { "tier": "strong", "readOnlyRetry": true },
+    "investigation-checker": { "tier": "strong", "readOnlyRetry": true }
+  },
+  "phases": [
+    { "title": "scope", "detail": "Bound source scope to at most 40 files" },
+    { "title": "gather", "detail": "Form bounded hypotheses backed by source evidence" },
+    { "title": "check", "detail": "Independently account for every hypothesis and report next actions" }
+  ]
+}

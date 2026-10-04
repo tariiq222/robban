@@ -1,0 +1,17 @@
+# investigate — source-only cause investigation
+
+Three bounded steps: scope (at most 40 concrete files), gather competing hypotheses (at most 12), independent checker resolving exactly every global hypothesis id. Custom strong roles `investigator` / `investigation-checker` avoid the canonical reviewer prerequisite. Every authenticated private marker uses `readOnly:true`; updated host tools restrict to read/read_image/glob/grep/structured_output. No fixes, commands, tests, network, browser or delegation.
+
+Inputs: nonblank task and canonical absolute POSIX repo. No decision/resume loop: unresolved context stays inconclusive with next_actions. Direct AsyncFunction execution without host routing token is for offline hooks only; caller owns tool policy.
+
+Output: common status completed/completed_with_failures, cause_status confirmed/rejected/inconclusive, retained hypotheses with scanner provenance/checker reasons, exact coverage, results, commands[], changedPaths[], next_actions, limitations and reviewTrail. Confirmed means evidence-backed source explanation, never runtime reproduction. Rejected hypotheses remain visible. Empty hypotheses or missing/partial stages cannot establish a confirmed/rejected overall cause. Unknown/missing/duplicate checker identities, absent evidence and uninspected candidate files retain originals inconclusive. The recipe checks claimed references/coverage; it cannot prove actual LLM reads or line existence mechanically.
+
+## TDD evidence
+
+User journey derived from direct task: identify a specific problem's cause before choosing repair, without mutation or false runtime claims. NEW test/investigate-recipe.test.mjs executes actual saved script through AsyncFunction and installed assertObjectJsonSchema/validateJsonSchemaValue.
+
+Runner: supplied Node24 --test test/investigate-recipe.test.mjs from installed plugin directory. Initial absent-feature RED:36 tests,33 failures,3 passes,exit1. Three input-rejection tests passed because absent source throws; this is incomplete capability evidence, not reproduced production-regression proof. First implementation35/36 failed due test observation-copy mistake; corrected test only, not counted business RED. Initial GREEN36/36,0fail/cancel/skip,exit0 (~76ms). Independent review then found order-dependent mixed confirmed/inconclusive statuses: added both-orders regression, RED37tests36pass1fail exit1; captured coverage completeness before resolution assignment, final GREEN37/37 exit0 (~77ms).
+
+Tests cover confirmation/rejection/inconclusive, empty hypothesis no false rejection, malformed/null/exception every stage, exact ids, uncovered verified/rejected resolution, same local ids retain separate causes/provenance, scoped files/traversal/limits, partial coverage, private markers and real schema validation. No whole-product coverage percentage claimed for AsyncFunction source.
+
+Implementer did not create locks or run live models. Parent subsequently obtained independent PASS, passed the actual worker-engine offline test, and created/checked the approval lock. Live activation remains unverified. Legacy visual card may display unused feature-pipeline stages; structured result is authoritative. Model-identity separation of custom checker is not guaranteed by canonical reviewer exclusion. No existing recipe/host file was edited.

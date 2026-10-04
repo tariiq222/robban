@@ -1728,6 +1728,14 @@ def smoke_sdk_scheduler_recovery(base_url: str, executable: Path, update_snapsho
             raise AssertionError(f"scheduler recovery expected two serialized model requests: {requests}")
         logs = read_session_logs(sessions)
         records = logs[RECOVERY_SESSION_ID]
+        preparations = [record for record in records if record.get("type") == "snapshot/request-prepare-recovered"]
+        if [record.get("data") for record in preparations] != [
+            {"turn": 1, "step": 1, "code": "NO_ADAPTER"}, {"turn": 2, "step": 1, "code": "NO_ADAPTER"},
+        ] or any(record.get("ignorable") is not True for record in preparations):
+            raise AssertionError(f"preparation recovery lost its portable receipts: {preparations}")
+        if sum(record.get("type") == "user/message" and record.get("data", {}).get("source", {}).get("kind") == "user"
+               for record in records) != 2:
+            raise AssertionError("preparation recovery replayed user admission")
         calls = [record["data"]["callId"] for record in records if record.get("type") == "tool/call"]
         if calls != list(RECOVERY_CALL_IDS[:2]):
             raise AssertionError(f"scheduler recovery dispatched the unstarted call: {calls}")

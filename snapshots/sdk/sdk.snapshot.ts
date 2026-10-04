@@ -885,6 +885,13 @@ describe('TypeScript SDK snapshots over the jsonrpc runtime', () => {
       if (scenario.name === 'tool-scheduler-recovery') {
         expect(results).toHaveLength(2)
         const events = results.flatMap(result => result.events)
+        expect(events.filter(event => event.type === 'snapshot/request-prepare-recovered'))
+          .toMatchObject([
+            { ignorable: true, data: { turn: 1, step: 1, code: 'NO_ADAPTER' } },
+            { ignorable: true, data: { turn: 2, step: 1, code: 'NO_ADAPTER' } },
+          ])
+        expect(events.filter(event => event.type === 'user/message'
+          && (event.data['source'] as { kind?: string } | undefined)?.kind === 'user')).toHaveLength(2)
         expect(results[1]?.finalResponse, JSON.stringify(events.filter(event => event.type === 'turn/end')))
           .toBe('SCHEDULER_RECOVERY_OK')
         expect(events.filter(event => event.type === 'turn/end').map(event => event.data['reason']))

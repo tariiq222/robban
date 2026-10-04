@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "name": "feature-pipeline",
+  "sha256": {
+    "meta": "41e25b9aa87dbcc6b3426dad4c95b5c19d455416839105b43c28ed00d3f9dc51",
+    "script": "189e9b37aa3023a48594437425b4fab190e3d5e22f2bd09fef549e79901b12e8"
+  },
+  "approvedAt": "2026-10-04T08:38:25.917Z",
+  "approvedBy": "stop-resume-fixes-captain-review"
+}

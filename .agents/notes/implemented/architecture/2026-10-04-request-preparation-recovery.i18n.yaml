@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for 2026-10-04-request-preparation-recovery.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-10-04-request-preparation-recovery.md
+/agent-note-request-preparation-recovery-before-input-admission:
+  en: 2e9ee469b2f01237
+  zh: 9b98fe06a4e691fb
+/agent-note-request-preparation-recovery-before-input-admission/problem:
+  en: db6962c586a0fb95
+  zh: 0d8f4bcada1038e4
+/agent-note-request-preparation-recovery-before-input-admission/decision:
+  en: 25ab9b753d08c246
+  zh: aeb762ef7b7e47c5
+/agent-note-request-preparation-recovery-before-input-admission/alternatives-considered:
+  en: 302dbdd465c4d345
+  zh: e3c0203f132dd4f8
+/agent-note-request-preparation-recovery-before-input-admission/consequences:
+  en: 2c331c718b32189a
+  zh: 0423bfffd2c9bddf

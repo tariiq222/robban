@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "dshVersion": "0.1.5-rc.2",
+  "note": "Originals are byte-identical to the published npm tarballs @deepseek-ai/*@0.1.5-rc.2. The tool-subagent patch imports /Users/tariq/.local/share/deepseek-harness/home/local-plugins/auto-subagent-routing/router.mjs by absolute path; that shim must stay (it re-exports lib/router.mjs so the process shares ONE router instance). Changing the import would require re-patching the live runtime and is deferred to a future DSH seam.",
+  "targets": [
+    {
+      "id": "tool-subagent",
+      "target": "@deepseek-ai/dsh-tool-subagent/lib/index.js",
+      "original": "tool-subagent/original.js",
+      "patched": "tool-subagent/patched.js",
+      "originalSha256": "674e8008e9dcb8009c8662b50e4d4971a7e02b6e1ae6a8972434713d43060f00",
+      "patchedSha256": "d54bc3f48dfb3b71681c0f7a6f3f80a4f11790e1f0d2b1d5c61f3e380c4b4fce",
+      "purpose": "Auto policy: tier/verifies parameters, live settings router, enforced selection. Lazily imports the router through the absolute home/local-plugins/auto-subagent-routing/router.mjs shim (see note)."
+    },
+    {
+      "id": "tool-subagent-types",
+      "target": "@deepseek-ai/dsh-tool-subagent/lib/types/index.d.ts",
+      "original": "tool-subagent-types/original.d.ts",
+      "patched": "tool-subagent-types/patched.d.ts",
+      "originalSha256": "9e7cab1cfbce0bd0a29fc7085db9c4b89d195751bc09065d0d13041c72f1fcc2",
+      "patchedSha256": "ff9475b7af078f450248dd548c94a09ce169c19babbd6135eb6fe8a0b9f62e88",
+      "purpose": "Declarations: automaticModelSelection, registerModelDiscovery config."
+    },
+    {
+      "id": "model-selection-settings",
+      "target": "@deepseek-ai/dsh-tool-subagent/lib/model-selection-settings.js",
+      "original": "model-selection-settings/original.js",
+      "patched": "model-selection-settings/patched.js",
+      "originalSha256": "6870316b9fc3e69201e1f8353a163103f2e01f2682ebbb65c1f183a3b9da86d9",
+      "patchedSha256": "15c7690d318fe2c883936838a317b99e9347654bdc6c999bcbc4f80297a6ca08",
+      "purpose": "Settings section: modelTiers (strong/medium/light)."
+    },
+    {
+      "id": "model-selection-settings-types",
+      "target": "@deepseek-ai/dsh-tool-subagent/lib/types/model-selection-settings.d.ts",
+      "original": "model-selection-settings-types/original.d.ts",
+      "patched": "model-selection-settings-types/patched.d.ts",
+      "originalSha256": "2a4ac6ad88e24c35309feba83599d3f02366c8d3f396309a42c62a0969a21234",
+      "patchedSha256": "493bb20eeed149c05589eac3255e578789edec09ba5ec72b1369ea97e82a2636",
+      "purpose": "Declarations for modelTiers."
+    },
+    {
+      "id": "agent-loop",
+      "target": "@deepseek-ai/dsh-agent-loop/lib/index.js",
+      "original": "agent-loop/original.js",
+      "patched": "agent-loop/patched.js",
+      "originalSha256": "257eb83c00a05ee068e9f4ba80ca71ab94e3a1275d24b7a0cf5038ff23dd0fd8",
+      "patchedSha256": "ee851052e23dac7bfd7c53f154ff6bc6eac87eb5830a65827d58a80286dc15a8",
+      "purpose": "agent/request-prepare-error seam before request admission."
+    },
+    {
+      "id": "agent-runtime-types",
+      "target": "@deepseek-ai/dsh-agent/lib/types/runtime-types.d.ts",
+      "original": "agent-runtime-types/original.d.ts",
+      "patched": "agent-runtime-types/patched.d.ts",
+      "originalSha256": "da5d808efec816fe81a1d334c8cef6e0fa18f2daefc4085df4c68e02d426c60c",
+      "patchedSha256": "776d9b3a6493a4e787bd45a69630be8a0c73ed6e1f1b2408677b0bbe62dc04a7",
+      "purpose": "Event declaration for agent/request-prepare-error."
+    },
+    {
+      "id": "scope-invariant",
+      "target": "@deepseek-ai/dsh-scope/lib/invariant.js",
+      "original": "scope-invariant/original.js",
+      "patched": "scope-invariant/patched.js",
+      "originalSha256": "1580d3c01b442bb099040ef527e2ba7ac55c453dba0597eab9c9c32bcbdded59",
+      "patchedSha256": "6ba84d45e08a5ae4409c1a5b2abbd25d78a1ec884afbffd6a23db3fe7511f7e6",
+      "purpose": "Routing-subject resolver for agent/request-prepare-error."
+    },
+    {
+      "id": "tool-cordis-metadata",
+      "target": "@deepseek-ai/dsh-tool-cordis/lib/index.js",
+      "original": "tool-cordis-metadata/original.js",
+      "patched": "tool-cordis-metadata/patched.js",
+      "originalSha256": "55fb66ceb75ee92fdbd75e89db813f59edb8774cfa113968cdd132fade65edfe",
+      "patchedSha256": "066d1e3ae0af00595dd420b18475f4cb0758b072324f6e2e1b355b4e03a1bbfa",
+      "purpose": "Event metadata for agent/request-prepare-error."
+    },
+    {
+      "id": "session",
+      "target": "@deepseek-ai/dsh-session/lib/index.js",
+      "original": "session/original.js",
+      "patched": "session/patched.js",
+      "originalSha256": "05e94f57d96e7979670a5b51024c8591572eb0051ce793613dbdec35cf2c47bf",
+      "patchedSha256": "4de382d62fae58fc35ae5160e01b79b9960b3fb4deaa5e66890c85291a5b4412",
+      "purpose": "History compatibility fix for auto-subagent/* route events."
+    },
+    {
+      "id": "session-types",
+      "target": "@deepseek-ai/dsh-session/lib/types/index.d.ts",
+      "original": "session-types/original.d.ts",
+      "patched": "session-types/patched.d.ts",
+      "originalSha256": "ed327445b83ca8d699eb22991178362e4458172ba3c717a7a894f4907394fc37",
+      "patchedSha256": "07c8d9741ffefd9be13c20f37d3f63db8deae5637396e8832246b393285d7a73",
+      "purpose": "Declarations for the session history fix."
+    },
+    {
+      "id": "settings-ui-client",
+      "target": "@deepseek-ai/dsh-client-ui-settings-plugins/lib/client.js",
+      "original": "settings-ui-client/original.js",
+      "patched": "settings-ui-client/patched.js",
+      "originalSha256": "1e8f93289cc0b5f3472378feb085ddeb0f0dd5d3b24192ff60d1e646f347fcb6",
+      "patchedSha256": "231b8c05665543e390ed7d3e672f756743942efea8ede7c1bf671981f79e8a94",
+      "purpose": "Subagent settings card: per-model tier selector."
+    },
+    {
+      "id": "settings-ui-card-types",
+      "target": "@deepseek-ai/dsh-client-ui-settings-plugins/lib/types/client/subagent-model-selection-card-controller.d.ts",
+      "original": "settings-ui-card-types/original.d.ts",
+      "patched": "settings-ui-card-types/patched.d.ts",
+      "originalSha256": "355b0ddcdff4037af7909a0426087b9bdc3ba66264642fa14c3f4e7b6cd106a5",
+      "patchedSha256": "6828f838dac1104f4dee7acb714beff1d0d313174d48ee5a90b6015c5d8b40c3",
+      "purpose": "Declarations for the tier selector."
+    }
+  ]
+}

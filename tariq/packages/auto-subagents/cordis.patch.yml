@@ -1,0 +1,12 @@
+# Apply after the Web bundle. Auto owns the live model-selection service.
+- id: subagent-model-selection-settings
+  disabled: true
+- insert:
+    - id: auto-model-selection
+      name: dsh-auto-subagents/model-selection
+      config:
+        enabled: false
+        allowedModels: []
+        modelTiers: []
+    - id: dsh-auto-subagents
+      name: dsh-auto-subagents

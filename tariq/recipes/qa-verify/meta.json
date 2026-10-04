@@ -1,0 +1,15 @@
+{
+  "name": "qa-verify",
+  "version": "1.0.0",
+  "description": "Read existing acceptance and safe command definitions, verify without repairs, independently check exact criteria and runtime/source evidence; missing requirements never become success.",
+  "whenToUse": "Verify an already implemented task against explicit user or repository acceptance requirements; report failures and blockers without fixing them.",
+  "roles": {
+    "qa-verifier": { "tier": "strong", "readOnlyRetry": false },
+    "qa-checker": { "tier": "strong", "readOnlyRetry": false }
+  },
+  "phases": [
+    { "title": "analysis", "detail": "Source-only acceptance and command contract discovery" },
+    { "title": "verify", "detail": "Safe verification with source or runtime evidence, no repairs" },
+    { "title": "check", "detail": "Independent exact acceptance accounting and evidence validation" }
+  ]
+}

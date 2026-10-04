@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "name": "code-audit",
+  "sha256": {
+    "meta": "e3ff56ab6460630f79acff71c7de7d9f4e9cf386798ef9037e63b4ce723b14b8",
+    "script": "f516c17f97092a734163e544956a3858804d2140953700f833c3622aadface62"
+  },
+  "approvedAt": "2026-10-03T17:02:25.580Z",
+  "approvedBy": "independent-reviewed-code-audit"
+}

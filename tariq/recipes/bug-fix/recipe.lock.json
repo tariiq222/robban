@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "name": "bug-fix",
+  "sha256": {
+    "meta": "4e4a83f162a3f28a0b0d7224eb3713fa84d45c2a26e2fd392157fe6990034bac",
+    "script": "091779efd004ccef0186e7d188e604775c89008fc0fa66b3593530887b826287"
+  },
+  "approvedAt": "2026-10-04T08:37:29.120Z",
+  "approvedBy": "stop-resume-fixes-captain-review"
+}

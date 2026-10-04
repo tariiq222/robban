@@ -97,6 +97,7 @@ turn/start
      reject, or a first enter rewritten empty -> close the turn with no step
      step/start
      agent/request -> prepareCall (cancellation commits neither system nor users)
+       LlmError -> agent/request-prepare-error (retry|terminal|delegate)
      reconcile system/message using the prepared call capability
      append entered messages as user/message; log request/header and request/context as needed
      derive and freeze model history from the log

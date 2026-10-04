@@ -59,6 +59,10 @@ describe('scoped-dispatch invariants', () => {
           type: 'start', attemptId: 'attempt-1' as never, revision: 1, turn: 1, step: 1,
         },
       }],
+      'agent/request-prepare-error': [
+        { agent, turn: 1, step: 1, provider: 'p', failure: { message: 'prepare', code: 'NO_ADAPTER' }, signal },
+        () => Promise.resolve(undefined),
+      ],
       'agent/request-error': [
         {
           agent,

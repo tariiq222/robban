@@ -1,0 +1,8 @@
+{
+  "name": "dsh-rtl-arabic",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "description": "DSH web plugin: automatic right-to-left (RTL) rendering for Arabic text blocks in chat markdown."
+}

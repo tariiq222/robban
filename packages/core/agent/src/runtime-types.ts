@@ -336,6 +336,24 @@ declare module '@deepseek-ai/cordis' {
     */
     'agent/request'(this: Scoped<Agent>, payload: { agent: Agent; turn: number; step: number; signal: AbortSignal }, next: () => Promise<LlmCallConfig>): Promise<LlmCallConfig>
     /**
+     * Recover an adapter preparation failure before admitting model-visible input.
+     * Return `{ kind: 'retry' }` to rerun `agent/request` and preparation within
+     * this step, without repeating assembly, input admission, or completed tools.
+     * Recovery policy owns finite attempt limits. Return `undefined` without
+     * calling `next()` to make the failure terminal; call `next()` to retain
+     * native handling, including unregistered-route middleware compatibility.
+     * Cancellation prevents recovery and wins over its returned action.
+     * @param payload.agent - the agent whose adapter preparation failed.
+     * @param payload.turn - the turn containing the failed preparation.
+     * @param payload.step - the step awaiting a prepared request.
+     * @param payload.provider - the provider selected by `agent/request`.
+     * @param payload.failure - serializable facts from the preparation LlmError.
+     * @param payload.signal - the turn abort signal.
+     * Scope-filtered dispatch (`@deepseek-ai/dsh-scope`): agent-scoped listeners receive only that agent.
+     * @mode waterfall
+     */
+    'agent/request-prepare-error'(this: Scoped<Agent>, payload: { agent: Agent; turn: number; step: number; provider: string; failure: LlmFailure; signal: AbortSignal }, next: () => Promise<RequestErrorAction>): Promise<RequestErrorAction>
+    /**
      * Handle one failed model-request attempt before the loop retries or closes
      * its step. A listener returns `{ kind: 'retry' }` without calling `next()`
      * when it owns recovery, or calls `next()` to delegate. The default

@@ -591,7 +591,9 @@ declare class Session {
    *   history) and
    *   rejected by the compiler for non-surface types like `turn/start` or
    *   `assistant/attempt`. Assistant messages embed their exact provider
-   *   stream and cannot cite top-level source events.
+   *   stream and cannot cite top-level source events. Any event may carry
+   *   `ignorable: true`, allowing readers that do not know its type to retain it
+   *   without interpreting it; false and other supplied values are rejected.
    * @returns the logged event — its assigned `seq`/`time` plus the SNAPSHOT of
    *   `data` that entered the log, so reading `event.data` back sees the logged
    *   value, never the caller's still-mutable input.
@@ -613,8 +615,10 @@ declare class Session {
   append<T extends SessionEventType>(
     type: T,
     data: SessionEventMap[T],
-    ...opts: T extends SurfaceEventType ? [opts: SurfaceIntent<T>] : []
-    ): SessionEvent<T>;
+    ...opts: T extends SurfaceEventType
+      ? [opts: SurfaceIntent<T> & { ignorable?: true }]
+      : [opts?: { ignorable?: true }]
+  ): SessionEvent<T>;
   /**
    * The {@link EpochHeader} in force after the log's last header event — the
    * header the NEXT request will be compared against — or undefined before
