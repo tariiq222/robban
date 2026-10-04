@@ -159,7 +159,7 @@ function consumeMarker(prompt, token, roleTable) {
  * existing runtime must remain mounted to track later fallback switches. This module
  * cannot promise live durable route-change UI events; callers must project those.
  */
-export function registerWorkflowRouting({ subagents, router, parent, baseProvider = 'spawn', onChild = () => {}, onRouteChange = () => {}, onStartFailure = () => {}, onStepFailure = () => {}, structuredRetries = 1, retryImplementer = false, recipeRoles = {}, warn = message => console.warn(message), scheduleTimeout = (fn, ms) => { const handle = setTimeout(fn, ms); handle.unref?.(); return handle; }, cancelTimeout = handle => clearTimeout(handle) }) {
+export function registerWorkflowRouting({ subagents, router, parent, baseProvider = 'spawn', onChild = () => {}, onRouteChange = () => {}, onStartFailure = () => {}, onStepFailure = () => {}, structuredRetries = 1, retryImplementer = false, recipeRoles = {}, timeoutOverrides = {}, warn = message => console.warn(message), scheduleTimeout = (fn, ms) => { const handle = setTimeout(fn, ms); handle.unref?.(); return handle; }, cancelTimeout = handle => clearTimeout(handle) }) {
   if (!Number.isSafeInteger(structuredRetries) || structuredRetries < 0) throw new Error('structuredRetries must be a non-negative integer');
   const roleTable = effectiveRoleTable(WORKFLOW_ROLE_TIERS, READ_ONLY_RETRY_ROLES, recipeRoles);
   const base = subagents.getProvider(baseProvider);
@@ -189,7 +189,10 @@ export function registerWorkflowRouting({ subagents, router, parent, baseProvide
   async function start(request) {
     if (closed) throw new Error('recipe routing is closed');
     if (request.parent !== parent) throw new Error('recipe routing parent does not match active run');
-    const { metadata, prompt, timeoutMs } = consumeMarker(request.prompt, markerToken, roleTable);
+    const consumed = consumeMarker(request.prompt, markerToken, roleTable);
+    const { metadata, prompt } = consumed;
+    // A saved per-role timeout from Auto settings replaces the recipe's own marker value.
+    const timeoutMs = Object.hasOwn(timeoutOverrides, metadata.role) ? validStepTimeoutMs(timeoutOverrides[metadata.role]) : consumed.timeoutMs;
     if (metadata.readOnly === true) {
       if (!base.capabilities.toolFilter) throw new Error('recipe readOnly requires provider toolFilter capability');
       // One-shot descriptors persist version/mode/provider/label only (installed schema); the

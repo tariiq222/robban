@@ -82,3 +82,21 @@ test('dispose during a signal-ignoring replacement launch waits for it and dispo
   assert.equal(f.router.activeCounts.size, 0);
   await f.routing.dispose();
 });
+
+test('saved per-role timeout replaces the recipe marker timeout', async () => {
+  const f = fixture({ timeoutOverrides: { setup: 30 } });
+  const run = await f.start(20);
+  f.fireLast(); await tick();
+  f.fireLast();
+  const out = await settle(run.result);
+  assert.match(out.v.output[0].text, /step timed out after 30 ms/);
+  f.gate.resolve(); await tick(); await tick();
+  await f.routing.dispose();
+});
+
+test('saved per-role timeout applies to a step whose marker has none', async () => {
+  const f = fixture({ timeoutOverrides: { setup: 30 } });
+  const run = await f.start(undefined);
+  assert.equal(f.timers.size, 1, 'override arms a step timer');
+  await run.dispose(); await f.routing.dispose();
+});

@@ -8,5 +8,6 @@
         enabled: false
         allowedModels: []
         modelTiers: []
+        recipeOverrides: {}
     - id: dsh-auto-subagents
       name: dsh-auto-subagents

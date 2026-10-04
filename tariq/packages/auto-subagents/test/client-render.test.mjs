@@ -194,3 +194,48 @@ test('Auto settings renders saved unavailable routes, tiers and the disabled sta
   assert.match(html, /value="strong" selected=""/);
   assert.doesNotMatch(html, /checked=""/);
 });
+
+const recipeCatalog = [
+  { name: 'bug-fix', description: 'Fix a defect', whenToUse: '', options: [],
+    stages: [{ id: 'setup', roles: ['setup'], detail: 'Inspect repo' }, { id: 'code-loop', roles: ['implementer', 'reviewer'], loop: true, parallel: true, detail: '' }],
+    roles: [{ role: 'setup', tier: 'light', locked: false }, { role: 'implementer', tier: 'strong', locked: true }, { role: 'reviewer', tier: 'strong', locked: true }] },
+  { name: 'feature-pipeline', description: 'Build a feature', whenToUse: '',
+    options: [{ key: 'fastPath', default: true, detail: 'boolean, default true' }],
+    stages: [{ id: 'setup', roles: ['setup'], detail: '' }], roles: [{ role: 'setup', tier: 'light', locked: false }] },
+];
+const settingsWith = recipeOverrides => ({ t, recipes: recipeCatalog,
+  useAutoSettings: select => select({ status: 'ready', writable: true, revision: 1, value: { enabled: true, allowedModels: [{ provider: 'p', model: 'm' }], modelTiers: [], ...(recipeOverrides ? { recipeOverrides } : {}) } }),
+  catalog: async () => ({ ok: true, value: { groups: [], failures: [] } }), save: async () => true });
+
+test('recipe canvas renders a tab per recipe and the first recipe flow with stage badges and role tiers', () => {
+  const html = renderToStaticMarkup(React.createElement(mod.__test.AutoSettings, settingsWith(undefined)));
+  assert.match(html, /role="tablist"/);
+  assert.equal((html.match(/role="tab"/g) || []).length, 2);
+  assert.match(html, /aria-selected="true"[^>]*>.*bug-fix/);
+  assert.match(html, /class="ars-canvas"/);
+  assert.match(html, /data-stage="code-loop"/);
+  assert.match(html, /loopBadge/);
+  assert.match(html, /parallelBadge/);
+  assert.match(html, /data-role="implementer" data-tier="strong"/);
+  assert.match(html, /data-role="setup" data-tier="light"/);
+  assert.match(html, /recipeEnabled/);
+});
+
+test('recipe canvas shows saved tier, timeout and disabled overrides', () => {
+  const html = renderToStaticMarkup(React.createElement(mod.__test.AutoSettings, settingsWith({ 'bug-fix': { disabled: true, roles: { setup: { tier: 'medium', timeoutMinutes: 4 } } } })));
+  assert.match(html, /data-role="setup" data-tier="medium" data-custom="true"/);
+  assert.match(html, /minutes n=4/);
+  assert.match(html, /data-off="true"/);
+});
+
+test('recipe settings helpers drop empty overrides and validate timeouts', () => {
+  const { setRoleOverride, setRecipeEntry, recipeOverridesInvalid } = mod.__test;
+  let ov = setRoleOverride({}, 'bug-fix', 'setup', { tier: 'medium' });
+  assert.deepEqual(JSON.parse(JSON.stringify(ov)), { 'bug-fix': { roles: { setup: { tier: 'medium' } } } });
+  ov = setRoleOverride(ov, 'bug-fix', 'setup', { tier: undefined });
+  assert.deepEqual(JSON.parse(JSON.stringify(ov)), {});
+  ov = setRecipeEntry({}, 'feature-pipeline', { args: { fastPath: false } });
+  assert.deepEqual(JSON.parse(JSON.stringify(ov)), { 'feature-pipeline': { args: { fastPath: false } } });
+  assert.equal(recipeOverridesInvalid({ a: { roles: { s: { timeoutMinutes: 0 } } } }), true);
+  assert.equal(recipeOverridesInvalid({ a: { roles: { s: { timeoutMinutes: 240 } } } }), false);
+});

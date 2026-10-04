@@ -9,12 +9,12 @@ import { runtimeModuleUrl } from '../lib/dsh-paths.mjs';
 const { validateMeta } = await import(runtimeModuleUrl('@deepseek-ai/dsh-workflow-ptc'));
 import { createPtcFixture } from './helpers/ptc-runtime.mjs';
 
-async function fixture({ realPtc = false, invalidDescription = false, childStart } = {}) {
+async function fixture({ realPtc = false, invalidDescription = false, childStart, recipeOverrides } = {}) {
   const root = await mkdtemp(path.join(os.tmpdir(), 'ars-engine-meta-'));
   const recipesDir = path.join(root, 'recipes');
   const base = path.join(recipesDir, 'fixture');
   await mkdir(base, { recursive: true });
-  const meta = { name: 'fixture', version: '0.3.0', args: { fastPath: 'default true' },
+  const meta = { name: 'fixture', version: '0.3.0', args: { fastPath: 'default true', quick: 'boolean, default true; fixture option' },
     description: invalidDescription ? 12 : 'A metadata boundary regression fixture', whenToUse: 'Test only',
     phases: [{ title: 'setup', detail: 'read only' }], roles: { setup: { tier: 'medium', readOnlyRetry: true } } };
   await writeFile(path.join(base, 'meta.json'), JSON.stringify(meta));
@@ -40,20 +40,23 @@ return {status:'completed',verified:value.ok};
       registerProvider(value) { providers.set(value.name, value); return () => providers.delete(value.name); },
       async start(providerName, request) { return providers.get(providerName).start(request); },
     },
-    subagentModelSelection: { current: () => ({ enabled: true, allowedModels: [{ provider: 'fixture', model: 'model' }], modelTiers: [{ provider: 'fixture', model: 'model', tier: 'medium' }] }) },
+    subagentModelSelection: { current: () => ({ enabled: true, allowedModels: [{ provider: 'fixture', model: 'model' }], modelTiers: [{ provider: 'fixture', model: 'model', tier: 'medium' }] }),
+      ...(recipeOverrides ? { recipeOverrides: () => recipeOverrides } : {}) },
     llm: { listProviders: () => [{ id: 'fixture' }], resolveCallConfig: async value => value },
   };
   const runtime = realPtc ? await createPtcFixture({ cwd: root, provider, events: ctx, maxTotalAgents: 10 }) : undefined;
   if (runtime) ctx.subagents = runtime.subagents;
+  let receivedArgs;
   ctx.workflowEngine = { start(request) {
     receivedMeta = request.meta;
+    receivedArgs = request.args;
     if (realPtc) return runtime.engine.start(request);
     validateMeta(request.meta); // Real validator, not an imitation of its whitelist.
     return { id: 'validated-engine', result: Promise.resolve({ stopReason: 'completed', agentsStarted: 0, value: { status: 'completed' } }), cancel() {}, async dispose() {} };
   } };
   apply(ctx, { recipesDir, runsDir: path.join(root, 'runs'), setupCacheDir: path.join(root, 'cache') });
   const exec = { agent: runtime?.createParent() ?? { session: { id: 'fixture-owner', header: { cwd: root }, append: (type, data) => appended.push({ type, data }), snapshotEvents: () => [] } }, signal: new AbortController().signal };
-  return { root, recipesDir, meta, get receivedMeta() { return receivedMeta; }, get starts() { return starts; }, tool, exec, warnings, runtime,
+  return { root, recipesDir, meta, get receivedMeta() { return receivedMeta; }, get receivedArgs() { return receivedArgs; }, get starts() { return starts; }, tool, exec, warnings, runtime,
     cleanup: async () => { try { await runtime?.dispose(); } finally { await rm(root, { recursive: true, force: true }); } } };
 }
 
@@ -158,5 +161,28 @@ return {status:'completed'};
     assert.equal(saved.consumed, true);
     assert.equal(saved.cardRunId, runStarts[0].data.runId, 'the consumed checkpoint belongs to the cancelled run');
     await assert.rejects(h.tool.execute({ ...args, resumeId }, h.exec), /already used/);
+  } finally { await h.cleanup(); }
+});
+
+test('run_recipe refuses a recipe disabled in settings before starting the engine', async () => {
+  const h = await fixture({ recipeOverrides: { fixture: { disabled: true } } });
+  try {
+    await assert.rejects(h.tool.execute({ recipe: 'fixture', repo: h.root, task: 'Disabled fixture' }, h.exec), /disabled in Auto settings/);
+    assert.equal(h.receivedMeta, undefined);
+  } finally { await h.cleanup(); }
+});
+
+test('run_recipe passes saved boolean options to the recipe args', async () => {
+  const h = await fixture({ recipeOverrides: { fixture: { args: { quick: false } } } });
+  try {
+    await h.tool.execute({ recipe: 'fixture', repo: h.root, task: 'Option fixture' }, h.exec);
+    assert.equal(h.receivedArgs.quick, false);
+  } finally { await h.cleanup(); }
+});
+
+test('run_recipe fails loudly when saved settings no longer match the recipe', async () => {
+  const h = await fixture({ recipeOverrides: { fixture: { roles: { ghost: { tier: 'light' } } } } });
+  try {
+    await assert.rejects(h.tool.execute({ recipe: 'fixture', repo: h.root, task: 'Stale settings fixture' }, h.exec), /unknown role "ghost"/);
   } finally { await h.cleanup(); }
 });

@@ -8,6 +8,8 @@ From the repository root, install dependencies with `pnpm install`, build DSH wi
 
 Select Auto Subagents as the session preset. The Auto settings page groups the routing switch, model/provider rows and save actions in a responsive English layout inside the installed bundle page. Full application localization is deferred. It owns the live enabled switch, exact allowed routes and strong/medium/light tiers. Disabled or empty settings refuse delegation. Saved routes remain editable if their provider disappears. Saving all routing fields uses one revision-fenced mutation; a stale draft requires discard and reload.
 
+The Recipes section of the same page draws each approved recipe as a stage canvas. Selecting a role opens its tier and step-timeout fields; each recipe also has an enable switch and its documented boolean options. These values are saved as `recipeOverrides` in the same revision-fenced mutation and never edit recipe files, so approval locks stay valid. `run_recipe` validates them against the approved recipe at run start: a disabled recipe is refused, strong-only roles (implementer, reviewer, validate) keep the strong tier, and an override naming an unknown role or option fails the run. The canvas data is built from approved recipes by `build.mjs`; rebuild after approving a new recipe. Stage graphs live in `lib/recipe-flows.mjs`, which `test/recipe-flows.test.mjs` checks against each script and its metadata.
+
 The package resolves declared dependencies through Node's public package exports. `DSH_RUNTIME_DIR` does not select runtime modules. `DSH_HOME` selects data storage; `DSH_AUTO_RECIPES_DIR` selects the approved recipe directory. The supplied preview selects `tariq/recipes`.
 
 ## Components
@@ -15,6 +17,7 @@ The package resolves declared dependencies through Node's public package exports
 - `lib/delegation.mjs`, `lib/model-selection.mjs`: Auto-owned spawn/fork consumers and volatile routing settings. See [delegation](docs/DELEGATION-V020.md).
 - `lib/router.mjs`, `lib/runtime.mjs`: live authorization, least-loaded routing, verifier separation and bounded upward recovery within the same child.
 - `lib/coordinator.mjs`: read-only coordinator tool admission and child report policy.
+- `lib/recipe-flows.mjs`, `lib/recipe-overrides.mjs`: settings-canvas stage graphs and validated per-recipe overrides.
 - `lib/recipes.mjs`, `lib/workflow-routing.mjs`: approved recipes, private workflow routing, cancellation and resume. See [PTC execution](docs/WORKFLOW-V020.md).
 - `lib/decision-receipt.mjs`: accepts only successful canonical Session tool messages matched to this run's human questions.
 - `src/client.src.js`, `src/settings.src.js`: current chat card and Auto settings page, assembled into `lib/client.js` by `build.mjs`.

@@ -21,6 +21,7 @@ import { registerWorkflowRouting, WORKFLOW_ROLE_TIERS } from './workflow-routing
 import { verifyRecipeIntegrity } from './recipe-integrity.mjs';
 import { validateRecipeMeta } from './recipe-contract.mjs';
 import { listApprovedRecipesSync, renderCatalogForTool } from './recipe-catalog.mjs';
+import { resolveRecipeOverrides } from './recipe-overrides.mjs';
 export { listApprovedRecipesSync, loadVerifiedRecipeSync, renderCatalogForTool, renderCatalogForCoordinator } from './recipe-catalog.mjs';
 import { EVENT, compactQuestions, compactDecided } from './events.mjs';
 import { setupCacheKey, setupCacheDir, loadSetupCache, saveSetupCache } from './setup-cache.mjs';
@@ -378,6 +379,9 @@ export function apply(ctx, config = {}) {
         throw new Error('run_recipe is only available to the top-level Auto coordinator; a subagent must deliver its own result through structured_output instead of starting another recipe.');
       }
       await assertRecipeWorkspace(args.repo, parent.session.header?.cwd);
+      // Saved Auto settings tune routing tiers, step timeouts and options without editing the approved files.
+      const overrides = resolveRecipeOverrides(ctx.subagentModelSelection.recipeOverrides?.() ?? {}, args.recipe, meta, contract.roles);
+      if (overrides.disabled) throw new Error(`recipe "${args.recipe}" is disabled in Auto settings; enable it there or choose another recipe`);
       const setupKey = await setupCacheKey(args.repo, args.recipe);
       const cachedSetup = await loadSetupCache(setupKey, { dir: cacheDir });
       const ownerSessionId = String(parent.session.id);
@@ -417,12 +421,13 @@ export function apply(ctx, config = {}) {
       let routing;
       const startFailures = [];
       const stepFailures = [];
-      try { routing = registerWorkflowRouting({ subagents: ctx.subagents, router, parent, recipeRoles: contract.roles, retryImplementer: true,
+      try { routing = registerWorkflowRouting({ subagents: ctx.subagents, router, parent, recipeRoles: overrides.roles, timeoutOverrides: overrides.timeouts, retryImplementer: true,
         onStepFailure: failure => { if (stepFailures.length < 8) stepFailures.push(failure.message); ctx.logger?.warn?.(`auto-recipe: ${failure.message}`); },
         onRouteChange: event => ctx.emit('auto-subagents/route-changed', event),
         onStartFailure: failure => { if (startFailures.length < 8) startFailures.push(failure.message); ctx.logger?.warn?.(`auto-recipe: ${failure.message}`); } }); }
       catch (error) { await failAttempt(); await releaseClaim(); throw error; }
       const recipeArgs = {
+        ...overrides.args,
         task: args.task,
         repo: args.repo,
         routingToken: routing.markerToken,
