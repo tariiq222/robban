@@ -1,6 +1,6 @@
 # Auto Subagents
 
-Auto Subagents provides tier-based routing, upward provider fallback, a read-only coordinator, seven approved workflow recipes and a replay-driven chat card on Robban's DSH 0.2.0-rc.2 branch. It requires the branch's preparation-error event and Session append support; unmodified upstream compatibility is not claimed.
+Auto Subagents provides tier-based routing, upward provider fallback, a read-only coordinator, seven approved workflow recipes and a replay-driven chat card on Robban's DSH 0.2.1-alpha.1 branch. It requires the branch's preparation-error event and Session append support; unmodified upstream compatibility is not claimed.
 
 ## Use
 
