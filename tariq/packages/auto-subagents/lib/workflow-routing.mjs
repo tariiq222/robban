@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { routeKey } from './router.mjs';
-import { effectiveRoleTable, TIERS } from './recipe-contract.mjs';
+import { effectiveRoleTable, TIERS, WORKFLOW_ROLE_TIERS, READ_ONLY_RETRY_ROLES } from './recipe-contract.mjs';
+// Defaults live in the dependency-free contract module so build.mjs can read them without the runtime.
+export { WORKFLOW_ROLE_TIERS, READ_ONLY_RETRY_ROLES };
 import { isDeepStrictEqual } from 'node:util';
 import { runtimeModuleUrl } from './dsh-paths.mjs';
 const { Session } = await import(runtimeModuleUrl('@deepseek-ai/dsh-session'));
@@ -99,14 +101,7 @@ function ownedMissingCapture(child, value, request, parent) {
 // when no retry is possible the step resolves with a synthetic stopReason:'error'
 // result whose message the recipe's must() throws.
 export const ROLE_MARKER = '__AUTO_RECIPE_ROLE__';
-export const WORKFLOW_ROLE_TIERS = Object.freeze({
-  setup: 'light', analysis: 'medium', requirements: 'medium', design: 'medium',
-  designReview: 'strong', plan: 'medium', implementer: 'strong', reviewer: 'strong',
-  aggregate: 'medium', validate: 'strong',
-});
 
-// Roles whose retry is safe: they do not edit the repository. `implementer` is opt-in.
-export const READ_ONLY_RETRY_ROLES = new Set(['setup', 'analysis', 'requirements', 'design', 'designReview', 'plan', 'reviewer', 'aggregate', 'validate']);
 export const IMPLEMENTER_RETRY_WARNING = 'A previous attempt on this step may have left partial edits in the working tree. First inspect `git status` and `git diff`, then continue from that state or reconcile it; do not blindly redo work.';
 
 const MAX_STEP_TIMEOUT_MS = 4 * 60 * 60 * 1000;

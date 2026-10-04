@@ -1,8 +1,7 @@
 // Display-only stage graph of each approved recipe, used by the settings canvas.
 // Each stage id is a meta phase title; roles are the routed roles the script marks in that phase.
 // test/recipe-flows.test.mjs keeps this map aligned with the approved scripts and metadata.
-import { effectiveRoleTable, STRICT_BUILTIN_ROLES } from './recipe-contract.mjs';
-import { WORKFLOW_ROLE_TIERS, READ_ONLY_RETRY_ROLES } from './workflow-routing.mjs';
+import { effectiveRoleTable, STRICT_BUILTIN_ROLES, WORKFLOW_ROLE_TIERS, READ_ONLY_RETRY_ROLES } from './recipe-contract.mjs';
 
 const stage = (id, roles, extra = {}) => Object.freeze({ id, roles: Object.freeze(roles), ...extra });
 

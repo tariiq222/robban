@@ -1,8 +1,7 @@
 // Saved per-recipe settings applied by run_recipe on top of the approved files.
 // Overrides never edit a recipe, so its approval lock stays valid; they only change
 // routing tiers, step timeouts, enablement and documented boolean options.
-import { effectiveRoleTable, TIERS } from './recipe-contract.mjs';
-import { WORKFLOW_ROLE_TIERS, READ_ONLY_RETRY_ROLES } from './workflow-routing.mjs';
+import { effectiveRoleTable, TIERS, WORKFLOW_ROLE_TIERS, READ_ONLY_RETRY_ROLES } from './recipe-contract.mjs';
 import { STRONG_LOCKED_ROLES, booleanOptions } from './recipe-flows.mjs';
 
 const MAX_TIMEOUT_MINUTES = 240;
