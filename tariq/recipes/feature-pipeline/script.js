@@ -201,6 +201,11 @@ const must = (value, step) => {
   if (value === null || value === undefined) throw new Error(`step "${step}" returned no structured output (the model may have ended without calling structured_output); one retry on another model is attempted when available; check Subagent settings tiers and the child failure details`);
   return value;
 };
+// Reviewer/validator failures (child start failure, timeout, missing output) are recorded as a
+// missing result for the deterministic gates instead of ending the whole run.
+const soft = async (step, run) => {
+  try { return await run(); } catch (error) { log(`${step} failed: ${String(error?.message ?? error).slice(0, 300)}`); return null; }
+};
 const brief = d => ({ id: d.id, question: d.question, current: d.current, options: d.options, recommendation: d.recommendation, why: d.why });
 const stopping = list => (list || []).filter(d => !answered(d.id) && (d.kind === 'high_risk' || (d.kind === 'follow_up' && round <= 1)));
 const assumed = list => (list || []).filter(d => !answered(d.id) && !stopping([d]).length).map(d => ({ id: d.id, decision: d.recommendation }));
@@ -519,7 +524,7 @@ const unionFindings = list => {
   return [...union.values()];
 };
 
-const validate = () => invokeAgent(`${CONTEXT}\n\n${REQS}\n\nFinal validation. Do not edit files. For each acceptance criterion, check the current repository state\n(read code, run the relevant commands) and report pass/fail with concrete evidence.\nCopy each requirements acceptance string EXACTLY into "criterion", once each: no omitted, duplicate,\nrenamed or additional criteria.`, {
+const validate = () => soft('validate', () => invokeAgent(`${CONTEXT}\n\n${REQS}\n\nFinal validation. Do not edit files. For each acceptance criterion, check the current repository state\n(read code, run the relevant commands) and report pass/fail with concrete evidence.\nCopy each requirements acceptance string EXACTLY into "criterion", once each: no omitted, duplicate,\nrenamed or additional criteria.`, {
   label: 'validate', phase: 'validate', ...R('validate'),
   schema: {
     type: 'object', properties: {
@@ -529,7 +534,7 @@ const validate = () => invokeAgent(`${CONTEXT}\n\n${REQS}\n\nFinal validation. D
       summary: { type: 'string' },
     }, required: ['results', 'summary'], additionalProperties: false,
   },
-});
+}));
 let earlyValidation = null;
 
 // ── code loop ──────────────────────────────────────────────────────────────
@@ -615,7 +620,7 @@ Do not add comments that reveal it. Report exactly what you changed.`, {
   }
 
   const repairReview = i >= 2 ? `\nReview the changes since the previous iteration (git diff of the changed paths) and verify every previous finding below is fixed; also flag any new problem you notice in touched code.\nPrevious findings:\n${JSON.stringify(codeVerdict.findings, null, 2)}\nChanged paths: ${impl.changedPaths.join(', ')}` : '';
-  const reviewTasks = reviewers.map(r => () => invokeAgent(`${CONTEXT}
+  const reviewTasks = reviewers.map(r => () => soft(`${r.label || 'review'} #${i}`, () => invokeAgent(`${CONTEXT}
 
 ${REQS}
 
@@ -629,7 +634,7 @@ decisions, scope (no changes outside in-scope paths), regressions in the depende
 Severity: anything that violates an acceptance criterion or a recorded decision is at least "high",
 even if the current tests pass. Return NEEDS_REVISION if you report any such finding.${repairReview}`, {
     label: `${r.label || 'review'} #${i}`, phase: 'code-loop', ...route(r), schema: verdictSchema,
-  }));
+  })));
   const parallelResults = await parallel([...reviewTasks, ...(args.earlyValidate !== false ? [validate] : [])]);
   const reviews = parallelResults.slice(0, reviewers.length);
   const candidateValidation = args.earlyValidate !== false ? parallelResults[reviewers.length] : null;
@@ -689,7 +694,8 @@ if (codeVerdict.verdict !== 'APPROVED' && abortIfUnapproved) {
 
 // ── validate ───────────────────────────────────────────────────────────────
 phase('validate');
-const validation = must(earlyValidation ?? await validate(), 'validate');
+const validation = earlyValidation ?? await validate();
+const validationResults = validation?.results ?? [];
 
 // Exact, duplicate-free coverage of the original strings is required, not a passing subset.
 const expectedCriteria = new Set(requirements.acceptance);
@@ -699,7 +705,7 @@ const validationFailure = (criterion, evidence) => ({ criterion, status: 'failed
 if (requirements.acceptance.length === 0 || expectedCriteria.size !== requirements.acceptance.length) {
   coverageFailures.push(validationFailure('(requirements acceptance)', 'Requirements must contain nonempty, duplicate-free acceptance criteria.'));
 }
-for (const result of validation.results) {
+for (const result of validationResults) {
   if (!expectedCriteria.has(result.criterion)) coverageFailures.push(validationFailure(result.criterion, 'Unknown criterion: validate only the exact requirements acceptance strings.'));
   if (seenCriteria.has(result.criterion)) coverageFailures.push(validationFailure(result.criterion, 'Duplicate criterion: report each acceptance string exactly once.'));
   seenCriteria.add(result.criterion);
@@ -708,12 +714,13 @@ for (const criterion of expectedCriteria) {
   if (!seenCriteria.has(criterion)) coverageFailures.push(validationFailure(criterion, 'Missing validation: check this acceptance criterion and report concrete evidence.'));
 }
 const approvalFailures = [];
+if (!validation) approvalFailures.push(validationFailure('(validation)', 'The validator returned no structured result; rerun final validation before certification.'));
 if (!fastPath && designReview.verdict !== 'APPROVED') approvalFailures.push(validationFailure('(design approval)', 'Obtain independent design approval; abortIfUnapproved=false permits continuation, not certification.'));
 if (codeVerdict.verdict !== 'APPROVED') approvalFailures.push(validationFailure('(code approval)', 'Obtain unanimous safe independent code reviews before certification.'));
-const failedCriteria = [...validation.results.filter(r => r.status !== 'passed'), ...coverageFailures, ...approvalFailures];
+const failedCriteria = [...validationResults.filter(r => r.status !== 'passed'), ...coverageFailures, ...approvalFailures];
 const allPassed = failedCriteria.length === 0;
 const passedCount = requirements.acceptance.filter(criterion => {
-  const matches = validation.results.filter(r => r.criterion === criterion);
+  const matches = validationResults.filter(r => r.criterion === criterion);
   return matches.length === 1 && matches[0].status === 'passed';
 }).length;
 return {
@@ -724,7 +731,7 @@ return {
   changedPaths: [...new Set([...(progress.changedPaths || []), ...impl.changedPaths])],
   passed: `${passedCount}/${requirements.acceptance.length}`,
   failedCriteria,
-  validationSummary: validation.summary,
+  validationSummary: validation?.summary ?? 'validation did not report',
   iterations: { design: history.filter(h => h.step.startsWith('design-review')).length, code: history.filter(h => h.step.startsWith('aggregate')).length, ...(savedProgress ? { resumedFromRound } : {}) },
   reviewTrail,
   ...(injectedFault ? { injectedFault } : {}),

@@ -3,8 +3,8 @@
   "name": "qa-verify",
   "sha256": {
     "meta": "875786f084d4c22c7730123c865129ffe97d1606944e5ae52bd1ea158550f3cc",
-    "script": "d5d66e7dc2a1b6e304b2a974fb42c52fce816625089032ffd19752f29a3f7433"
+    "script": "be779144e951171537546b6fa8debd2ff5b24bc8c8c311f42966746b627f0096"
   },
-  "approvedAt": "2026-10-03T18:27:32.017Z",
-  "approvedBy": "audit-repairs-independent-review-01e3039a"
+  "approvedAt": "2026-10-04T12:39:08.795Z",
+  "approvedBy": "claude (fix: per-criterion limitations)"
 }

@@ -3,8 +3,8 @@
   "name": "feature-pipeline",
   "sha256": {
     "meta": "41e25b9aa87dbcc6b3426dad4c95b5c19d455416839105b43c28ed00d3f9dc51",
-    "script": "189e9b37aa3023a48594437425b4fab190e3d5e22f2bd09fef549e79901b12e8"
+    "script": "67f98d03cd45eb63090341aa2fbbe4417c45d2a8fbe0fe261cba32e02347bd7b"
   },
-  "approvedAt": "2026-10-04T08:38:25.917Z",
-  "approvedBy": "stop-resume-fixes-captain-review"
+  "approvedAt": "2026-10-04T12:09:54.241Z",
+  "approvedBy": "claude (fix: soft reviewer/validate failures)"
 }

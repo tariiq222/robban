@@ -3,8 +3,8 @@
   "name": "plan-to-packages",
   "sha256": {
     "meta": "39d3f8b63911c8c53b1e7dfff49f4dfd806f99f4684805c82977bf0204b746cc",
-    "script": "095bfb2fcff520e07736387553ef040fe0300469d6a5adecd33004abd8ba0d5e"
+    "script": "2f196282e5d32cca80e95acd4f52f28190ea02c872278235d2bf7b26cde24445"
   },
-  "approvedAt": "2026-10-03T17:37:19.627Z",
-  "approvedBy": "independently-reviewed-plan-to-packages"
+  "approvedAt": "2026-10-04T12:39:08.737Z",
+  "approvedBy": "claude (fix: resumable questions)"
 }

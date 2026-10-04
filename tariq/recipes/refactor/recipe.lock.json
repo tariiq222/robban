@@ -3,8 +3,8 @@
   "name": "refactor",
   "sha256": {
     "meta": "d15a31b408b208c93fdbb3746a81d8365cb9c204dceb60d4237a54644b1c05e7",
-    "script": "acf9c3b23d89cfd0bb3ae10923ceec8342c3dc3bad48bc79b6270b2177de6d91"
+    "script": "b087ada9bde910662e585887640254054c6595557924d89a132cff6305c19723"
   },
-  "approvedAt": "2026-10-03T18:27:32.055Z",
-  "approvedBy": "audit-repairs-independent-review-01e3039a"
+  "approvedAt": "2026-10-04T12:39:08.674Z",
+  "approvedBy": "claude (fix: refactor resume+repair)"
 }

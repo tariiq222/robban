@@ -3,8 +3,8 @@
   "name": "bug-fix",
   "sha256": {
     "meta": "4e4a83f162a3f28a0b0d7224eb3713fa84d45c2a26e2fd392157fe6990034bac",
-    "script": "091779efd004ccef0186e7d188e604775c89008fc0fa66b3593530887b826287"
+    "script": "26b20bcfb60fff70a4d2022180ea9a1a3b4566deef35e05486ac548f4590607f"
   },
-  "approvedAt": "2026-10-04T08:37:29.120Z",
-  "approvedBy": "stop-resume-fixes-captain-review"
+  "approvedAt": "2026-10-04T12:09:54.110Z",
+  "approvedBy": "claude (fix: approval resume and free-text answers)"
 }

@@ -19,7 +19,9 @@ const analysis = (decisions = []) => ({ scope: { files: ['file.js'], symbols: []
 const resume = (decisions = [], extra = {}) => ({ task: 'Safety test', repo: '/fake-repo', round: 1, setup: setup(), analysis: analysis(decisions), ...extra });
 const passing = () => ({ results: acceptance.map(criterion => ({ criterion, status: 'passed', evidence: 'Checked' })), summary: 'Validated' });
 
-async function run(overrides = {}, args = {}) {
+// The default parallel hook dissolves every thunk failure to null; `parallel` overrides it to model
+// the engine's fatal child-start errors, which propagate through parallel() unless the recipe catches them.
+async function run(overrides = {}, args = {}, { parallel = hooks => Promise.all(hooks.map(hook => Promise.resolve().then(hook).catch(() => null))) } = {}) {
   const calls = [];
   const logs = [];
   const phases = [];
@@ -39,7 +41,7 @@ async function run(overrides = {}, args = {}) {
     const value = Object.hasOwn(overrides, key) ? overrides[key] : defaults[key];
     return structuredClone(typeof value === 'function' ? await value(opts, prompt, calls) : value);
   };
-  const result = await runRecipe(agent, hooks => Promise.all(hooks.map(hook => Promise.resolve().then(hook).catch(() => null))), name => phases.push(name), line => logs.push(line), {
+  const result = await runRecipe(agent, parallel, name => phases.push(name), line => logs.push(line), {
     task: 'Safety test', repo: '/fake-repo', maxDesignIterations: 2, maxCodeIterations: 1,
     // Keep legacy gate tests on their original full-path semantics; speedup tests opt in.
     fastPath: false, useAggregator: true, earlyValidate: false, ...args,
@@ -249,3 +251,32 @@ test('routes and structured verdict logs remain compatible', async () => {
   assert.equal(calls.find(call => call.label === 'review-a #1').provider, 'fake-review');
   assert.equal(aggregateSignal(logs).verdict, 'APPROVED');
 });
+
+const fatalParallel = hooks => Promise.all(hooks.map(hook => hook()));
+const childStartFailure = () => { throw new Error('child agent run failed: provider could not start'); };
+
+test('a reviewer child-start failure becomes a missing review instead of killing the run', async () => {
+  const { result, logs } = await run({ 'review-b': childStartFailure }, {}, { parallel: fatalParallel });
+  assert.equal(result.status, 'aborted');
+  assert.ok(result.resume);
+  const event = aggregateSignal(logs);
+  assert.equal(event.verdict, 'NEEDS_REVISION');
+  assert.ok(event.findings.some(f => f.id === 'missing-review-2'));
+});
+
+test('a reviewer failure in the first round is repaired by the next round', async () => {
+  let n = 0;
+  const { result } = await run({ 'review-a': () => (++n === 1 ? childStartFailure() : approved()) }, { maxCodeIterations: 2 }, { parallel: fatalParallel });
+  assert.equal(result.status, 'completed');
+});
+
+for (const [name, validate] of [['null', null], ['child-start failure', childStartFailure]]) {
+  for (const earlyValidate of [false, true]) {
+    test(`validate ${name} (earlyValidate=${earlyValidate}) yields completed_with_failures`, async () => {
+      const { result } = await run({ validate }, { earlyValidate }, { parallel: fatalParallel });
+      assert.equal(result.status, 'completed_with_failures');
+      assert.ok(result.failedCriteria.some(f => f.criterion === '(validation)'));
+      assert.equal(result.passed, `0/${acceptance.length}`);
+    });
+  }
+}
