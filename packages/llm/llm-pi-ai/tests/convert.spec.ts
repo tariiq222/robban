@@ -939,6 +939,14 @@ describe('mapStopReason / mapUsage', () => {
   })
 
   it.each([
+    'A server error occurred. Please try again.',
+    'Internal Server Error',
+  ])('maps status-less server wording %j', (errorMessage) => {
+    expect(mapStopReason(assistant({ stopReason: 'error', errorMessage })))
+      .toMatchObject({ kind: 'error', failure: { code: 'SERVER' } })
+  })
+
+  it.each([
     'other side closed',
     'HTTP2 request did not get a response',
     'WebSocket closed unexpectedly',
