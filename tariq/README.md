@@ -76,4 +76,4 @@ DSH_AUTO_RECIPES_DIR="$PWD/tariq/recipes" node --test tariq/packages/auto-subage
 node tariq/scripts/auto-preview.mjs
 ```
 
-The preview uses `.artifacts/auto-home` on port 3181; `--instance <safe-name>` selects a fresh preview directory without touching existing credentials. See [migration status](docs/AUTO-V020-STATUS.md) for acceptance evidence and remaining limits, and [the package README](packages/auto-subagents/README.md) for plugin behavior.
+The preview uses `.artifacts/auto-home` on port 3181; `--instance <safe-name>` selects a fresh preview directory without touching existing credentials. After that first launch has created the profile, `pnpm run deep` starts the same home and port and accepts its saved credentials and installed plugins, which the offline preview script refuses. See [migration status](docs/AUTO-V020-STATUS.md) for acceptance evidence and remaining limits, and [the package README](packages/auto-subagents/README.md) for plugin behavior.
