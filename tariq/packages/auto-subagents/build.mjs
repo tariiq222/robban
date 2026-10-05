@@ -28,5 +28,6 @@ console.log(`built lib/client.js (${out.length} bytes)`);
 
 // Package the canonical agent composition as a declarative 0.2 preset.
 const agentRows = read('../../presets/auto-subagents/agent.cordis.yml');
-const preset = '- insert:\n    - id: preset-auto-subagents\n      name: "@deepseek-ai/dsh-agent-preset"\n      config:\n        id: auto-subagents\n        name: Auto Subagents\n        description: Coordinate work with approved recipes and model tiers.\n        order: 5\n        plugins:\n' + agentRows.split('\n').filter(line => line.length).map(line => '          ' + line).join('\n') + '\n';
+// Blank lines inside YAML block scalars are part of the model instructions.
+const preset = '- insert:\n    - id: preset-auto-subagents\n      name: "@deepseek-ai/dsh-agent-preset"\n      config:\n        id: auto-subagents\n        name: Auto Subagents\n        description: Coordinate work with approved recipes and model tiers.\n        order: 5\n        plugins:\n' + agentRows.trimEnd().split('\n').map(line => line.length ? '          ' + line : '').join('\n') + '\n';
 writeFileSync(path.join(here, 'preset.patch.yml'), preset);

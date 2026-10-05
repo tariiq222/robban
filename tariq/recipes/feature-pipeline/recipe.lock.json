@@ -2,9 +2,9 @@
   "version": 1,
   "name": "feature-pipeline",
   "sha256": {
-    "meta": "41e25b9aa87dbcc6b3426dad4c95b5c19d455416839105b43c28ed00d3f9dc51",
-    "script": "189e9b37aa3023a48594437425b4fab190e3d5e22f2bd09fef549e79901b12e8"
+    "meta": "3709372f4dab7f9d6569e00d3d819a44b41b285fabdeb79fbf16b2140033bf61",
+    "script": "48de66a7c16682115f97b493a56c8f5c7fe6d1432f571155d6f52b07588c692b"
   },
-  "approvedAt": "2026-10-04T08:38:25.917Z",
-  "approvedBy": "stop-resume-fixes-captain-review"
+  "approvedAt": "2026-10-04T21:31:15.464Z",
+  "approvedBy": "user-authorized-recipe-simplification"
 }

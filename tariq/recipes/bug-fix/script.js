@@ -20,7 +20,7 @@ const reviewSchema = object({verdict:{type:'string',enum:['APPROVED','NEEDS_REVI
 const validationSchema = object({results:{type:'array',items:object({criterion:S,status:{type:'string',enum:['passed','failed']},evidence:S})},commands:commandsSchema,summary:S});
 const common = `Repository: ${repo}\nRequest: ${task}\nWork only inside this repository. Preserve unrelated dirty work. No commit, push, merge, deployment, installs, secrets or destructive cleanup. Only execute existing repository-local verification commands after reading their scripts; do not execute untrusted network installers or destructive commands. Never fabricate a command or evidence. End with structured_output. Read-only reviewers/validator may run safe verification but may NOT edit files.`;
 const invoke = async (label,role,prompt,schema,readOnly=false) => {
-  const phaseName = ['setup','analysis','validate'].includes(role) ? role : 'code-loop';
+  const phaseName = ['analysis','validate'].includes(role) ? role : 'code-loop';
   const timeoutMs = role === 'implementer' ? 1200000 : role === 'setup' ? 180000 : 480000;
   const marker = args.routingToken ? '__AUTO_RECIPE_ROLE__'+JSON.stringify({token:args.routingToken,role,label,timeoutMs,readOnly})+'\n' : '';
   try { return await agent(marker+common+'\n\n'+prompt,{label,phase:phaseName,schema}); } catch { return null; }
@@ -44,11 +44,15 @@ const resume = args.resume;
 if (resume && (resume.task!==task || resume.repo!==repo || !resume.setup || !resume.analysis || !Number.isInteger(resume.round) || resume.round<1)) throw new Error('resume does not match task/repo or saved state');
 const answers = {...(resume?.confirmedDecisions||{}),...(args.decisions||{})};
 const answered = d => Object.hasOwn(answers,d.id) && text(answers[d.id]) && d.options.some(o=>o.label===answers[d.id]);
-let setup = resume?.setup ?? args.cachedSetup;
-if (!setup) { phase('setup'); setup = await invoke('setup','setup','READ ONLY: inspect manifests/config with read/glob/grep. Do not execute commands or edit. Identify exact existing test/lint/typecheck commands safe for local verification and conventions. No guessed commands.',setupSchema,true); }
-if (!setup || !uniqueText(setup.verifyCommands)) return stop('aborted','No structured setup or existing verification commands');
+let setup = resume?.setup;
 let analysis = resume?.analysis;
-if (!analysis) { phase('analysis'); analysis = await invoke('analysis','analysis',`READ ONLY: narrow source diagnosis of this defect, direct callers and covering tests. No bash/command execution or edits. Distinguish observed/current from intended behavior with file:line evidence. outcome reproducible means a concrete source-confirmed issue with a feasible regression, NOT a claimed runtime reproduction. If no concrete issue, not_reproducible. Scope.files must enumerate literal concrete files permitted to change (include the intended regression test file even if new); do not list directories, globs or reference-only files. Include scope.tests/symbols/dependents. Exact unique acceptance includes regression and existing behavior. Raise stable kebab-case decision ids for security/permissions, deletion or API/visible behavior changes rather than guessing.\nSetup: ${JSON.stringify(setup)}`,analysisSchema,true); }
+if (!analysis) {
+ phase('analysis');
+ const diagnosis = await invoke('analysis','analysis',`READ ONLY: inspect manifests/config and exact existing local verification command definitions, stack and conventions. Never guess commands. Also provide narrow source diagnosis of this defect, direct callers and covering tests. No bash/command execution or edits. Distinguish observed/current from intended behavior with file:line evidence. outcome reproducible means a concrete source-confirmed issue with a feasible regression, NOT a claimed runtime reproduction. Treat this outcome only as a source candidate until the implementer records qualifying RED evidence; source inspection alone never proves runtime reproduction. If no concrete issue, not_reproducible. Scope.files must enumerate literal concrete files permitted to change (include the intended regression test file even if new); do not list directories, globs or reference-only files. Include scope.tests/symbols/dependents. Exact unique acceptance includes regression and existing behavior. Raise stable kebab-case decision ids for security/permissions, deletion or API/visible behavior changes rather than guessing.`,object({setup:setupSchema,analysis:analysisSchema}),true);
+ setup = diagnosis?.setup;
+ analysis = diagnosis?.analysis;
+}
+if (!setup || !uniqueText(setup.verifyCommands)) return stop('aborted','No structured setup or existing verification commands');
 if (!analysis || !analysis.scope || !uniqueText(analysis.scope.files) || !analysis.scope.files.every(concrete) || !uniqueText(analysis.scope.tests) || !analysis.scope.tests.every(p=>concrete(p)&&analysis.scope.files.includes(p)) || !uniqueText(analysis.acceptance)) return stop('aborted','Invalid or missing narrow diagnosis/scope/acceptance');
 const pending = list => (list||[]).filter(d=>!answered(d));
 const decisionStop = (list,stage) => {

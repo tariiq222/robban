@@ -3873,14 +3873,6 @@ export const EVENT_API: readonly EventApiEntry[] = [
     parameters: [{ name: 'payload', description: '.signal - the turn abort signal. Scope-filtered dispatch (`@deepseek-ai/dsh-scope`): agent-scoped listeners receive only that agent.' }],
   },
   {
-    name: 'agent/request-prepare-error',
-    mode: 'waterfall',
-    signature: '\'agent/request-prepare-error\'(this: Scoped<Agent>, payload: { agent: Agent; turn: number; step: number; provider: string; failure: LlmFailure; signal: AbortSignal }, next: () => Promise<RequestErrorAction>): Promise<RequestErrorAction>',
-    summary: 'Recover an adapter preparation failure before admitting model-visible input.',
-    description: 'Recover an adapter preparation failure before admitting model-visible input. Return `{ kind: \'retry\' }` to rerun `agent/request` and preparation within this step, without repeating assembly, input admission, or completed tools. Recovery policy owns finite attempt limits. Return `undefined` without calling `next()` to make the failure terminal; call `next()` to retain native handling, including unregistered-route middleware compatibility. Cancellation prevents recovery and wins over its returned action.',
-    parameters: [{ name: 'payload', description: '.signal - the turn abort signal. Scope-filtered dispatch (`@deepseek-ai/dsh-scope`): agent-scoped listeners receive only that agent.' }],
-  },
-  {
     name: 'agent/status',
     mode: 'emit',
     signature: '\'agent/status\'(this: Scoped<Agent>, payload: { agent: Agent; status: AgentStatus }): void',

@@ -1017,37 +1017,6 @@ Types: [LlmFailure](llm-streaming.zh.md) · [ResolvedRetryPolicy](llm-streaming.
 
 Source: [`packages/core/agent/src/runtime-types.ts`](../../packages/core/agent/src/runtime-types.ts)
 
-<a id="agentrequest-prepare-error--waterfall"></a>
-
-#### `agent/request-prepare-error` — waterfall
-
-Recover an adapter preparation failure before admitting model-visible input. Return `{ kind: 'retry' }` to rerun `agent/request` and preparation within this step, without repeating assembly, input admission, or completed tools. Recovery policy owns finite attempt limits. Return `undefined` without calling `next()` to make the failure terminal; call `next()` to retain native handling, including unregistered-route middleware compatibility. Cancellation prevents recovery and wins over its returned action.
-
-```ts cordis-catalog
-/**
- * Recover an adapter preparation failure before admitting model-visible input.
- * Return `{ kind: 'retry' }` to rerun `agent/request` and preparation within
- * this step, without repeating assembly, input admission, or completed tools.
- * Recovery policy owns finite attempt limits. Return `undefined` without
- * calling `next()` to make the failure terminal; call `next()` to retain
- * native handling, including unregistered-route middleware compatibility.
- * Cancellation prevents recovery and wins over its returned action.
- * @param payload.agent - the agent whose adapter preparation failed.
- * @param payload.turn - the turn containing the failed preparation.
- * @param payload.step - the step awaiting a prepared request.
- * @param payload.provider - the provider selected by `agent/request`.
- * @param payload.failure - serializable facts from the preparation LlmError.
- * @param payload.signal - the turn abort signal.
- * Scope-filtered dispatch (`@deepseek-ai/dsh-scope`): agent-scoped listeners receive only that agent.
- * @mode waterfall
- */
-'agent/request-prepare-error'(this: Scoped<Agent>, payload: { agent: Agent; turn: number; step: number; provider: string; failure: LlmFailure; signal: AbortSignal }, next: () => Promise<RequestErrorAction>): Promise<RequestErrorAction>
-```
-
-Types: [LlmFailure](llm-streaming.zh.md) · [Scoped](scope.zh.md)
-
-Source: [`packages/core/agent/src/runtime-types.ts`](../../packages/core/agent/src/runtime-types.ts)
-
 <a id="agentstatus--emit"></a>
 
 #### `agent/status` — emit

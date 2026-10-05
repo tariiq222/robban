@@ -2,9 +2,9 @@
   "version": 1,
   "name": "plan-to-packages",
   "sha256": {
-    "meta": "39d3f8b63911c8c53b1e7dfff49f4dfd806f99f4684805c82977bf0204b746cc",
-    "script": "095bfb2fcff520e07736387553ef040fe0300469d6a5adecd33004abd8ba0d5e"
+    "meta": "169357ee7b33b2fb5405d0feb45e81a7af197cbaac1d3877d975dbd411f1efa6",
+    "script": "b126c9718ba4ddfcfdab2729abb7559ea1bf714bb2cc784dcd89b3ee0766f626"
   },
-  "approvedAt": "2026-10-03T17:37:19.627Z",
-  "approvedBy": "independently-reviewed-plan-to-packages"
+  "approvedAt": "2026-10-04T21:29:04.866Z",
+  "approvedBy": "user-authorized-recipe-simplification"
 }

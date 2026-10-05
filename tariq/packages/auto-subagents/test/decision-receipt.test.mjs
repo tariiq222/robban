@@ -4,6 +4,18 @@ const qs=[{id:'q'}];
 const call=(ids,callId='c')=>({type:'tool/call',data:{name:'ask_user_question',callId,arguments:{questions:ids.map(id=>({id}))}}});
 const result=(answers,callId='c',isError=false)=>({type:'tool/result',data:{message:{role:'tool',source:{kind:'tool',callId},toolCallId:callId,isError,content:[{type:'text',text:JSON.stringify({answers})}]}}});
 const ans=(id,custom)=>({id,selected:[],custom});
+test('a response cannot authorize a wanted decision omitted from its matching question call',()=>{
+ const two=[{id:'a'},{id:'b'}];
+ const events=[call(['run:a']),result([ans('run:a','A'),ans('run:b','B')])];
+ assert.throws(()=>verifiedDecisions(events,'run',two),/decision "b"/);
+ assert.deepEqual(verifiedDecisions(events,'run',[{id:'a'}],['b']),{a:'A'});
+});
+test('malformed answer payloads do not prevent a later valid receipt',()=>{
+ const malformed=result([]);
+ malformed.data.message.content[0].text=JSON.stringify({answers:{id:'run:q',custom:'yes'}});
+ assert.throws(()=>verifiedDecisions([call(['run:q']),malformed],'run',qs),/No verified/);
+ assert.deepEqual(verifiedDecisions([call(['run:q']),malformed,result([ans('run:q','yes')])],'run',qs),{q:'yes'});
+});
 test('only successful scoped human question responses authorize resume',()=>{
  assert.deepEqual(verifiedDecisions([call(['run:q']),result([ans('run:q','yes')])],'run',qs),{q:'yes'});
  assert.throws(()=>verifiedDecisions([],'run',qs),/No verified/);

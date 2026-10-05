@@ -135,7 +135,7 @@ describe('agent loop', () => {
       configurable: true,
       value: (...args: Parameters<typeof agent.session.append>): ReturnType<typeof agent.session.append> => {
         if (args[0] === 'assistant/message') throw new Error('settlement rejected')
-        return Reflect.apply(append, agent.session, args) as ReturnType<typeof agent.session.append>
+        return Reflect.apply(append, agent.session, args)
       },
     })
 
@@ -256,7 +256,7 @@ describe('agent loop', () => {
       configurable: true,
       value: (...args: Parameters<typeof agent.session.append>): ReturnType<typeof agent.session.append> => {
         if (args[0] === 'assistant/attempt') throw settlementFailure
-        return Reflect.apply(append, agent.session, args) as ReturnType<typeof agent.session.append>
+        return Reflect.apply(append, agent.session, args)
       },
     })
     const errors: unknown[] = []

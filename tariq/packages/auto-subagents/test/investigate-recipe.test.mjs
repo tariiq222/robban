@@ -18,11 +18,21 @@ async function run(overrides={},args={}){
  return {result:await fn(agent,h=>Promise.all(h.map(f=>Promise.resolve().then(f).catch(()=>null))),()=>{},()=>{},{task:'Investigate bad input',repo:'/repo',routingToken:'token',...args}),calls};
 }
 test('saved metadata uses strong custom roles',async()=>{const m=JSON.parse(await readFile(path.join(dir,'meta.json'),'utf8'));assert.equal(m.name,'investigate');assert.equal(m.roles.investigator.tier,'strong');assert.equal(m.roles['investigation-checker'].tier,'strong');assert.equal(m.phases.length,3);});
+for(const status of ['confirmed','rejected','inconclusive'])test('source verdict never certifies runtime cause '+status,async()=>{
+ const {result,calls}=await run({check:{...check(),resolutions:[resolution('H1',status)]}});
+ assert.equal(result.cause_status,status);
+ assert.equal(result.evidence_kind,'source_only');
+ assert.equal(result.runtime_verified,false);
+ assert.match(result.summary,/Runtime cause remains unverified/);
+ assert.match(calls.find(c=>c.label==='check').prompt,/unobserved runtime inputs, ordering, environment/);
+ assert.match(calls.find(c=>c.label==='check').prompt,/distinguish the competing explanations before repair/);
+ assert.deepEqual(result.commands,[]);
+});
 test('source cause confirmed only with independent evidence and readonly stages',async()=>{const {result,calls}=await run();assert.equal(result.status,'completed');assert.equal(result.cause_status,'confirmed');assert.equal(result.hypotheses[0].status,'confirmed');assert.deepEqual(result.changedPaths,[]);assert.deepEqual(result.commands,[]);assert.ok(result.next_actions.length);for(const c of calls){const marker=JSON.parse(c.prompt.split('\n')[0].slice('__AUTO_RECIPE_ROLE__'.length));assert.equal(marker.readOnly,true);assert.equal(marker.token,'token');assert.ok(marker.timeoutMs>0);assert.equal(marker.role,c.label==='check'?'investigation-checker':'investigator');assert.deepEqual(c.violations,[]);}});
 for(const label of ['scope','gather','check'])for(const bad of [null,{},()=>{throw Error('failed');}])test('missing/malformed/exception '+label+' never confirms',async()=>{const {result}=await run({[label]:bad});assert.equal(result.status,'completed_with_failures');assert.equal(result.cause_status,'inconclusive');assert.ok(result.hypotheses.every(h=>h.status!=='confirmed'));});
 for(const resolutions of [[],[resolution(),resolution()],[resolution('unknown')],[{...resolution(),evidence:''}],[{...resolution(),confidence:2}]])test('exact checker hypothesis accounting '+JSON.stringify(resolutions),async()=>{const {result}=await run({check:{...check(),resolutions}});assert.equal(result.status,'completed_with_failures');assert.equal(result.hypotheses[0].status,'inconclusive');});
 for(const status of ['confirmed','rejected'])test('uncovered resolution cannot discard or confirm '+status,async()=>{const {result}=await run({check:{...check(),coverage:[],resolutions:[resolution('H1',status)]}});assert.equal(result.status,'completed_with_failures');assert.equal(result.hypotheses[0].status,'inconclusive');});
-test('rejection remains explicit with provenance',async()=>{const {result}=await run({check:{...check(),resolutions:[resolution('H1','rejected')]}});assert.equal(result.cause_status,'rejected');assert.equal(result.status,'completed');assert.equal(result.hypotheses[0].sources.length,1);});
+test('rejection remains explicit with source evidence',async()=>{const {result}=await run({check:{...check(),resolutions:[resolution('H1','rejected')]}});assert.equal(result.cause_status,'rejected');assert.equal(result.status,'completed');assert.equal(result.hypotheses[0].sources.length,1);});
 test('unknown cause remains inconclusive',async()=>{const {result}=await run({check:{...check(),resolutions:[resolution('H1','inconclusive')]}});assert.equal(result.status,'completed_with_failures');assert.equal(result.cause_status,'inconclusive');});
 test('no hypothesis is not proof of rejected cause',async()=>{const {result}=await run({gather:{...gather(),hypotheses:[]},check:{...check(),resolutions:[]}});assert.equal(result.cause_status,'inconclusive');assert.equal(result.status,'completed_with_failures');});
 test('distinct hypotheses with same local id survive with stable global ids',async()=>{const {result}=await run({gather:{...gather(),hypotheses:[hypothesis(),{...hypothesis(),cause:'Different cause'}]},check:{...check(),resolutions:[resolution('H1'),resolution('H2','rejected')]}});assert.equal(result.hypotheses.length,2);assert.deepEqual(result.hypotheses.map(h=>h.id),['H1','H2']);});

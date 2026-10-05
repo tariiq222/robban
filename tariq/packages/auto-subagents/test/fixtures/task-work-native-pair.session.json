@@ -1,0 +1,1536 @@
+{
+  "first": {
+    "header": {
+      "version": 4,
+      "id": "task-work-first",
+      "createdAt": 1791154362525,
+      "cwd": "/tmp/task-work-native-9wmQlB/repository",
+      "isSeeded": false
+    },
+    "events": [
+      {
+        "type": "agent/inbox/spliced",
+        "seq": 0,
+        "time": 1791154362534,
+        "data": {
+          "target": "next-turn",
+          "start": 0,
+          "inserted": [
+            {
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Create the addition task, define its goal and dependent work, then block unverified repair instead of claiming completion."
+                }
+              ],
+              "source": {
+                "kind": "user"
+              },
+              "role": "user",
+              "id": "8fa745fc-287a-469c-8b17-ebe8d6acaf8f"
+            }
+          ]
+        }
+      },
+      {
+        "type": "turn/start",
+        "seq": 1,
+        "time": 1791154362538,
+        "data": {
+          "turn": 1
+        }
+      },
+      {
+        "type": "agent/inbox/spliced",
+        "seq": 2,
+        "time": 1791154362538,
+        "data": {
+          "target": "next-turn",
+          "start": 0,
+          "removedCount": 1,
+          "inserted": []
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 3,
+        "time": 1791154362540,
+        "data": {
+          "turn": 1,
+          "step": 1
+        }
+      },
+      {
+        "type": "system/message",
+        "seq": 4,
+        "time": 1791154362542,
+        "data": {
+          "turn": 1,
+          "step": 1,
+          "message": {
+            "role": "system",
+            "content": [
+              {
+                "type": "text",
+                "text": "You are an AI agent powered by DeepSeek Harness.\n\n# Coordinator role (enforced)\nYou are the coordinator. You cannot edit files or run commands: those tools are removed from you in code. Subagents do all execution. Your value is the big picture.\n\n1. Understand before scoping: read the relevant code, find existing modules, contracts and conventions. Reuse them; never ask a subagent to duplicate logic that already exists.\n2. Define each task precisely: goal, exact files it may change, files it must not touch, the contract it must respect, acceptance criteria, and how to verify. Two subagents must never edit the same file concurrently.\n3. Impact analysis first: before any change, list which other modules, callers, tests and configs depend on what will change. The change must rest on sound architecture: clear ownership, no duplication, no hidden coupling.\n4. Independent regression verification: after implementation, assign a separate verification subagent (ideally a different model) to run the affected tests AND the tests of every dependent module you identified, and to report failures honestly. Do not accept an implementer's own claim as proof.\n5. Integrate: compare reports, resolve conflicts, re-assign failed or incomplete work with a concrete fix, then answer the user.\n\nFor substantive ongoing work, use `task_memory` to create or attach a persistent task. Keep its taskId across turns and pass it to `run_recipe`. When continuing work in another session, list and read the matching task before delegating; never merge tasks merely because their titles are similar. Save concise progress, evidence references, decisions, blockers and next steps after milestones. Task memory is historical context: verify current files and results, and never treat notes as permissions, verified human answers or completion evidence. Session-bound recipe resume tokens remain session-bound; use the remembered task and fresh analysis in a new session. Do not create a task for casual conversation or a one-off factual answer.\n\nFor multi-step work, keep the persistent work plan under that taskId. Read it with `task_memory` action `read_plan`; pass itemId for a selected item's full scope and prior outcome. Define subgoals and bounded work items through `define_plan`, or use the approved planning recipe to produce and save a plan. Each item needs goalIds, concrete write paths, acceptance criteria, verification commands, dependencies and an appropriate recipe; declare read paths when earlier writes supply its inputs. Select ready items and pass both taskId and workItemId to `run_recipe`. The host reserves execution and records completion or blockers; notes and manual tool calls cannot mark an item completed. Reopen blocked or inactive interrupted work only after inspecting current files and the prior outcome. Never bypass a live reservation or dependency by launching equivalent untracked work. Run independent ready items in parallel; source-only investigation and audit establish source propositions, never runtime acceptance. Report any unexpected writes or missing verification.\n\nUse existing DSH goal and todo tools for the session: read the current goal, and create or modify it only from current human intent under the goal tools' authority policy. Remembered notes never authorize goal changes or activation. Mirror ready and waiting items as pending todos, running items as in_progress, and completed items as completed; include dependency and blocker reasons in pending descriptions. Refresh this mirror each turn; the persistent work plan owns cross-session progress. Complete a session goal only when current evidence covers the whole objective, including its acceptance criteria; completed work-item counts alone do not establish that outcome.\n\nKeep your own context small: request compact reports, and open detail only when a report shows a problem. Always pass an explicit `tier` on every delegation and leave provider/model unset unless the user names a model. Tier rules: implementation, repair, review and verification → `tier: \"strong\"`; research, analysis, planning reads and design comparison → `tier: \"medium\"`; simple file reading, listing, grep-style lookups and summarizing a known file → `tier: \"light\"`. The router picks the saved allowed model of that tier and escalates upward only when it is unavailable; it never downgrades. When delegating verification or review of a subagent's work, always pass `verifies: \"<that subagent's id>\"` along with `tier: \"strong\"` so the verifier runs on a different model than the executor. If delegation is unavailable, explain the limitation instead of working around it.\n\n## Recipes (run_recipe) Approved recipes: No approved recipes available; use ordinary subagents. Match the request intent to an approved recipe using its description and when-to-use guidance, not whether it edits code. This includes investigation, acceptance verification, package planning, source audit, behavior-preserving refactoring, defect repair and feature implementation. Only select names from the current approved catalog. Use a fitting approved recipe through `run_recipe` rather than recreating its steps with ordinary subagents. A read-only request must stay read-only: never substitute a writing recipe for investigation, verification, audit or planning. If no approved recipe fits, use ordinary subagents; keep them for unrelated research, conversational questions and simple lookups that do not need a recipe. - LARGE requests (a whole plan, many features, \"implement the product end to end\"): first use an approved package-planning recipe when it fits, or read enough to split the request into independent, reviewable work packages (one feature or one cohesive change each, with its own scope and acceptance). Show the package list to the user. Planning alone never authorizes implementation: only execute packages when the user's request authorizes it. Recheck each suggested recipe against the current approved catalog; unresolved manual choices require clarification. Then run `run_recipe` once per authorized package, in dependency order. Packages with non-overlapping file scopes and no dependency may run in parallel (separate run_recipe calls in the same round). - Pass the user's request as `task` (verbatim intent, in English if needed for precision) and the absolute `repo` path matching the session workspace. If the repository differs, ask the user to open a session in that repository; do not attempt to bypass the workspace check. Never pass models: the tool routes each step by tier from saved settings. Canonical reviewers exclude the implementer's route when an alternative is available; do not assume a custom checker necessarily uses a different model. - `needs_decision`: ask the user ALL returned questions in ONE ask_user_question call. Set each question id EXACTLY to `<cardRunId>:<decision.id>` (the result provides cardRunId). This binds the visual card's answer button to the live Host question. Never invent or default a missing answer. For each, show the current state, every option with its consequence, and mark the recommendation. To let the user override a `decidedForYou` item, add it to the SAME batch as an optional question with id EXACTLY `<cardRunId>:<decidedForYou.id>` whose FIRST option is the explicit keep option: its `label` must be exactly `__keep__` (ask_user_question returns option labels as answers; put the human-readable \"keep the current decision: <full decision>\" in that option's `description`), plus alternatives whose labels are written in full; never offer or pass truncated/compacted decision text (e.g. ending in \"…\") as an answer value. `__keep__` keeps the decision made for the user and is never a valid answer to a required question; never add ids that are neither a returned question nor a decidedForYou id, or the whole batch is rejected. Then call run_recipe again with the same recipe, task and repo and the returned `resumeId`. Do not pass `decisions`: run_recipe ignores it and reads answers and overrides only from that verified ask_user_question result. If a resumed run fails with an error or is cancelled, the same `resumeId` stays valid: retry it without asking again. - `ended`: explain why nothing was changed; offer to proceed anyway only if the user wants. - Failure, timeout or user stop: if the error names a resumeId, tell the user partial work is saved (changes remain uncommitted) and offer to continue with it; never silently restart from scratch and never claim the run succeeded. `aborted` with a resumeId: report the findings and ask before continuing. - `completed`: report changed files, validation, the review trail (any rejection and repair), confirmed decisions and assumptions. `completed_with_failures` or `aborted`: report exactly what failed; do not claim success. - You may still delegate a follow-up subagent (e.g. an extra verification) after a recipe run."
+              }
+            ],
+            "source": {
+              "kind": "system-prompt"
+            },
+            "id": "708c54d6-c36f-49e5-a749-28e2845b06ea"
+          }
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "user/message",
+        "seq": 5,
+        "time": 1791154362542,
+        "data": {
+          "content": [
+            {
+              "type": "text",
+              "text": "Create the addition task, define its goal and dependent work, then block unverified repair instead of claiming completion."
+            }
+          ],
+          "source": {
+            "kind": "user"
+          },
+          "role": "user",
+          "id": "8fa745fc-287a-469c-8b17-ebe8d6acaf8f"
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "request/header",
+        "seq": 6,
+        "time": 1791154362544,
+        "data": {
+          "header": {
+            "config": {
+              "provider": "fixture",
+              "model": "keyless"
+            },
+            "tools": [
+              {
+                "name": "task_memory",
+                "description": "Reported task context only: not verified human permission, execution evidence or proof of completion. A new task needs a new id; continue an existing task only with its explicit id. No title matching or workspace-wide automatic joining. Create/list/read/append durable notes across sessions in this workspace. Define/read a work plan, block or reopen its items. Only the top-level coordinator may mutate notes or plans. Plan revisions are separate from note revisions: use read_plan before changing a plan and read before appending notes. Only run_recipe claims and settles work; no model action can start or complete an item. Append requires the last observed revision; a stale revision must be reread rather than merged as authority. Read returns newest-first pages, not the whole history.",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "action": {
+                      "type": "string",
+                      "enum": [
+                        "create",
+                        "list",
+                        "read",
+                        "append",
+                        "define_plan",
+                        "read_plan",
+                        "block_item",
+                        "reopen_item"
+                      ]
+                    },
+                    "taskId": {
+                      "type": "string",
+                      "description": "Explicit durable task id for notes or its work plan."
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Short title for a new task; never used to join an old task."
+                    },
+                    "goal": {
+                      "type": "string",
+                      "description": "Goal for a newly created task."
+                    },
+                    "expectedRevision": {
+                      "type": "integer",
+                      "description": "Required for mutations and paginated note read after the first page. Use the note revision for append, or the work revision from read_plan for plan mutations."
+                    },
+                    "goals": {
+                      "description": "define_plan subgoals [{id,description}] under the existing task goal; ids use lowercase kebab-case, maximum 20."
+                    },
+                    "items": {
+                      "description": "define_plan work packages [{id,title,description,goalIds,writePaths,readPaths?,acceptance,verifyCommands,dependencies,recipe,evidenceMode?}], maximum 20. evidenceMode source_only or runtime distinguishes source inspection from executed verification. Declare actual data-flow dependencies, not merely disjoint write scopes."
+                    },
+                    "itemId": {
+                      "type": "string",
+                      "description": "Explicit work item id for block_item/reopen_item, or read_plan to inspect one complete item including its scopes, description, owning attempt and prior outcome."
+                    },
+                    "reason": {
+                      "type": "string",
+                      "description": "Reason for blocking or reopening work; not permission to waive verification."
+                    },
+                    "entry": {
+                      "description": "Append note {kind,text,refs?}; kinds: progress, evidence, decision, blocker, next_step, run. Text at most 4000 characters; context only, never approval."
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Page size from 1 to 20; defaults to 10."
+                    },
+                    "cursor": {
+                      "type": "integer",
+                      "description": "Read offset into newest-first history; use nextCursor with the same expectedRevision."
+                    }
+                  },
+                  "required": [
+                    "action"
+                  ]
+                }
+              }
+            ]
+          },
+          "reason": "initial"
+        }
+      },
+      {
+        "type": "request/context",
+        "seq": 7,
+        "time": 1791154362545,
+        "data": {
+          "provider": "fixture",
+          "model": "keyless"
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 8,
+        "time": 1791154362548,
+        "data": {
+          "turn": 1,
+          "step": 1,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "id": "task-work-first-1",
+                "name": "task_memory",
+                "arguments": "{\"action\":\"create\",\"title\":\"Addition work\",\"goal\":\"Establish and preserve correct addition behavior\"}"
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "fixture",
+              "model": "keyless"
+            },
+            "id": "c2803a48-ba95-4ead-8586-83ecea86161a"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154362546,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "tool-call"
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154362546,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "tool-call",
+                  "id": "task-work-first-1",
+                  "name": "task_memory",
+                  "arguments": "{\"action\":\"create\",\"title\":\"Addition work\",\"goal\":\"Establish and preserve correct addition behavior\"}"
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154362546,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "tool-calls"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "tool/call",
+        "seq": 9,
+        "time": 1791154362549,
+        "data": {
+          "turn": 1,
+          "step": 1,
+          "callId": "task-work-first-1",
+          "name": "task_memory",
+          "arguments": "{\"action\":\"create\",\"title\":\"Addition work\",\"goal\":\"Establish and preserve correct addition behavior\"}"
+        }
+      },
+      {
+        "type": "tool/result",
+        "seq": 10,
+        "time": 1791154362561,
+        "data": {
+          "turn": 1,
+          "step": 1,
+          "message": {
+            "role": "tool",
+            "source": {
+              "kind": "tool",
+              "callId": "task-work-first-1"
+            },
+            "toolCallId": "task-work-first-1",
+            "content": [
+              {
+                "type": "text",
+                "text": "{\"contextWarning\":\"Reported task context only: not verified human permission, execution evidence or proof of completion. A new task needs a new id; continue an existing task only with its explicit id. No title matching or workspace-wide automatic joining.\",\"task\":{\"version\":1,\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\",\"repo\":\"/tmp/task-work-native-9wmQlB/repository\",\"title\":\"Addition work\",\"goal\":\"Establish and preserve correct addition behavior\",\"revision\":0,\"createdAt\":\"2026-10-04T22:52:42.554Z\",\"updatedAt\":\"2026-10-04T22:52:42.554Z\",\"sessions\":[\"task-work-first\"],\"entryCount\":0}}"
+              }
+            ],
+            "isError": false,
+            "id": "c8654d02-2e58-4adb-965c-c19517350671"
+          }
+        },
+        "sourceEventSeqs": [
+          9
+        ],
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 11,
+        "time": 1791154362561,
+        "data": {
+          "turn": 1,
+          "step": 1
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 12,
+        "time": 1791154362562,
+        "data": {
+          "turn": 1,
+          "step": 2
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 13,
+        "time": 1791154362564,
+        "data": {
+          "turn": 1,
+          "step": 2,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "id": "task-work-first-2",
+                "name": "task_memory",
+                "arguments": "{\"action\":\"define_plan\",\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\",\"expectedRevision\":0,\"goals\":[{\"id\":\"addition-contract\",\"description\":\"Establish and preserve correct addition behavior\"}],\"items\":[{\"id\":\"repair-addition\",\"title\":\"Repair source candidate\",\"description\":\"Diagnose then obtain regression before repair\",\"goalIds\":[\"addition-contract\"],\"writePaths\":[\"src.js\",\"test.js\"],\"readPaths\":[\"package.json\"],\"acceptance\":[\"Addition regression passes without weakening existing assertions\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[],\"recipe\":\"bug-fix\"},{\"id\":\"verify-addition\",\"title\":\"Independent addition check\",\"description\":\"Check repaired behavior independently\",\"goalIds\":[\"addition-contract\"],\"writePaths\":[],\"readPaths\":[\"src.js\",\"test.js\"],\"acceptance\":[\"Current addition behavior satisfies explicit acceptance\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[\"repair-addition\"],\"recipe\":\"qa-verify\"}]}"
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "fixture",
+              "model": "keyless"
+            },
+            "id": "354f4378-ab68-4d4d-9579-bb1a7e9c92fa"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154362563,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "tool-call"
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154362563,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "tool-call",
+                  "id": "task-work-first-2",
+                  "name": "task_memory",
+                  "arguments": "{\"action\":\"define_plan\",\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\",\"expectedRevision\":0,\"goals\":[{\"id\":\"addition-contract\",\"description\":\"Establish and preserve correct addition behavior\"}],\"items\":[{\"id\":\"repair-addition\",\"title\":\"Repair source candidate\",\"description\":\"Diagnose then obtain regression before repair\",\"goalIds\":[\"addition-contract\"],\"writePaths\":[\"src.js\",\"test.js\"],\"readPaths\":[\"package.json\"],\"acceptance\":[\"Addition regression passes without weakening existing assertions\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[],\"recipe\":\"bug-fix\"},{\"id\":\"verify-addition\",\"title\":\"Independent addition check\",\"description\":\"Check repaired behavior independently\",\"goalIds\":[\"addition-contract\"],\"writePaths\":[],\"readPaths\":[\"src.js\",\"test.js\"],\"acceptance\":[\"Current addition behavior satisfies explicit acceptance\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[\"repair-addition\"],\"recipe\":\"qa-verify\"}]}"
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154362563,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "tool-calls"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "tool/call",
+        "seq": 14,
+        "time": 1791154362564,
+        "data": {
+          "turn": 1,
+          "step": 2,
+          "callId": "task-work-first-2",
+          "name": "task_memory",
+          "arguments": "{\"action\":\"define_plan\",\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\",\"expectedRevision\":0,\"goals\":[{\"id\":\"addition-contract\",\"description\":\"Establish and preserve correct addition behavior\"}],\"items\":[{\"id\":\"repair-addition\",\"title\":\"Repair source candidate\",\"description\":\"Diagnose then obtain regression before repair\",\"goalIds\":[\"addition-contract\"],\"writePaths\":[\"src.js\",\"test.js\"],\"readPaths\":[\"package.json\"],\"acceptance\":[\"Addition regression passes without weakening existing assertions\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[],\"recipe\":\"bug-fix\"},{\"id\":\"verify-addition\",\"title\":\"Independent addition check\",\"description\":\"Check repaired behavior independently\",\"goalIds\":[\"addition-contract\"],\"writePaths\":[],\"readPaths\":[\"src.js\",\"test.js\"],\"acceptance\":[\"Current addition behavior satisfies explicit acceptance\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[\"repair-addition\"],\"recipe\":\"qa-verify\"}]}"
+        }
+      },
+      {
+        "type": "tool/result",
+        "seq": 15,
+        "time": 1791154362595,
+        "data": {
+          "turn": 1,
+          "step": 2,
+          "message": {
+            "role": "tool",
+            "source": {
+              "kind": "tool",
+              "callId": "task-work-first-2"
+            },
+            "toolCallId": "task-work-first-2",
+            "content": [
+              {
+                "type": "text",
+                "text": "{\"contextWarning\":\"Reported task context only: not verified human permission, execution evidence or proof of completion. A new task needs a new id; continue an existing task only with its explicit id. No title matching or workspace-wide automatic joining.\",\"plan\":{\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\",\"rootGoal\":\"Establish and preserve correct addition behavior\",\"revision\":1,\"goals\":[{\"id\":\"addition-contract\",\"description\":\"Establish and preserve correct addition behavior\"}],\"items\":[{\"id\":\"repair-addition\",\"title\":\"Repair source candidate\",\"goalIds\":[\"addition-contract\"],\"acceptance\":[\"Addition regression passes without weakening existing assertions\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[],\"recipe\":\"bug-fix\",\"status\":\"pending\",\"readiness\":\"ready\",\"evidenceMode\":\"runtime\"},{\"id\":\"verify-addition\",\"title\":\"Independent addition check\",\"goalIds\":[\"addition-contract\"],\"acceptance\":[\"Current addition behavior satisfies explicit acceptance\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[\"repair-addition\"],\"recipe\":\"qa-verify\",\"status\":\"pending\",\"readiness\":\"waiting\",\"evidenceMode\":\"runtime\"}],\"ready\":[\"repair-addition\"],\"waiting\":[\"verify-addition\"],\"goalProgress\":[{\"id\":\"addition-contract\",\"description\":\"Establish and preserve correct addition behavior\",\"totalCount\":2,\"completedCount\":0}],\"counts\":{\"pending\":2,\"in_progress\":0,\"blocked\":0,\"completed\":0},\"totalItems\":2},\"observedWorkRevision\":1,\"note\":\"Plan states come from host-owned recipe attempts. Notes cannot mark work complete or waive verification; only run_recipe claims and settles items. Use read_plan with itemId for full scopes, description and prior outcome before choosing or reopening work.\"}"
+              }
+            ],
+            "isError": false,
+            "id": "e7891678-6a50-439e-8b2a-6185df5ad33d"
+          }
+        },
+        "sourceEventSeqs": [
+          14
+        ],
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 16,
+        "time": 1791154362596,
+        "data": {
+          "turn": 1,
+          "step": 2
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 17,
+        "time": 1791154362600,
+        "data": {
+          "turn": 1,
+          "step": 3
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 18,
+        "time": 1791154362601,
+        "data": {
+          "turn": 1,
+          "step": 3,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "id": "task-work-first-3",
+                "name": "task_memory",
+                "arguments": "{\"action\":\"read_plan\",\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\"}"
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "fixture",
+              "model": "keyless"
+            },
+            "id": "959466c9-5104-4c08-b10e-ac6593490e68"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154362601,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "tool-call"
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154362601,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "tool-call",
+                  "id": "task-work-first-3",
+                  "name": "task_memory",
+                  "arguments": "{\"action\":\"read_plan\",\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\"}"
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154362601,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "tool-calls"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "tool/call",
+        "seq": 19,
+        "time": 1791154362601,
+        "data": {
+          "turn": 1,
+          "step": 3,
+          "callId": "task-work-first-3",
+          "name": "task_memory",
+          "arguments": "{\"action\":\"read_plan\",\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\"}"
+        }
+      },
+      {
+        "type": "tool/result",
+        "seq": 20,
+        "time": 1791154362608,
+        "data": {
+          "turn": 1,
+          "step": 3,
+          "message": {
+            "role": "tool",
+            "source": {
+              "kind": "tool",
+              "callId": "task-work-first-3"
+            },
+            "toolCallId": "task-work-first-3",
+            "content": [
+              {
+                "type": "text",
+                "text": "{\"contextWarning\":\"Reported task context only: not verified human permission, execution evidence or proof of completion. A new task needs a new id; continue an existing task only with its explicit id. No title matching or workspace-wide automatic joining.\",\"plan\":{\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\",\"rootGoal\":\"Establish and preserve correct addition behavior\",\"revision\":1,\"goals\":[{\"id\":\"addition-contract\",\"description\":\"Establish and preserve correct addition behavior\"}],\"items\":[{\"id\":\"repair-addition\",\"title\":\"Repair source candidate\",\"goalIds\":[\"addition-contract\"],\"acceptance\":[\"Addition regression passes without weakening existing assertions\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[],\"recipe\":\"bug-fix\",\"status\":\"pending\",\"readiness\":\"ready\",\"evidenceMode\":\"runtime\"},{\"id\":\"verify-addition\",\"title\":\"Independent addition check\",\"goalIds\":[\"addition-contract\"],\"acceptance\":[\"Current addition behavior satisfies explicit acceptance\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[\"repair-addition\"],\"recipe\":\"qa-verify\",\"status\":\"pending\",\"readiness\":\"waiting\",\"evidenceMode\":\"runtime\"}],\"ready\":[\"repair-addition\"],\"waiting\":[\"verify-addition\"],\"goalProgress\":[{\"id\":\"addition-contract\",\"description\":\"Establish and preserve correct addition behavior\",\"totalCount\":2,\"completedCount\":0}],\"counts\":{\"pending\":2,\"in_progress\":0,\"blocked\":0,\"completed\":0},\"totalItems\":2},\"observedWorkRevision\":1,\"note\":\"Plan states come from host-owned recipe attempts. Notes cannot mark work complete or waive verification; only run_recipe claims and settles items. Use read_plan with itemId for full scopes, description and prior outcome before choosing or reopening work.\"}"
+              }
+            ],
+            "isError": false,
+            "id": "892bea59-dc51-4b29-b175-7b69371ca572"
+          }
+        },
+        "sourceEventSeqs": [
+          19
+        ],
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 21,
+        "time": 1791154362608,
+        "data": {
+          "turn": 1,
+          "step": 3
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 22,
+        "time": 1791154362609,
+        "data": {
+          "turn": 1,
+          "step": 4
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 23,
+        "time": 1791154362610,
+        "data": {
+          "turn": 1,
+          "step": 4,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "id": "task-work-first-4",
+                "name": "task_memory",
+                "arguments": "{\"action\":\"block_item\",\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\",\"expectedRevision\":1,\"itemId\":\"repair-addition\",\"reason\":\"Regression not executed; no completion claim authorized\"}"
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "fixture",
+              "model": "keyless"
+            },
+            "id": "6510529b-9da4-4fa0-a8eb-e814a54f1124"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154362609,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "tool-call"
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154362609,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "tool-call",
+                  "id": "task-work-first-4",
+                  "name": "task_memory",
+                  "arguments": "{\"action\":\"block_item\",\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\",\"expectedRevision\":1,\"itemId\":\"repair-addition\",\"reason\":\"Regression not executed; no completion claim authorized\"}"
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154362610,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "tool-calls"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "tool/call",
+        "seq": 24,
+        "time": 1791154362610,
+        "data": {
+          "turn": 1,
+          "step": 4,
+          "callId": "task-work-first-4",
+          "name": "task_memory",
+          "arguments": "{\"action\":\"block_item\",\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\",\"expectedRevision\":1,\"itemId\":\"repair-addition\",\"reason\":\"Regression not executed; no completion claim authorized\"}"
+        }
+      },
+      {
+        "type": "tool/result",
+        "seq": 25,
+        "time": 1791154362623,
+        "data": {
+          "turn": 1,
+          "step": 4,
+          "message": {
+            "role": "tool",
+            "source": {
+              "kind": "tool",
+              "callId": "task-work-first-4"
+            },
+            "toolCallId": "task-work-first-4",
+            "content": [
+              {
+                "type": "text",
+                "text": "{\"contextWarning\":\"Reported task context only: not verified human permission, execution evidence or proof of completion. A new task needs a new id; continue an existing task only with its explicit id. No title matching or workspace-wide automatic joining.\",\"plan\":{\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\",\"rootGoal\":\"Establish and preserve correct addition behavior\",\"revision\":2,\"goals\":[{\"id\":\"addition-contract\",\"description\":\"Establish and preserve correct addition behavior\"}],\"items\":[{\"id\":\"repair-addition\",\"title\":\"Repair source candidate\",\"goalIds\":[\"addition-contract\"],\"acceptance\":[\"Addition regression passes without weakening existing assertions\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[],\"recipe\":\"bug-fix\",\"status\":\"blocked\",\"readiness\":\"blocked\",\"blocker\":\"Regression not executed; no completion claim authorized\",\"evidenceMode\":\"runtime\"},{\"id\":\"verify-addition\",\"title\":\"Independent addition check\",\"goalIds\":[\"addition-contract\"],\"acceptance\":[\"Current addition behavior satisfies explicit acceptance\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[\"repair-addition\"],\"recipe\":\"qa-verify\",\"status\":\"pending\",\"readiness\":\"waiting\",\"evidenceMode\":\"runtime\"}],\"ready\":[],\"waiting\":[\"verify-addition\"],\"goalProgress\":[{\"id\":\"addition-contract\",\"description\":\"Establish and preserve correct addition behavior\",\"totalCount\":2,\"completedCount\":0}],\"counts\":{\"pending\":1,\"in_progress\":0,\"blocked\":1,\"completed\":0},\"totalItems\":2},\"observedWorkRevision\":2,\"note\":\"Plan states come from host-owned recipe attempts. Notes cannot mark work complete or waive verification; only run_recipe claims and settles items. Use read_plan with itemId for full scopes, description and prior outcome before choosing or reopening work.\"}"
+              }
+            ],
+            "isError": false,
+            "id": "e544d5ad-252f-4295-9c40-9e01679b542e"
+          }
+        },
+        "sourceEventSeqs": [
+          24
+        ],
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 26,
+        "time": 1791154362623,
+        "data": {
+          "turn": 1,
+          "step": 4
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 27,
+        "time": 1791154362624,
+        "data": {
+          "turn": 1,
+          "step": 5
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 28,
+        "time": 1791154362625,
+        "data": {
+          "turn": 1,
+          "step": 5,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "id": "task-work-first-5",
+                "name": "task_memory",
+                "arguments": "{\"action\":\"read_plan\",\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\"}"
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "fixture",
+              "model": "keyless"
+            },
+            "id": "4eefcbe7-e560-457f-8ad5-351f96634b98"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154362624,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "tool-call"
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154362624,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "tool-call",
+                  "id": "task-work-first-5",
+                  "name": "task_memory",
+                  "arguments": "{\"action\":\"read_plan\",\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\"}"
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154362625,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "tool-calls"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "tool/call",
+        "seq": 29,
+        "time": 1791154362626,
+        "data": {
+          "turn": 1,
+          "step": 5,
+          "callId": "task-work-first-5",
+          "name": "task_memory",
+          "arguments": "{\"action\":\"read_plan\",\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\"}"
+        }
+      },
+      {
+        "type": "tool/result",
+        "seq": 30,
+        "time": 1791154362632,
+        "data": {
+          "turn": 1,
+          "step": 5,
+          "message": {
+            "role": "tool",
+            "source": {
+              "kind": "tool",
+              "callId": "task-work-first-5"
+            },
+            "toolCallId": "task-work-first-5",
+            "content": [
+              {
+                "type": "text",
+                "text": "{\"contextWarning\":\"Reported task context only: not verified human permission, execution evidence or proof of completion. A new task needs a new id; continue an existing task only with its explicit id. No title matching or workspace-wide automatic joining.\",\"plan\":{\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\",\"rootGoal\":\"Establish and preserve correct addition behavior\",\"revision\":2,\"goals\":[{\"id\":\"addition-contract\",\"description\":\"Establish and preserve correct addition behavior\"}],\"items\":[{\"id\":\"repair-addition\",\"title\":\"Repair source candidate\",\"goalIds\":[\"addition-contract\"],\"acceptance\":[\"Addition regression passes without weakening existing assertions\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[],\"recipe\":\"bug-fix\",\"status\":\"blocked\",\"readiness\":\"blocked\",\"blocker\":\"Regression not executed; no completion claim authorized\",\"evidenceMode\":\"runtime\"},{\"id\":\"verify-addition\",\"title\":\"Independent addition check\",\"goalIds\":[\"addition-contract\"],\"acceptance\":[\"Current addition behavior satisfies explicit acceptance\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[\"repair-addition\"],\"recipe\":\"qa-verify\",\"status\":\"pending\",\"readiness\":\"waiting\",\"evidenceMode\":\"runtime\"}],\"ready\":[],\"waiting\":[\"verify-addition\"],\"goalProgress\":[{\"id\":\"addition-contract\",\"description\":\"Establish and preserve correct addition behavior\",\"totalCount\":2,\"completedCount\":0}],\"counts\":{\"pending\":1,\"in_progress\":0,\"blocked\":1,\"completed\":0},\"totalItems\":2},\"observedWorkRevision\":2,\"note\":\"Plan states come from host-owned recipe attempts. Notes cannot mark work complete or waive verification; only run_recipe claims and settles items. Use read_plan with itemId for full scopes, description and prior outcome before choosing or reopening work.\"}"
+              }
+            ],
+            "isError": false,
+            "id": "46901a5d-f388-4db2-bd68-85c9877330a9"
+          }
+        },
+        "sourceEventSeqs": [
+          29
+        ],
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 31,
+        "time": 1791154362632,
+        "data": {
+          "turn": 1,
+          "step": 5
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 32,
+        "time": 1791154362633,
+        "data": {
+          "turn": 1,
+          "step": 6
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 33,
+        "time": 1791154362634,
+        "data": {
+          "turn": 1,
+          "step": 6,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "The durable work plan remains pending; no recipe ran and no verification or human approval is inferred."
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "fixture",
+              "model": "keyless"
+            },
+            "id": "b6ab6325-b908-43b5-ba38-8fec61e9a3ed"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154362634,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "text"
+              }
+            },
+            {
+              "type": "text-chunks",
+              "time0": 1791154362634,
+              "index": 0,
+              "dt": [],
+              "texts": [
+                "The durable work plan remains pending; no recipe ran and no verification or human approval is inferred."
+              ]
+            },
+            {
+              "type": "chunk",
+              "time": 1791154362634,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "text",
+                  "text": "The durable work plan remains pending; no recipe ran and no verification or human approval is inferred."
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154362634,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "stop"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 34,
+        "time": 1791154362635,
+        "data": {
+          "turn": 1,
+          "step": 6
+        }
+      },
+      {
+        "type": "turn/end",
+        "seq": 35,
+        "time": 1791154362635,
+        "data": {
+          "turn": 1,
+          "reason": {
+            "kind": "completed"
+          }
+        }
+      }
+    ]
+  },
+  "second": {
+    "header": {
+      "version": 4,
+      "id": "task-work-second",
+      "createdAt": 1791154362652,
+      "cwd": "/tmp/task-work-native-9wmQlB/repository",
+      "isSeeded": false
+    },
+    "events": [
+      {
+        "type": "agent/inbox/spliced",
+        "seq": 0,
+        "time": 1791154362656,
+        "data": {
+          "target": "next-turn",
+          "start": 0,
+          "inserted": [
+            {
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Resume the explicitly selected task: inspect its graph, reopen blocked work with a reason, and retain every goal and dependency."
+                }
+              ],
+              "source": {
+                "kind": "user"
+              },
+              "role": "user",
+              "id": "756e4ff3-9822-4a45-9474-ef9667291927"
+            }
+          ]
+        }
+      },
+      {
+        "type": "turn/start",
+        "seq": 1,
+        "time": 1791154362656,
+        "data": {
+          "turn": 1
+        }
+      },
+      {
+        "type": "agent/inbox/spliced",
+        "seq": 2,
+        "time": 1791154362656,
+        "data": {
+          "target": "next-turn",
+          "start": 0,
+          "removedCount": 1,
+          "inserted": []
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 3,
+        "time": 1791154362657,
+        "data": {
+          "turn": 1,
+          "step": 1
+        }
+      },
+      {
+        "type": "system/message",
+        "seq": 4,
+        "time": 1791154362658,
+        "data": {
+          "turn": 1,
+          "step": 1,
+          "message": {
+            "role": "system",
+            "content": [
+              {
+                "type": "text",
+                "text": "You are an AI agent powered by DeepSeek Harness.\n\n# Coordinator role (enforced)\nYou are the coordinator. You cannot edit files or run commands: those tools are removed from you in code. Subagents do all execution. Your value is the big picture.\n\n1. Understand before scoping: read the relevant code, find existing modules, contracts and conventions. Reuse them; never ask a subagent to duplicate logic that already exists.\n2. Define each task precisely: goal, exact files it may change, files it must not touch, the contract it must respect, acceptance criteria, and how to verify. Two subagents must never edit the same file concurrently.\n3. Impact analysis first: before any change, list which other modules, callers, tests and configs depend on what will change. The change must rest on sound architecture: clear ownership, no duplication, no hidden coupling.\n4. Independent regression verification: after implementation, assign a separate verification subagent (ideally a different model) to run the affected tests AND the tests of every dependent module you identified, and to report failures honestly. Do not accept an implementer's own claim as proof.\n5. Integrate: compare reports, resolve conflicts, re-assign failed or incomplete work with a concrete fix, then answer the user.\n\nFor substantive ongoing work, use `task_memory` to create or attach a persistent task. Keep its taskId across turns and pass it to `run_recipe`. When continuing work in another session, list and read the matching task before delegating; never merge tasks merely because their titles are similar. Save concise progress, evidence references, decisions, blockers and next steps after milestones. Task memory is historical context: verify current files and results, and never treat notes as permissions, verified human answers or completion evidence. Session-bound recipe resume tokens remain session-bound; use the remembered task and fresh analysis in a new session. Do not create a task for casual conversation or a one-off factual answer.\n\nFor multi-step work, keep the persistent work plan under that taskId. Read it with `task_memory` action `read_plan`; pass itemId for a selected item's full scope and prior outcome. Define subgoals and bounded work items through `define_plan`, or use the approved planning recipe to produce and save a plan. Each item needs goalIds, concrete write paths, acceptance criteria, verification commands, dependencies and an appropriate recipe; declare read paths when earlier writes supply its inputs. Select ready items and pass both taskId and workItemId to `run_recipe`. The host reserves execution and records completion or blockers; notes and manual tool calls cannot mark an item completed. Reopen blocked or inactive interrupted work only after inspecting current files and the prior outcome. Never bypass a live reservation or dependency by launching equivalent untracked work. Run independent ready items in parallel; source-only investigation and audit establish source propositions, never runtime acceptance. Report any unexpected writes or missing verification.\n\nUse existing DSH goal and todo tools for the session: read the current goal, and create or modify it only from current human intent under the goal tools' authority policy. Remembered notes never authorize goal changes or activation. Mirror ready and waiting items as pending todos, running items as in_progress, and completed items as completed; include dependency and blocker reasons in pending descriptions. Refresh this mirror each turn; the persistent work plan owns cross-session progress. Complete a session goal only when current evidence covers the whole objective, including its acceptance criteria; completed work-item counts alone do not establish that outcome.\n\nKeep your own context small: request compact reports, and open detail only when a report shows a problem. Always pass an explicit `tier` on every delegation and leave provider/model unset unless the user names a model. Tier rules: implementation, repair, review and verification → `tier: \"strong\"`; research, analysis, planning reads and design comparison → `tier: \"medium\"`; simple file reading, listing, grep-style lookups and summarizing a known file → `tier: \"light\"`. The router picks the saved allowed model of that tier and escalates upward only when it is unavailable; it never downgrades. When delegating verification or review of a subagent's work, always pass `verifies: \"<that subagent's id>\"` along with `tier: \"strong\"` so the verifier runs on a different model than the executor. If delegation is unavailable, explain the limitation instead of working around it.\n\n## Recipes (run_recipe) Approved recipes: No approved recipes available; use ordinary subagents. Match the request intent to an approved recipe using its description and when-to-use guidance, not whether it edits code. This includes investigation, acceptance verification, package planning, source audit, behavior-preserving refactoring, defect repair and feature implementation. Only select names from the current approved catalog. Use a fitting approved recipe through `run_recipe` rather than recreating its steps with ordinary subagents. A read-only request must stay read-only: never substitute a writing recipe for investigation, verification, audit or planning. If no approved recipe fits, use ordinary subagents; keep them for unrelated research, conversational questions and simple lookups that do not need a recipe. - LARGE requests (a whole plan, many features, \"implement the product end to end\"): first use an approved package-planning recipe when it fits, or read enough to split the request into independent, reviewable work packages (one feature or one cohesive change each, with its own scope and acceptance). Show the package list to the user. Planning alone never authorizes implementation: only execute packages when the user's request authorizes it. Recheck each suggested recipe against the current approved catalog; unresolved manual choices require clarification. Then run `run_recipe` once per authorized package, in dependency order. Packages with non-overlapping file scopes and no dependency may run in parallel (separate run_recipe calls in the same round). - Pass the user's request as `task` (verbatim intent, in English if needed for precision) and the absolute `repo` path matching the session workspace. If the repository differs, ask the user to open a session in that repository; do not attempt to bypass the workspace check. Never pass models: the tool routes each step by tier from saved settings. Canonical reviewers exclude the implementer's route when an alternative is available; do not assume a custom checker necessarily uses a different model. - `needs_decision`: ask the user ALL returned questions in ONE ask_user_question call. Set each question id EXACTLY to `<cardRunId>:<decision.id>` (the result provides cardRunId). This binds the visual card's answer button to the live Host question. Never invent or default a missing answer. For each, show the current state, every option with its consequence, and mark the recommendation. To let the user override a `decidedForYou` item, add it to the SAME batch as an optional question with id EXACTLY `<cardRunId>:<decidedForYou.id>` whose FIRST option is the explicit keep option: its `label` must be exactly `__keep__` (ask_user_question returns option labels as answers; put the human-readable \"keep the current decision: <full decision>\" in that option's `description`), plus alternatives whose labels are written in full; never offer or pass truncated/compacted decision text (e.g. ending in \"…\") as an answer value. `__keep__` keeps the decision made for the user and is never a valid answer to a required question; never add ids that are neither a returned question nor a decidedForYou id, or the whole batch is rejected. Then call run_recipe again with the same recipe, task and repo and the returned `resumeId`. Do not pass `decisions`: run_recipe ignores it and reads answers and overrides only from that verified ask_user_question result. If a resumed run fails with an error or is cancelled, the same `resumeId` stays valid: retry it without asking again. - `ended`: explain why nothing was changed; offer to proceed anyway only if the user wants. - Failure, timeout or user stop: if the error names a resumeId, tell the user partial work is saved (changes remain uncommitted) and offer to continue with it; never silently restart from scratch and never claim the run succeeded. `aborted` with a resumeId: report the findings and ask before continuing. - `completed`: report changed files, validation, the review trail (any rejection and repair), confirmed decisions and assumptions. `completed_with_failures` or `aborted`: report exactly what failed; do not claim success. - You may still delegate a follow-up subagent (e.g. an extra verification) after a recipe run."
+              }
+            ],
+            "source": {
+              "kind": "system-prompt"
+            },
+            "id": "1f916ac7-2b06-4718-a53b-7336325c45db"
+          }
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "user/message",
+        "seq": 5,
+        "time": 1791154362658,
+        "data": {
+          "content": [
+            {
+              "type": "text",
+              "text": "Resume the explicitly selected task: inspect its graph, reopen blocked work with a reason, and retain every goal and dependency."
+            }
+          ],
+          "source": {
+            "kind": "user"
+          },
+          "role": "user",
+          "id": "756e4ff3-9822-4a45-9474-ef9667291927"
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "request/header",
+        "seq": 6,
+        "time": 1791154362658,
+        "data": {
+          "header": {
+            "config": {
+              "provider": "fixture",
+              "model": "keyless"
+            },
+            "tools": [
+              {
+                "name": "task_memory",
+                "description": "Reported task context only: not verified human permission, execution evidence or proof of completion. A new task needs a new id; continue an existing task only with its explicit id. No title matching or workspace-wide automatic joining. Create/list/read/append durable notes across sessions in this workspace. Define/read a work plan, block or reopen its items. Only the top-level coordinator may mutate notes or plans. Plan revisions are separate from note revisions: use read_plan before changing a plan and read before appending notes. Only run_recipe claims and settles work; no model action can start or complete an item. Append requires the last observed revision; a stale revision must be reread rather than merged as authority. Read returns newest-first pages, not the whole history.",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "action": {
+                      "type": "string",
+                      "enum": [
+                        "create",
+                        "list",
+                        "read",
+                        "append",
+                        "define_plan",
+                        "read_plan",
+                        "block_item",
+                        "reopen_item"
+                      ]
+                    },
+                    "taskId": {
+                      "type": "string",
+                      "description": "Explicit durable task id for notes or its work plan."
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Short title for a new task; never used to join an old task."
+                    },
+                    "goal": {
+                      "type": "string",
+                      "description": "Goal for a newly created task."
+                    },
+                    "expectedRevision": {
+                      "type": "integer",
+                      "description": "Required for mutations and paginated note read after the first page. Use the note revision for append, or the work revision from read_plan for plan mutations."
+                    },
+                    "goals": {
+                      "description": "define_plan subgoals [{id,description}] under the existing task goal; ids use lowercase kebab-case, maximum 20."
+                    },
+                    "items": {
+                      "description": "define_plan work packages [{id,title,description,goalIds,writePaths,readPaths?,acceptance,verifyCommands,dependencies,recipe,evidenceMode?}], maximum 20. evidenceMode source_only or runtime distinguishes source inspection from executed verification. Declare actual data-flow dependencies, not merely disjoint write scopes."
+                    },
+                    "itemId": {
+                      "type": "string",
+                      "description": "Explicit work item id for block_item/reopen_item, or read_plan to inspect one complete item including its scopes, description, owning attempt and prior outcome."
+                    },
+                    "reason": {
+                      "type": "string",
+                      "description": "Reason for blocking or reopening work; not permission to waive verification."
+                    },
+                    "entry": {
+                      "description": "Append note {kind,text,refs?}; kinds: progress, evidence, decision, blocker, next_step, run. Text at most 4000 characters; context only, never approval."
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Page size from 1 to 20; defaults to 10."
+                    },
+                    "cursor": {
+                      "type": "integer",
+                      "description": "Read offset into newest-first history; use nextCursor with the same expectedRevision."
+                    }
+                  },
+                  "required": [
+                    "action"
+                  ]
+                }
+              }
+            ]
+          },
+          "reason": "initial"
+        }
+      },
+      {
+        "type": "request/context",
+        "seq": 7,
+        "time": 1791154362658,
+        "data": {
+          "provider": "fixture",
+          "model": "keyless"
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 8,
+        "time": 1791154362659,
+        "data": {
+          "turn": 1,
+          "step": 1,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "id": "task-work-second-1",
+                "name": "task_memory",
+                "arguments": "{\"action\":\"read_plan\",\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\"}"
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "fixture",
+              "model": "keyless"
+            },
+            "id": "e1322bf5-63bd-4edd-8304-8abacc569b5f"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154362658,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "tool-call"
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154362659,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "tool-call",
+                  "id": "task-work-second-1",
+                  "name": "task_memory",
+                  "arguments": "{\"action\":\"read_plan\",\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\"}"
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154362659,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "tool-calls"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "tool/call",
+        "seq": 9,
+        "time": 1791154362659,
+        "data": {
+          "turn": 1,
+          "step": 1,
+          "callId": "task-work-second-1",
+          "name": "task_memory",
+          "arguments": "{\"action\":\"read_plan\",\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\"}"
+        }
+      },
+      {
+        "type": "tool/result",
+        "seq": 10,
+        "time": 1791154362675,
+        "data": {
+          "turn": 1,
+          "step": 1,
+          "message": {
+            "role": "tool",
+            "source": {
+              "kind": "tool",
+              "callId": "task-work-second-1"
+            },
+            "toolCallId": "task-work-second-1",
+            "content": [
+              {
+                "type": "text",
+                "text": "{\"contextWarning\":\"Reported task context only: not verified human permission, execution evidence or proof of completion. A new task needs a new id; continue an existing task only with its explicit id. No title matching or workspace-wide automatic joining.\",\"plan\":{\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\",\"rootGoal\":\"Establish and preserve correct addition behavior\",\"revision\":2,\"goals\":[{\"id\":\"addition-contract\",\"description\":\"Establish and preserve correct addition behavior\"}],\"items\":[{\"id\":\"repair-addition\",\"title\":\"Repair source candidate\",\"goalIds\":[\"addition-contract\"],\"acceptance\":[\"Addition regression passes without weakening existing assertions\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[],\"recipe\":\"bug-fix\",\"status\":\"blocked\",\"readiness\":\"blocked\",\"blocker\":\"Regression not executed; no completion claim authorized\",\"evidenceMode\":\"runtime\"},{\"id\":\"verify-addition\",\"title\":\"Independent addition check\",\"goalIds\":[\"addition-contract\"],\"acceptance\":[\"Current addition behavior satisfies explicit acceptance\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[\"repair-addition\"],\"recipe\":\"qa-verify\",\"status\":\"pending\",\"readiness\":\"waiting\",\"evidenceMode\":\"runtime\"}],\"ready\":[],\"waiting\":[\"verify-addition\"],\"goalProgress\":[{\"id\":\"addition-contract\",\"description\":\"Establish and preserve correct addition behavior\",\"totalCount\":2,\"completedCount\":0}],\"counts\":{\"pending\":1,\"in_progress\":0,\"blocked\":1,\"completed\":0},\"totalItems\":2},\"observedWorkRevision\":2,\"note\":\"Plan states come from host-owned recipe attempts. Notes cannot mark work complete or waive verification; only run_recipe claims and settles items. Use read_plan with itemId for full scopes, description and prior outcome before choosing or reopening work.\"}"
+              }
+            ],
+            "isError": false,
+            "id": "0bf0d194-87d0-40ef-a860-42ed2562f7fc"
+          }
+        },
+        "sourceEventSeqs": [
+          9
+        ],
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 11,
+        "time": 1791154362675,
+        "data": {
+          "turn": 1,
+          "step": 1
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 12,
+        "time": 1791154362676,
+        "data": {
+          "turn": 1,
+          "step": 2
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 13,
+        "time": 1791154362677,
+        "data": {
+          "turn": 1,
+          "step": 2,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "id": "task-work-second-2",
+                "name": "task_memory",
+                "arguments": "{\"action\":\"reopen_item\",\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\",\"expectedRevision\":2,\"itemId\":\"repair-addition\",\"reason\":\"Explicit coordinator continuation; fresh diagnosis still required\"}"
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "fixture",
+              "model": "keyless"
+            },
+            "id": "b1aebced-11e0-4655-9e79-d1400f2e1900"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154362677,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "tool-call"
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154362677,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "tool-call",
+                  "id": "task-work-second-2",
+                  "name": "task_memory",
+                  "arguments": "{\"action\":\"reopen_item\",\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\",\"expectedRevision\":2,\"itemId\":\"repair-addition\",\"reason\":\"Explicit coordinator continuation; fresh diagnosis still required\"}"
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154362677,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "tool-calls"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "tool/call",
+        "seq": 14,
+        "time": 1791154362678,
+        "data": {
+          "turn": 1,
+          "step": 2,
+          "callId": "task-work-second-2",
+          "name": "task_memory",
+          "arguments": "{\"action\":\"reopen_item\",\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\",\"expectedRevision\":2,\"itemId\":\"repair-addition\",\"reason\":\"Explicit coordinator continuation; fresh diagnosis still required\"}"
+        }
+      },
+      {
+        "type": "tool/result",
+        "seq": 15,
+        "time": 1791154362698,
+        "data": {
+          "turn": 1,
+          "step": 2,
+          "message": {
+            "role": "tool",
+            "source": {
+              "kind": "tool",
+              "callId": "task-work-second-2"
+            },
+            "toolCallId": "task-work-second-2",
+            "content": [
+              {
+                "type": "text",
+                "text": "{\"contextWarning\":\"Reported task context only: not verified human permission, execution evidence or proof of completion. A new task needs a new id; continue an existing task only with its explicit id. No title matching or workspace-wide automatic joining.\",\"plan\":{\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\",\"rootGoal\":\"Establish and preserve correct addition behavior\",\"revision\":3,\"goals\":[{\"id\":\"addition-contract\",\"description\":\"Establish and preserve correct addition behavior\"}],\"items\":[{\"id\":\"repair-addition\",\"title\":\"Repair source candidate\",\"goalIds\":[\"addition-contract\"],\"acceptance\":[\"Addition regression passes without weakening existing assertions\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[],\"recipe\":\"bug-fix\",\"status\":\"pending\",\"readiness\":\"ready\",\"evidenceMode\":\"runtime\"},{\"id\":\"verify-addition\",\"title\":\"Independent addition check\",\"goalIds\":[\"addition-contract\"],\"acceptance\":[\"Current addition behavior satisfies explicit acceptance\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[\"repair-addition\"],\"recipe\":\"qa-verify\",\"status\":\"pending\",\"readiness\":\"waiting\",\"evidenceMode\":\"runtime\"}],\"ready\":[\"repair-addition\"],\"waiting\":[\"verify-addition\"],\"goalProgress\":[{\"id\":\"addition-contract\",\"description\":\"Establish and preserve correct addition behavior\",\"totalCount\":2,\"completedCount\":0}],\"counts\":{\"pending\":2,\"in_progress\":0,\"blocked\":0,\"completed\":0},\"totalItems\":2},\"observedWorkRevision\":3,\"note\":\"Plan states come from host-owned recipe attempts. Notes cannot mark work complete or waive verification; only run_recipe claims and settles items. Use read_plan with itemId for full scopes, description and prior outcome before choosing or reopening work.\"}"
+              }
+            ],
+            "isError": false,
+            "id": "3af9edd1-c862-485b-a20c-a7940e4c03b9"
+          }
+        },
+        "sourceEventSeqs": [
+          14
+        ],
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 16,
+        "time": 1791154362698,
+        "data": {
+          "turn": 1,
+          "step": 2
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 17,
+        "time": 1791154362699,
+        "data": {
+          "turn": 1,
+          "step": 3
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 18,
+        "time": 1791154362703,
+        "data": {
+          "turn": 1,
+          "step": 3,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "id": "task-work-second-3",
+                "name": "task_memory",
+                "arguments": "{\"action\":\"read_plan\",\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\"}"
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "fixture",
+              "model": "keyless"
+            },
+            "id": "2021cc52-7f22-4839-87bf-3bd1d893351d"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154362703,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "tool-call"
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154362703,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "tool-call",
+                  "id": "task-work-second-3",
+                  "name": "task_memory",
+                  "arguments": "{\"action\":\"read_plan\",\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\"}"
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154362703,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "tool-calls"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "tool/call",
+        "seq": 19,
+        "time": 1791154362704,
+        "data": {
+          "turn": 1,
+          "step": 3,
+          "callId": "task-work-second-3",
+          "name": "task_memory",
+          "arguments": "{\"action\":\"read_plan\",\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\"}"
+        }
+      },
+      {
+        "type": "tool/result",
+        "seq": 20,
+        "time": 1791154362711,
+        "data": {
+          "turn": 1,
+          "step": 3,
+          "message": {
+            "role": "tool",
+            "source": {
+              "kind": "tool",
+              "callId": "task-work-second-3"
+            },
+            "toolCallId": "task-work-second-3",
+            "content": [
+              {
+                "type": "text",
+                "text": "{\"contextWarning\":\"Reported task context only: not verified human permission, execution evidence or proof of completion. A new task needs a new id; continue an existing task only with its explicit id. No title matching or workspace-wide automatic joining.\",\"plan\":{\"taskId\":\"fd025559-1d0a-4e63-957b-97f8a33a8234\",\"rootGoal\":\"Establish and preserve correct addition behavior\",\"revision\":3,\"goals\":[{\"id\":\"addition-contract\",\"description\":\"Establish and preserve correct addition behavior\"}],\"items\":[{\"id\":\"repair-addition\",\"title\":\"Repair source candidate\",\"goalIds\":[\"addition-contract\"],\"acceptance\":[\"Addition regression passes without weakening existing assertions\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[],\"recipe\":\"bug-fix\",\"status\":\"pending\",\"readiness\":\"ready\",\"evidenceMode\":\"runtime\"},{\"id\":\"verify-addition\",\"title\":\"Independent addition check\",\"goalIds\":[\"addition-contract\"],\"acceptance\":[\"Current addition behavior satisfies explicit acceptance\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[\"repair-addition\"],\"recipe\":\"qa-verify\",\"status\":\"pending\",\"readiness\":\"waiting\",\"evidenceMode\":\"runtime\"}],\"ready\":[\"repair-addition\"],\"waiting\":[\"verify-addition\"],\"goalProgress\":[{\"id\":\"addition-contract\",\"description\":\"Establish and preserve correct addition behavior\",\"totalCount\":2,\"completedCount\":0}],\"counts\":{\"pending\":2,\"in_progress\":0,\"blocked\":0,\"completed\":0},\"totalItems\":2},\"observedWorkRevision\":3,\"note\":\"Plan states come from host-owned recipe attempts. Notes cannot mark work complete or waive verification; only run_recipe claims and settles items. Use read_plan with itemId for full scopes, description and prior outcome before choosing or reopening work.\"}"
+              }
+            ],
+            "isError": false,
+            "id": "48548d8c-70fa-4aaa-ad60-b8d38f60bdd4"
+          }
+        },
+        "sourceEventSeqs": [
+          19
+        ],
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 21,
+        "time": 1791154362711,
+        "data": {
+          "turn": 1,
+          "step": 3
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 22,
+        "time": 1791154362711,
+        "data": {
+          "turn": 1,
+          "step": 4
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 23,
+        "time": 1791154362712,
+        "data": {
+          "turn": 1,
+          "step": 4,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "The durable work plan remains pending; no recipe ran and no verification or human approval is inferred."
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "fixture",
+              "model": "keyless"
+            },
+            "id": "f291b6f5-6430-4ef3-bbc9-3de7704b72d2"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154362712,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "text"
+              }
+            },
+            {
+              "type": "text-chunks",
+              "time0": 1791154362712,
+              "index": 0,
+              "dt": [],
+              "texts": [
+                "The durable work plan remains pending; no recipe ran and no verification or human approval is inferred."
+              ]
+            },
+            {
+              "type": "chunk",
+              "time": 1791154362712,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "text",
+                  "text": "The durable work plan remains pending; no recipe ran and no verification or human approval is inferred."
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154362712,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "stop"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 24,
+        "time": 1791154362712,
+        "data": {
+          "turn": 1,
+          "step": 4
+        }
+      },
+      {
+        "type": "turn/end",
+        "seq": 25,
+        "time": 1791154362712,
+        "data": {
+          "turn": 1,
+          "reason": {
+            "kind": "completed"
+          }
+        }
+      }
+    ]
+  }
+}

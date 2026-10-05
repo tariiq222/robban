@@ -1,0 +1,234 @@
+{
+  "header": {
+    "version": 4,
+    "id": "native-preparation",
+    "createdAt": 1791156596609,
+    "isSeeded": false,
+    "origin": "subagent"
+  },
+  "events": [
+    {
+      "type": "agent/inbox/spliced",
+      "seq": 0,
+      "time": 1791156596610,
+      "data": {
+        "target": "next-turn",
+        "start": 0,
+        "inserted": [
+          {
+            "content": [
+              {
+                "type": "text",
+                "text": "Perform the task once"
+              }
+            ],
+            "source": {
+              "kind": "user"
+            },
+            "role": "user",
+            "id": "183e75cb-b6e9-4044-ac9f-a354d292af76"
+          }
+        ]
+      }
+    },
+    {
+      "type": "turn/start",
+      "seq": 1,
+      "time": 1791156596610,
+      "data": {
+        "turn": 1
+      }
+    },
+    {
+      "type": "agent/inbox/spliced",
+      "seq": 2,
+      "time": 1791156596611,
+      "data": {
+        "target": "next-turn",
+        "start": 0,
+        "removedCount": 1,
+        "inserted": []
+      }
+    },
+    {
+      "type": "step/start",
+      "seq": 3,
+      "time": 1791156596611,
+      "data": {
+        "turn": 1,
+        "step": 1
+      }
+    },
+    {
+      "type": "auto-subagent/route",
+      "seq": 4,
+      "time": 1791156596612,
+      "data": {
+        "from": {
+          "provider": "one",
+          "model": "a"
+        },
+        "to": {
+          "provider": "two",
+          "model": "b"
+        },
+        "reason": "QUOTA",
+        "turn": 1,
+        "step": 1
+      },
+      "ignorable": true
+    },
+    {
+      "type": "system/message",
+      "seq": 5,
+      "time": 1791156596613,
+      "data": {
+        "turn": 1,
+        "step": 1,
+        "message": {
+          "role": "system",
+          "content": [
+            {
+              "type": "text",
+              "text": "You are an AI agent powered by DeepSeek Harness."
+            }
+          ],
+          "source": {
+            "kind": "system-prompt"
+          },
+          "id": "e99e34d7-8521-4351-8b88-75aa084ee35b"
+        }
+      },
+      "surfaceOp": "append"
+    },
+    {
+      "type": "user/message",
+      "seq": 6,
+      "time": 1791156596613,
+      "data": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Perform the task once"
+          }
+        ],
+        "source": {
+          "kind": "user"
+        },
+        "role": "user",
+        "id": "183e75cb-b6e9-4044-ac9f-a354d292af76"
+      },
+      "surfaceOp": "append"
+    },
+    {
+      "type": "request/header",
+      "seq": 7,
+      "time": 1791156596613,
+      "data": {
+        "header": {
+          "config": {
+            "provider": "two",
+            "model": "b"
+          }
+        },
+        "reason": "initial"
+      }
+    },
+    {
+      "type": "request/context",
+      "seq": 8,
+      "time": 1791156596613,
+      "data": {
+        "provider": "two",
+        "model": "b"
+      }
+    },
+    {
+      "type": "assistant/message",
+      "seq": 9,
+      "time": 1791156596614,
+      "data": {
+        "turn": 1,
+        "step": 1,
+        "message": {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "text",
+              "text": "Verified"
+            }
+          ],
+          "source": {
+            "kind": "model",
+            "provider": "two",
+            "model": "b"
+          },
+          "id": "5fe222e5-eb08-43e3-a7b4-e8ffc4082702"
+        },
+        "stream": [
+          {
+            "type": "chunk",
+            "time": 1791156596613,
+            "chunk": {
+              "type": "block-start",
+              "index": 0,
+              "blockType": "text"
+            }
+          },
+          {
+            "type": "text-chunks",
+            "time0": 1791156596614,
+            "index": 0,
+            "dt": [],
+            "texts": [
+              "Verified"
+            ]
+          },
+          {
+            "type": "chunk",
+            "time": 1791156596614,
+            "chunk": {
+              "type": "block-end",
+              "index": 0,
+              "block": {
+                "type": "text",
+                "text": "Verified"
+              }
+            }
+          },
+          {
+            "type": "chunk",
+            "time": 1791156596614,
+            "chunk": {
+              "type": "finish",
+              "reason": {
+                "kind": "stop"
+              }
+            }
+          }
+        ]
+      },
+      "surfaceOp": "append"
+    },
+    {
+      "type": "step/end",
+      "seq": 10,
+      "time": 1791156596614,
+      "data": {
+        "turn": 1,
+        "step": 1
+      }
+    },
+    {
+      "type": "turn/end",
+      "seq": 11,
+      "time": 1791156596614,
+      "data": {
+        "turn": 1,
+        "reason": {
+          "kind": "completed"
+        }
+      }
+    }
+  ]
+}

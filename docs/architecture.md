@@ -2,7 +2,7 @@
 
 English | [中文](architecture.zh.md)
 
-Read this before changing anything under `packages/`. It assumes you know Cordis; if you do not, start with the [primer](cordis-primer.md) or the [tutorial](cordis-tutorial/index.md).
+Read this before changing `packages/`. It assumes you know Cordis; if you do not, start with the [primer](cordis-primer.md) or the [tutorial](cordis-tutorial/index.md).
 
 We recommend using an agent to explore the codebase and understand its architecture.
 
@@ -93,7 +93,6 @@ turn/start
      reject, or a first enter rewritten empty -> close the turn with no step
      step/start
      agent/request -> prepareCall (cancellation commits neither system nor users)
-       LlmError -> agent/request-prepare-error (retry|terminal|delegate)
      reconcile system/message using the prepared call capability
      append entered messages as user/message; log request/header and request/context as needed
      derive and freeze model history from the log

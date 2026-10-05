@@ -1,0 +1,508 @@
+{
+  "header": {
+    "version": 4,
+    "id": "receipt-replay",
+    "createdAt": 1791141835025,
+    "isSeeded": false
+  },
+  "events": [
+    {
+      "type": "agent/inbox/spliced",
+      "seq": 0,
+      "time": 1791141835031,
+      "data": {
+        "target": "next-turn",
+        "start": 0,
+        "inserted": [
+          {
+            "content": [
+              {
+                "type": "text",
+                "text": "Collect both decisions before resuming"
+              }
+            ],
+            "source": {
+              "kind": "user"
+            },
+            "role": "user",
+            "id": "e96adc84-4ca6-4bdf-8cb2-784b18faed06"
+          }
+        ]
+      }
+    },
+    {
+      "type": "turn/start",
+      "seq": 1,
+      "time": 1791141835033,
+      "data": {
+        "turn": 1
+      }
+    },
+    {
+      "type": "agent/inbox/spliced",
+      "seq": 2,
+      "time": 1791141835034,
+      "data": {
+        "target": "next-turn",
+        "start": 0,
+        "removedCount": 1,
+        "inserted": []
+      }
+    },
+    {
+      "type": "step/start",
+      "seq": 3,
+      "time": 1791141835036,
+      "data": {
+        "turn": 1,
+        "step": 1
+      }
+    },
+    {
+      "type": "system/message",
+      "seq": 4,
+      "time": 1791141835039,
+      "data": {
+        "turn": 1,
+        "step": 1,
+        "message": {
+          "role": "system",
+          "content": [
+            {
+              "type": "text",
+              "text": "You are an AI agent powered by DeepSeek Harness."
+            }
+          ],
+          "source": {
+            "kind": "system-prompt"
+          },
+          "id": "4c68d7c2-a10a-4df0-bc8e-24aa90f2f8d2"
+        }
+      },
+      "surfaceOp": "append"
+    },
+    {
+      "type": "user/message",
+      "seq": 5,
+      "time": 1791141835039,
+      "data": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Collect both decisions before resuming"
+          }
+        ],
+        "source": {
+          "kind": "user"
+        },
+        "role": "user",
+        "id": "e96adc84-4ca6-4bdf-8cb2-784b18faed06"
+      },
+      "surfaceOp": "append"
+    },
+    {
+      "type": "request/header",
+      "seq": 6,
+      "time": 1791141835040,
+      "data": {
+        "header": {
+          "config": {
+            "provider": "receipt-fixture",
+            "model": "keyless"
+          },
+          "tools": [
+            {
+              "name": "ask_user_question",
+              "description": "Collect fixture decisions",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "questions": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "question": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "question"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "reason": "initial"
+      }
+    },
+    {
+      "type": "request/context",
+      "seq": 7,
+      "time": 1791141835040,
+      "data": {
+        "provider": "receipt-fixture",
+        "model": "keyless"
+      }
+    },
+    {
+      "type": "assistant/message",
+      "seq": 8,
+      "time": 1791141835044,
+      "data": {
+        "turn": 1,
+        "step": 1,
+        "message": {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "tool-call",
+              "id": "receipt-call-1",
+              "name": "ask_user_question",
+              "arguments": "{\"questions\":[{\"id\":\"run-replay:a\",\"question\":\"Choose A\"}]}"
+            }
+          ],
+          "source": {
+            "kind": "model",
+            "provider": "receipt-fixture",
+            "model": "keyless"
+          },
+          "id": "0dcd731f-50f7-48f4-97ee-c166c5130c54"
+        },
+        "stream": [
+          {
+            "type": "chunk",
+            "time": 1791141835042,
+            "chunk": {
+              "type": "block-start",
+              "index": 0,
+              "blockType": "tool-call"
+            }
+          },
+          {
+            "type": "tool-call-chunks",
+            "time0": 1791141835043,
+            "index": 0,
+            "dt": [],
+            "id": "receipt-call-1",
+            "name": "ask_user_question",
+            "args": [
+              "{\"questions\":[{\"id\":\"run-replay:a\",\"question\":\"Choose A\"}]}"
+            ]
+          },
+          {
+            "type": "chunk",
+            "time": 1791141835043,
+            "chunk": {
+              "type": "block-end",
+              "index": 0,
+              "block": {
+                "type": "tool-call",
+                "id": "receipt-call-1",
+                "name": "ask_user_question",
+                "arguments": "{\"questions\":[{\"id\":\"run-replay:a\",\"question\":\"Choose A\"}]}"
+              }
+            }
+          },
+          {
+            "type": "chunk",
+            "time": 1791141835043,
+            "chunk": {
+              "type": "finish",
+              "reason": {
+                "kind": "stop"
+              }
+            }
+          }
+        ]
+      },
+      "surfaceOp": "append"
+    },
+    {
+      "type": "tool/call",
+      "seq": 9,
+      "time": 1791141835045,
+      "data": {
+        "turn": 1,
+        "step": 1,
+        "callId": "receipt-call-1",
+        "name": "ask_user_question",
+        "arguments": "{\"questions\":[{\"id\":\"run-replay:a\",\"question\":\"Choose A\"}]}"
+      }
+    },
+    {
+      "type": "tool/result",
+      "seq": 10,
+      "time": 1791141835049,
+      "data": {
+        "turn": 1,
+        "step": 1,
+        "message": {
+          "role": "tool",
+          "source": {
+            "kind": "tool",
+            "callId": "receipt-call-1"
+          },
+          "toolCallId": "receipt-call-1",
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"answers\":[{\"id\":\"run-replay:a\",\"selected\":[\"A\"]},{\"id\":\"run-replay:b\",\"selected\":[\"UNASKED\"]}]}"
+            }
+          ],
+          "isError": false,
+          "id": "a3beea2c-ff35-4148-9696-f47ad49882a7"
+        }
+      },
+      "sourceEventSeqs": [
+        9
+      ],
+      "surfaceOp": "append"
+    },
+    {
+      "type": "step/end",
+      "seq": 11,
+      "time": 1791141835050,
+      "data": {
+        "turn": 1,
+        "step": 1
+      }
+    },
+    {
+      "type": "step/start",
+      "seq": 12,
+      "time": 1791141835050,
+      "data": {
+        "turn": 1,
+        "step": 2
+      }
+    },
+    {
+      "type": "assistant/message",
+      "seq": 13,
+      "time": 1791141835052,
+      "data": {
+        "turn": 1,
+        "step": 2,
+        "message": {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "tool-call",
+              "id": "receipt-call-2",
+              "name": "ask_user_question",
+              "arguments": "{\"questions\":[{\"id\":\"run-replay:b\",\"question\":\"Choose B\"}]}"
+            }
+          ],
+          "source": {
+            "kind": "model",
+            "provider": "receipt-fixture",
+            "model": "keyless"
+          },
+          "id": "a4482a54-2ff8-44cf-8de3-7b21c09cbb78"
+        },
+        "stream": [
+          {
+            "type": "chunk",
+            "time": 1791141835051,
+            "chunk": {
+              "type": "block-start",
+              "index": 0,
+              "blockType": "tool-call"
+            }
+          },
+          {
+            "type": "tool-call-chunks",
+            "time0": 1791141835051,
+            "index": 0,
+            "dt": [],
+            "id": "receipt-call-2",
+            "name": "ask_user_question",
+            "args": [
+              "{\"questions\":[{\"id\":\"run-replay:b\",\"question\":\"Choose B\"}]}"
+            ]
+          },
+          {
+            "type": "chunk",
+            "time": 1791141835051,
+            "chunk": {
+              "type": "block-end",
+              "index": 0,
+              "block": {
+                "type": "tool-call",
+                "id": "receipt-call-2",
+                "name": "ask_user_question",
+                "arguments": "{\"questions\":[{\"id\":\"run-replay:b\",\"question\":\"Choose B\"}]}"
+              }
+            }
+          },
+          {
+            "type": "chunk",
+            "time": 1791141835051,
+            "chunk": {
+              "type": "finish",
+              "reason": {
+                "kind": "stop"
+              }
+            }
+          }
+        ]
+      },
+      "surfaceOp": "append"
+    },
+    {
+      "type": "tool/call",
+      "seq": 14,
+      "time": 1791141835052,
+      "data": {
+        "turn": 1,
+        "step": 2,
+        "callId": "receipt-call-2",
+        "name": "ask_user_question",
+        "arguments": "{\"questions\":[{\"id\":\"run-replay:b\",\"question\":\"Choose B\"}]}"
+      }
+    },
+    {
+      "type": "tool/result",
+      "seq": 15,
+      "time": 1791141835053,
+      "data": {
+        "turn": 1,
+        "step": 2,
+        "message": {
+          "role": "tool",
+          "source": {
+            "kind": "tool",
+            "callId": "receipt-call-2"
+          },
+          "toolCallId": "receipt-call-2",
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"answers\":[{\"id\":\"run-replay:b\",\"selected\":[\"B\"]}]}"
+            }
+          ],
+          "isError": false,
+          "id": "a83acdcc-1d0b-4d80-9dee-277005c100a3"
+        }
+      },
+      "sourceEventSeqs": [
+        14
+      ],
+      "surfaceOp": "append"
+    },
+    {
+      "type": "step/end",
+      "seq": 16,
+      "time": 1791141835053,
+      "data": {
+        "turn": 1,
+        "step": 2
+      }
+    },
+    {
+      "type": "step/start",
+      "seq": 17,
+      "time": 1791141835054,
+      "data": {
+        "turn": 1,
+        "step": 3
+      }
+    },
+    {
+      "type": "assistant/message",
+      "seq": 18,
+      "time": 1791141835055,
+      "data": {
+        "turn": 1,
+        "step": 3,
+        "message": {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "text",
+              "text": "Ready to resume"
+            }
+          ],
+          "source": {
+            "kind": "model",
+            "provider": "receipt-fixture",
+            "model": "keyless"
+          },
+          "id": "62165040-b00e-4004-9d9b-4b6c4e9c850b"
+        },
+        "stream": [
+          {
+            "type": "chunk",
+            "time": 1791141835054,
+            "chunk": {
+              "type": "block-start",
+              "index": 0,
+              "blockType": "text"
+            }
+          },
+          {
+            "type": "text-chunks",
+            "time0": 1791141835054,
+            "index": 0,
+            "dt": [],
+            "texts": [
+              "Ready to resume"
+            ]
+          },
+          {
+            "type": "chunk",
+            "time": 1791141835055,
+            "chunk": {
+              "type": "block-end",
+              "index": 0,
+              "block": {
+                "type": "text",
+                "text": "Ready to resume"
+              }
+            }
+          },
+          {
+            "type": "chunk",
+            "time": 1791141835055,
+            "chunk": {
+              "type": "finish",
+              "reason": {
+                "kind": "stop"
+              }
+            }
+          }
+        ]
+      },
+      "surfaceOp": "append"
+    },
+    {
+      "type": "step/end",
+      "seq": 19,
+      "time": 1791141835055,
+      "data": {
+        "turn": 1,
+        "step": 3
+      }
+    },
+    {
+      "type": "turn/end",
+      "seq": 20,
+      "time": 1791141835055,
+      "data": {
+        "turn": 1,
+        "reason": {
+          "kind": "completed"
+        }
+      }
+    }
+  ]
+}

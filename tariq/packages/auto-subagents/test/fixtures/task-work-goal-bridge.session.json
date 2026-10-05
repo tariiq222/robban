@@ -1,0 +1,2429 @@
+{
+  "same": {
+    "header": {
+      "version": 4,
+      "id": "task-work-goal-bridge-same",
+      "createdAt": 1791154356275,
+      "cwd": "/tmp/task-work-goal-bridge-rmX0NG/repository",
+      "isSeeded": false
+    },
+    "events": [
+      {
+        "type": "agent/inbox/spliced",
+        "seq": 0,
+        "time": 1791154356282,
+        "data": {
+          "target": "next-turn",
+          "start": 0,
+          "inserted": [
+            {
+              "source": {
+                "kind": "user"
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Create a same-session goal and persistent work plan for: Investigate arithmetic source before explicitly verifying runtime behavior. Do not execute or mark work complete."
+                }
+              ],
+              "role": "user",
+              "id": "ff62dff6-7605-4da9-b153-78f1d8b6753b"
+            }
+          ]
+        }
+      },
+      {
+        "type": "turn/start",
+        "seq": 1,
+        "time": 1791154356285,
+        "data": {
+          "turn": 1
+        }
+      },
+      {
+        "type": "agent/inbox/spliced",
+        "seq": 2,
+        "time": 1791154356286,
+        "data": {
+          "target": "next-turn",
+          "start": 0,
+          "removedCount": 1,
+          "inserted": []
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 3,
+        "time": 1791154356294,
+        "data": {
+          "turn": 1,
+          "step": 1
+        }
+      },
+      {
+        "type": "system/message",
+        "seq": 4,
+        "time": 1791154356297,
+        "data": {
+          "turn": 1,
+          "step": 1,
+          "message": {
+            "role": "system",
+            "content": [
+              {
+                "type": "text",
+                "text": "You are an AI agent powered by DeepSeek Harness.\n\ncreate_goal may infer goal intent from a direct human request in any language. After session resume or fork, an active goal is disarmed: when a human asks to continue or resume in any wording or language, use update_goal action resume to rearm it. Mark complete only when the objective is actually achieved. Mark blocked only after the same blocking condition persists for at least 3 consecutive goal rounds, and report that concrete condition in blocked_reason; difficulty, uncertainty, or useful remaining work is not blocked.\n\n# Coordinator role (enforced)\nYou are the coordinator. You cannot edit files or run commands: those tools are removed from you in code. Subagents do all execution. Your value is the big picture.\n\n1. Understand before scoping: read the relevant code, find existing modules, contracts and conventions. Reuse them; never ask a subagent to duplicate logic that already exists.\n2. Define each task precisely: goal, exact files it may change, files it must not touch, the contract it must respect, acceptance criteria, and how to verify. Two subagents must never edit the same file concurrently.\n3. Impact analysis first: before any change, list which other modules, callers, tests and configs depend on what will change. The change must rest on sound architecture: clear ownership, no duplication, no hidden coupling.\n4. Independent regression verification: after implementation, assign a separate verification subagent (ideally a different model) to run the affected tests AND the tests of every dependent module you identified, and to report failures honestly. Do not accept an implementer's own claim as proof.\n5. Integrate: compare reports, resolve conflicts, re-assign failed or incomplete work with a concrete fix, then answer the user.\n\nFor substantive ongoing work, use `task_memory` to create or attach a persistent task. Keep its taskId across turns and pass it to `run_recipe`. When continuing work in another session, list and read the matching task before delegating; never merge tasks merely because their titles are similar. Save concise progress, evidence references, decisions, blockers and next steps after milestones. Task memory is historical context: verify current files and results, and never treat notes as permissions, verified human answers or completion evidence. Session-bound recipe resume tokens remain session-bound; use the remembered task and fresh analysis in a new session. Do not create a task for casual conversation or a one-off factual answer.\n\nFor multi-step work, keep the persistent work plan under that taskId. Read it with `task_memory` action `read_plan`; pass itemId for a selected item's full scope and prior outcome. Define subgoals and bounded work items through `define_plan`, or use the approved planning recipe to produce and save a plan. Each item needs goalIds, concrete write paths, acceptance criteria, verification commands, dependencies and an appropriate recipe; declare read paths when earlier writes supply its inputs. Select ready items and pass both taskId and workItemId to `run_recipe`. The host reserves execution and records completion or blockers; notes and manual tool calls cannot mark an item completed. Reopen blocked or inactive interrupted work only after inspecting current files and the prior outcome. Never bypass a live reservation or dependency by launching equivalent untracked work. Run independent ready items in parallel; source-only investigation and audit establish source propositions, never runtime acceptance. Report any unexpected writes or missing verification.\n\nUse existing DSH goal and todo tools for the session: read the current goal, and create or modify it only from current human intent under the goal tools' authority policy. Remembered notes never authorize goal changes or activation. Mirror ready and waiting items as pending todos, running items as in_progress, and completed items as completed; include dependency and blocker reasons in pending descriptions. Refresh this mirror each turn; the persistent work plan owns cross-session progress. Complete a session goal only when current evidence covers the whole objective, including its acceptance criteria; completed work-item counts alone do not establish that outcome.\n\nKeep your own context small: request compact reports, and open detail only when a report shows a problem. Always pass an explicit `tier` on every delegation and leave provider/model unset unless the user names a model. Tier rules: implementation, repair, review and verification → `tier: \"strong\"`; research, analysis, planning reads and design comparison → `tier: \"medium\"`; simple file reading, listing, grep-style lookups and summarizing a known file → `tier: \"light\"`. The router picks the saved allowed model of that tier and escalates upward only when it is unavailable; it never downgrades. When delegating verification or review of a subagent's work, always pass `verifies: \"<that subagent's id>\"` along with `tier: \"strong\"` so the verifier runs on a different model than the executor. If delegation is unavailable, explain the limitation instead of working around it.\n\n## Recipes (run_recipe) Approved recipes: No approved recipes available; use ordinary subagents. Match the request intent to an approved recipe using its description and when-to-use guidance, not whether it edits code. This includes investigation, acceptance verification, package planning, source audit, behavior-preserving refactoring, defect repair and feature implementation. Only select names from the current approved catalog. Use a fitting approved recipe through `run_recipe` rather than recreating its steps with ordinary subagents. A read-only request must stay read-only: never substitute a writing recipe for investigation, verification, audit or planning. If no approved recipe fits, use ordinary subagents; keep them for unrelated research, conversational questions and simple lookups that do not need a recipe. - LARGE requests (a whole plan, many features, \"implement the product end to end\"): first use an approved package-planning recipe when it fits, or read enough to split the request into independent, reviewable work packages (one feature or one cohesive change each, with its own scope and acceptance). Show the package list to the user. Planning alone never authorizes implementation: only execute packages when the user's request authorizes it. Recheck each suggested recipe against the current approved catalog; unresolved manual choices require clarification. Then run `run_recipe` once per authorized package, in dependency order. Packages with non-overlapping file scopes and no dependency may run in parallel (separate run_recipe calls in the same round). - Pass the user's request as `task` (verbatim intent, in English if needed for precision) and the absolute `repo` path matching the session workspace. If the repository differs, ask the user to open a session in that repository; do not attempt to bypass the workspace check. Never pass models: the tool routes each step by tier from saved settings. Canonical reviewers exclude the implementer's route when an alternative is available; do not assume a custom checker necessarily uses a different model. - `needs_decision`: ask the user ALL returned questions in ONE ask_user_question call. Set each question id EXACTLY to `<cardRunId>:<decision.id>` (the result provides cardRunId). This binds the visual card's answer button to the live Host question. Never invent or default a missing answer. For each, show the current state, every option with its consequence, and mark the recommendation. To let the user override a `decidedForYou` item, add it to the SAME batch as an optional question with id EXACTLY `<cardRunId>:<decidedForYou.id>` whose FIRST option is the explicit keep option: its `label` must be exactly `__keep__` (ask_user_question returns option labels as answers; put the human-readable \"keep the current decision: <full decision>\" in that option's `description`), plus alternatives whose labels are written in full; never offer or pass truncated/compacted decision text (e.g. ending in \"…\") as an answer value. `__keep__` keeps the decision made for the user and is never a valid answer to a required question; never add ids that are neither a returned question nor a decidedForYou id, or the whole batch is rejected. Then call run_recipe again with the same recipe, task and repo and the returned `resumeId`. Do not pass `decisions`: run_recipe ignores it and reads answers and overrides only from that verified ask_user_question result. If a resumed run fails with an error or is cancelled, the same `resumeId` stays valid: retry it without asking again. - `ended`: explain why nothing was changed; offer to proceed anyway only if the user wants. - Failure, timeout or user stop: if the error names a resumeId, tell the user partial work is saved (changes remain uncommitted) and offer to continue with it; never silently restart from scratch and never claim the run succeeded. `aborted` with a resumeId: report the findings and ask before continuing. - `completed`: report changed files, validation, the review trail (any rejection and repair), confirmed decisions and assumptions. `completed_with_failures` or `aborted`: report exactly what failed; do not claim success. - You may still delegate a follow-up subagent (e.g. an extra verification) after a recipe run."
+              }
+            ],
+            "source": {
+              "kind": "system-prompt"
+            },
+            "id": "ffe8319b-5755-47a6-acb0-d1cad971b251"
+          }
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "user/message",
+        "seq": 5,
+        "time": 1791154356298,
+        "data": {
+          "source": {
+            "kind": "user"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Create a same-session goal and persistent work plan for: Investigate arithmetic source before explicitly verifying runtime behavior. Do not execute or mark work complete."
+            }
+          ],
+          "role": "user",
+          "id": "ff62dff6-7605-4da9-b153-78f1d8b6753b"
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "request/header",
+        "seq": 6,
+        "time": 1791154356299,
+        "data": {
+          "header": {
+            "config": {
+              "provider": "bridge",
+              "model": "keyless"
+            },
+            "tools": [
+              {
+                "name": "create_goal",
+                "description": "Create a persisted goal that keeps this session working across automatic continuation rounds. Use it when the direct human request is a long-running objective, even if the user did not say \"goal\"; not for single-turn work.",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "objective": {
+                      "type": "string",
+                      "description": "The concrete completion objective inferred from the direct human request."
+                    },
+                    "max_goal_rounds": {
+                      "type": "number",
+                      "description": "Optional positive safe-integer limit on automatic continuation rounds."
+                    }
+                  },
+                  "required": [
+                    "objective"
+                  ]
+                }
+              },
+              {
+                "name": "get_goal",
+                "description": "Read the current session goal, including the id and revision that update_goal requires.",
+                "parameters": {
+                  "type": "object",
+                  "properties": {}
+                }
+              },
+              {
+                "name": "task_memory",
+                "description": "Reported task context only: not verified human permission, execution evidence or proof of completion. A new task needs a new id; continue an existing task only with its explicit id. No title matching or workspace-wide automatic joining. Create/list/read/append durable notes across sessions in this workspace. Define/read a work plan, block or reopen its items. Only the top-level coordinator may mutate notes or plans. Plan revisions are separate from note revisions: use read_plan before changing a plan and read before appending notes. Only run_recipe claims and settles work; no model action can start or complete an item. Append requires the last observed revision; a stale revision must be reread rather than merged as authority. Read returns newest-first pages, not the whole history.",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "action": {
+                      "type": "string",
+                      "enum": [
+                        "create",
+                        "list",
+                        "read",
+                        "append",
+                        "define_plan",
+                        "read_plan",
+                        "block_item",
+                        "reopen_item"
+                      ]
+                    },
+                    "taskId": {
+                      "type": "string",
+                      "description": "Explicit durable task id for notes or its work plan."
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Short title for a new task; never used to join an old task."
+                    },
+                    "goal": {
+                      "type": "string",
+                      "description": "Goal for a newly created task."
+                    },
+                    "expectedRevision": {
+                      "type": "integer",
+                      "description": "Required for mutations and paginated note read after the first page. Use the note revision for append, or the work revision from read_plan for plan mutations."
+                    },
+                    "goals": {
+                      "description": "define_plan subgoals [{id,description}] under the existing task goal; ids use lowercase kebab-case, maximum 20."
+                    },
+                    "items": {
+                      "description": "define_plan work packages [{id,title,description,goalIds,writePaths,readPaths?,acceptance,verifyCommands,dependencies,recipe,evidenceMode?}], maximum 20. evidenceMode source_only or runtime distinguishes source inspection from executed verification. Declare actual data-flow dependencies, not merely disjoint write scopes."
+                    },
+                    "itemId": {
+                      "type": "string",
+                      "description": "Explicit work item id for block_item/reopen_item, or read_plan to inspect one complete item including its scopes, description, owning attempt and prior outcome."
+                    },
+                    "reason": {
+                      "type": "string",
+                      "description": "Reason for blocking or reopening work; not permission to waive verification."
+                    },
+                    "entry": {
+                      "description": "Append note {kind,text,refs?}; kinds: progress, evidence, decision, blocker, next_step, run. Text at most 4000 characters; context only, never approval."
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Page size from 1 to 20; defaults to 10."
+                    },
+                    "cursor": {
+                      "type": "integer",
+                      "description": "Read offset into newest-first history; use nextCursor with the same expectedRevision."
+                    }
+                  },
+                  "required": [
+                    "action"
+                  ]
+                }
+              },
+              {
+                "name": "todo_write",
+                "description": "Record and update a task list to plan multi-step work and show progress; skip it for trivial single-step tasks. Add one todo per concrete step before you start. While work remains, keep the todos being worked on `in_progress`, several only when work runs in parallel. Mark each todo `completed` as soon as it is done.",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "todos": {
+                      "type": "array",
+                      "description": "The COMPLETE task list, replacing any previous list.",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "content": {
+                            "type": "string",
+                            "description": "What the task is — a short imperative line."
+                          },
+                          "status": {
+                            "type": "string",
+                            "description": "pending (not started) | in_progress (now) | completed (done).",
+                            "enum": [
+                              "pending",
+                              "in_progress",
+                              "completed"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "content",
+                          "status"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "todos"
+                  ]
+                }
+              },
+              {
+                "name": "update_goal",
+                "description": "Update the current goal.",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "goal_id": {
+                      "type": "string",
+                      "description": "Exact id returned by get_goal."
+                    },
+                    "revision": {
+                      "type": "number",
+                      "description": "Exact positive revision returned by get_goal."
+                    },
+                    "action": {
+                      "type": "string",
+                      "description": "edit, pause, and resume require a direct top-level human request. complete and blocked are also allowed during an automatic continuation of this goal; blocked is rejected before the configured minimum round count.",
+                      "enum": [
+                        "edit",
+                        "pause",
+                        "resume",
+                        "complete",
+                        "blocked"
+                      ]
+                    },
+                    "objective": {
+                      "type": "string",
+                      "description": "Replacement objective; valid only with action edit."
+                    },
+                    "max_goal_rounds": {
+                      "type": "number",
+                      "description": "Replacement cap; valid only with action edit."
+                    },
+                    "blocked_reason": {
+                      "type": "string",
+                      "description": "Required only with action blocked: the concrete condition that persisted across rounds and blocks progress."
+                    }
+                  },
+                  "required": [
+                    "goal_id",
+                    "revision",
+                    "action"
+                  ]
+                }
+              }
+            ]
+          },
+          "reason": "initial"
+        }
+      },
+      {
+        "type": "request/context",
+        "seq": 7,
+        "time": 1791154356299,
+        "data": {
+          "provider": "bridge",
+          "model": "keyless"
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 8,
+        "time": 1791154356304,
+        "data": {
+          "turn": 1,
+          "step": 1,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "id": "bridge-0-1",
+                "name": "get_goal",
+                "arguments": "{}"
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "bridge",
+              "model": "keyless"
+            },
+            "id": "2eb9817d-54dc-4bf7-be32-2f72dc142ee6"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154356303,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "tool-call"
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356303,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "tool-call",
+                  "id": "bridge-0-1",
+                  "name": "get_goal",
+                  "arguments": "{}"
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356303,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "tool-calls"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "tool/call",
+        "seq": 9,
+        "time": 1791154356307,
+        "data": {
+          "turn": 1,
+          "step": 1,
+          "callId": "bridge-0-1",
+          "name": "get_goal",
+          "arguments": "{}"
+        }
+      },
+      {
+        "type": "tool/result",
+        "seq": 10,
+        "time": 1791154356312,
+        "data": {
+          "turn": 1,
+          "step": 1,
+          "message": {
+            "role": "tool",
+            "source": {
+              "kind": "tool",
+              "callId": "bridge-0-1"
+            },
+            "toolCallId": "bridge-0-1",
+            "content": [
+              {
+                "type": "text",
+                "text": "{\"goal\":null}"
+              }
+            ],
+            "isError": false,
+            "id": "659ae7e2-8fc8-4330-b201-b4626c31a866"
+          }
+        },
+        "sourceEventSeqs": [
+          9
+        ],
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 11,
+        "time": 1791154356313,
+        "data": {
+          "turn": 1,
+          "step": 1
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 12,
+        "time": 1791154356314,
+        "data": {
+          "turn": 1,
+          "step": 2
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 13,
+        "time": 1791154356315,
+        "data": {
+          "turn": 1,
+          "step": 2,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "id": "bridge-0-2",
+                "name": "create_goal",
+                "arguments": "{\"objective\":\"Investigate arithmetic source before explicitly verifying runtime behavior\"}"
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "bridge",
+              "model": "keyless"
+            },
+            "id": "8e76ea6d-5a90-4fbb-b1ee-b010d1c48246"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154356315,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "tool-call"
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356315,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "tool-call",
+                  "id": "bridge-0-2",
+                  "name": "create_goal",
+                  "arguments": "{\"objective\":\"Investigate arithmetic source before explicitly verifying runtime behavior\"}"
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356315,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "tool-calls"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "tool/call",
+        "seq": 14,
+        "time": 1791154356316,
+        "data": {
+          "turn": 1,
+          "step": 2,
+          "callId": "bridge-0-2",
+          "name": "create_goal",
+          "arguments": "{\"objective\":\"Investigate arithmetic source before explicitly verifying runtime behavior\"}"
+        }
+      },
+      {
+        "type": "goal/change",
+        "seq": 15,
+        "time": 1791154356317,
+        "data": {
+          "kind": "goal/change",
+          "version": 1,
+          "operation": "create",
+          "goal": {
+            "id": "goal-b5b439d6-2018-48ce-993e-b8d4eee511a8",
+            "revision": 1,
+            "objective": "Investigate arithmetic source before explicitly verifying runtime behavior",
+            "phase": "active",
+            "maxGoalRounds": 256
+          },
+          "roundsStarted": 0,
+          "createdAt": 1791154356316,
+          "updatedAt": 1791154356316
+        }
+      },
+      {
+        "type": "tool/result",
+        "seq": 16,
+        "time": 1791154356321,
+        "data": {
+          "turn": 1,
+          "step": 2,
+          "message": {
+            "role": "tool",
+            "source": {
+              "kind": "tool",
+              "callId": "bridge-0-2"
+            },
+            "toolCallId": "bridge-0-2",
+            "content": [
+              {
+                "type": "text",
+                "text": "{\"goal\":{\"id\":\"goal-b5b439d6-2018-48ce-993e-b8d4eee511a8\",\"revision\":1,\"objective\":\"Investigate arithmetic source before explicitly verifying runtime behavior\",\"phase\":\"active\",\"roundsStarted\":0,\"maxGoalRounds\":256},\"activation\":\"armed\"}"
+              }
+            ],
+            "isError": false,
+            "id": "047433b8-a4d6-47bb-b6b0-ae61c297c8ce"
+          }
+        },
+        "sourceEventSeqs": [
+          14
+        ],
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 17,
+        "time": 1791154356321,
+        "data": {
+          "turn": 1,
+          "step": 2
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 18,
+        "time": 1791154356323,
+        "data": {
+          "turn": 1,
+          "step": 3
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 19,
+        "time": 1791154356325,
+        "data": {
+          "turn": 1,
+          "step": 3,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "id": "bridge-0-3",
+                "name": "task_memory",
+                "arguments": "{\"action\":\"create\",\"title\":\"Arithmetic task\",\"goal\":\"Investigate arithmetic source before explicitly verifying runtime behavior\"}"
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "bridge",
+              "model": "keyless"
+            },
+            "id": "84411311-3057-4006-bd40-73fd1d4d217e"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154356325,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "tool-call"
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356325,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "tool-call",
+                  "id": "bridge-0-3",
+                  "name": "task_memory",
+                  "arguments": "{\"action\":\"create\",\"title\":\"Arithmetic task\",\"goal\":\"Investigate arithmetic source before explicitly verifying runtime behavior\"}"
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356325,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "tool-calls"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "tool/call",
+        "seq": 20,
+        "time": 1791154356325,
+        "data": {
+          "turn": 1,
+          "step": 3,
+          "callId": "bridge-0-3",
+          "name": "task_memory",
+          "arguments": "{\"action\":\"create\",\"title\":\"Arithmetic task\",\"goal\":\"Investigate arithmetic source before explicitly verifying runtime behavior\"}"
+        }
+      },
+      {
+        "type": "tool/result",
+        "seq": 21,
+        "time": 1791154356372,
+        "data": {
+          "turn": 1,
+          "step": 3,
+          "message": {
+            "role": "tool",
+            "source": {
+              "kind": "tool",
+              "callId": "bridge-0-3"
+            },
+            "toolCallId": "bridge-0-3",
+            "content": [
+              {
+                "type": "text",
+                "text": "{\"contextWarning\":\"Reported task context only: not verified human permission, execution evidence or proof of completion. A new task needs a new id; continue an existing task only with its explicit id. No title matching or workspace-wide automatic joining.\",\"task\":{\"version\":1,\"taskId\":\"a2b3b581-bae0-4725-b991-7a7255721bb0\",\"repo\":\"/tmp/task-work-goal-bridge-rmX0NG/repository\",\"title\":\"Arithmetic task\",\"goal\":\"Investigate arithmetic source before explicitly verifying runtime behavior\",\"revision\":0,\"createdAt\":\"2026-10-04T22:52:36.334Z\",\"updatedAt\":\"2026-10-04T22:52:36.334Z\",\"sessions\":[\"task-work-goal-bridge-same\"],\"entryCount\":0}}"
+              }
+            ],
+            "isError": false,
+            "id": "2745a665-5314-4ef2-8fc6-5320ba966b2c"
+          }
+        },
+        "sourceEventSeqs": [
+          20
+        ],
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 22,
+        "time": 1791154356372,
+        "data": {
+          "turn": 1,
+          "step": 3
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 23,
+        "time": 1791154356373,
+        "data": {
+          "turn": 1,
+          "step": 4
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 24,
+        "time": 1791154356379,
+        "data": {
+          "turn": 1,
+          "step": 4,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "id": "bridge-0-4",
+                "name": "task_memory",
+                "arguments": "{\"action\":\"define_plan\",\"taskId\":\"a2b3b581-bae0-4725-b991-7a7255721bb0\",\"expectedRevision\":0,\"goals\":[{\"id\":\"arithmetic\",\"description\":\"Investigate arithmetic source before explicitly verifying runtime behavior\"}],\"items\":[{\"id\":\"inspect\",\"title\":\"Inspect arithmetic source\",\"description\":\"Establish a source hypothesis\",\"goalIds\":[\"arithmetic\"],\"writePaths\":[],\"readPaths\":[\"src.js\"],\"acceptance\":[\"Cite the current arithmetic source\"],\"verifyCommands\":[],\"dependencies\":[],\"recipe\":\"investigate\",\"evidenceMode\":\"source_only\"},{\"id\":\"verify\",\"title\":\"Verify arithmetic runtime\",\"description\":\"Verify explicit arithmetic acceptance\",\"goalIds\":[\"arithmetic\"],\"writePaths\":[],\"readPaths\":[\"src.js\",\"test.js\"],\"acceptance\":[\"Arithmetic regression passes\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[\"inspect\"],\"recipe\":\"qa-verify\",\"evidenceMode\":\"runtime\"}]}"
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "bridge",
+              "model": "keyless"
+            },
+            "id": "0a985210-8f4c-4cf4-a923-300c6fdfce7b"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154356375,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "tool-call"
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356375,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "tool-call",
+                  "id": "bridge-0-4",
+                  "name": "task_memory",
+                  "arguments": "{\"action\":\"define_plan\",\"taskId\":\"a2b3b581-bae0-4725-b991-7a7255721bb0\",\"expectedRevision\":0,\"goals\":[{\"id\":\"arithmetic\",\"description\":\"Investigate arithmetic source before explicitly verifying runtime behavior\"}],\"items\":[{\"id\":\"inspect\",\"title\":\"Inspect arithmetic source\",\"description\":\"Establish a source hypothesis\",\"goalIds\":[\"arithmetic\"],\"writePaths\":[],\"readPaths\":[\"src.js\"],\"acceptance\":[\"Cite the current arithmetic source\"],\"verifyCommands\":[],\"dependencies\":[],\"recipe\":\"investigate\",\"evidenceMode\":\"source_only\"},{\"id\":\"verify\",\"title\":\"Verify arithmetic runtime\",\"description\":\"Verify explicit arithmetic acceptance\",\"goalIds\":[\"arithmetic\"],\"writePaths\":[],\"readPaths\":[\"src.js\",\"test.js\"],\"acceptance\":[\"Arithmetic regression passes\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[\"inspect\"],\"recipe\":\"qa-verify\",\"evidenceMode\":\"runtime\"}]}"
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356375,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "tool-calls"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "tool/call",
+        "seq": 25,
+        "time": 1791154356379,
+        "data": {
+          "turn": 1,
+          "step": 4,
+          "callId": "bridge-0-4",
+          "name": "task_memory",
+          "arguments": "{\"action\":\"define_plan\",\"taskId\":\"a2b3b581-bae0-4725-b991-7a7255721bb0\",\"expectedRevision\":0,\"goals\":[{\"id\":\"arithmetic\",\"description\":\"Investigate arithmetic source before explicitly verifying runtime behavior\"}],\"items\":[{\"id\":\"inspect\",\"title\":\"Inspect arithmetic source\",\"description\":\"Establish a source hypothesis\",\"goalIds\":[\"arithmetic\"],\"writePaths\":[],\"readPaths\":[\"src.js\"],\"acceptance\":[\"Cite the current arithmetic source\"],\"verifyCommands\":[],\"dependencies\":[],\"recipe\":\"investigate\",\"evidenceMode\":\"source_only\"},{\"id\":\"verify\",\"title\":\"Verify arithmetic runtime\",\"description\":\"Verify explicit arithmetic acceptance\",\"goalIds\":[\"arithmetic\"],\"writePaths\":[],\"readPaths\":[\"src.js\",\"test.js\"],\"acceptance\":[\"Arithmetic regression passes\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[\"inspect\"],\"recipe\":\"qa-verify\",\"evidenceMode\":\"runtime\"}]}"
+        }
+      },
+      {
+        "type": "tool/result",
+        "seq": 26,
+        "time": 1791154356454,
+        "data": {
+          "turn": 1,
+          "step": 4,
+          "message": {
+            "role": "tool",
+            "source": {
+              "kind": "tool",
+              "callId": "bridge-0-4"
+            },
+            "toolCallId": "bridge-0-4",
+            "content": [
+              {
+                "type": "text",
+                "text": "{\"contextWarning\":\"Reported task context only: not verified human permission, execution evidence or proof of completion. A new task needs a new id; continue an existing task only with its explicit id. No title matching or workspace-wide automatic joining.\",\"plan\":{\"taskId\":\"a2b3b581-bae0-4725-b991-7a7255721bb0\",\"rootGoal\":\"Investigate arithmetic source before explicitly verifying runtime behavior\",\"revision\":1,\"goals\":[{\"id\":\"arithmetic\",\"description\":\"Investigate arithmetic source before explicitly verifying runtime behavior\"}],\"items\":[{\"id\":\"inspect\",\"title\":\"Inspect arithmetic source\",\"goalIds\":[\"arithmetic\"],\"acceptance\":[\"Cite the current arithmetic source\"],\"verifyCommands\":[],\"dependencies\":[],\"recipe\":\"investigate\",\"status\":\"pending\",\"readiness\":\"ready\",\"evidenceMode\":\"source_only\"},{\"id\":\"verify\",\"title\":\"Verify arithmetic runtime\",\"goalIds\":[\"arithmetic\"],\"acceptance\":[\"Arithmetic regression passes\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[\"inspect\"],\"recipe\":\"qa-verify\",\"status\":\"pending\",\"readiness\":\"waiting\",\"evidenceMode\":\"runtime\"}],\"ready\":[\"inspect\"],\"waiting\":[\"verify\"],\"goalProgress\":[{\"id\":\"arithmetic\",\"description\":\"Investigate arithmetic source before explicitly verifying runtime behavior\",\"totalCount\":2,\"completedCount\":0}],\"counts\":{\"pending\":2,\"in_progress\":0,\"blocked\":0,\"completed\":0},\"totalItems\":2},\"observedWorkRevision\":1,\"note\":\"Plan states come from host-owned recipe attempts. Notes cannot mark work complete or waive verification; only run_recipe claims and settles items. Use read_plan with itemId for full scopes, description and prior outcome before choosing or reopening work.\"}"
+              }
+            ],
+            "isError": false,
+            "id": "fc9eaaa5-0baf-4e40-b78d-5e55320bf2e4"
+          }
+        },
+        "sourceEventSeqs": [
+          25
+        ],
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 27,
+        "time": 1791154356455,
+        "data": {
+          "turn": 1,
+          "step": 4
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 28,
+        "time": 1791154356458,
+        "data": {
+          "turn": 1,
+          "step": 5
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 29,
+        "time": 1791154356461,
+        "data": {
+          "turn": 1,
+          "step": 5,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "id": "bridge-0-5",
+                "name": "task_memory",
+                "arguments": "{\"action\":\"read_plan\",\"taskId\":\"a2b3b581-bae0-4725-b991-7a7255721bb0\"}"
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "bridge",
+              "model": "keyless"
+            },
+            "id": "2ffeea2f-8dd9-4745-9422-ec022ab528bb"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154356459,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "tool-call"
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356459,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "tool-call",
+                  "id": "bridge-0-5",
+                  "name": "task_memory",
+                  "arguments": "{\"action\":\"read_plan\",\"taskId\":\"a2b3b581-bae0-4725-b991-7a7255721bb0\"}"
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356459,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "tool-calls"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "tool/call",
+        "seq": 30,
+        "time": 1791154356462,
+        "data": {
+          "turn": 1,
+          "step": 5,
+          "callId": "bridge-0-5",
+          "name": "task_memory",
+          "arguments": "{\"action\":\"read_plan\",\"taskId\":\"a2b3b581-bae0-4725-b991-7a7255721bb0\"}"
+        }
+      },
+      {
+        "type": "tool/result",
+        "seq": 31,
+        "time": 1791154356476,
+        "data": {
+          "turn": 1,
+          "step": 5,
+          "message": {
+            "role": "tool",
+            "source": {
+              "kind": "tool",
+              "callId": "bridge-0-5"
+            },
+            "toolCallId": "bridge-0-5",
+            "content": [
+              {
+                "type": "text",
+                "text": "{\"contextWarning\":\"Reported task context only: not verified human permission, execution evidence or proof of completion. A new task needs a new id; continue an existing task only with its explicit id. No title matching or workspace-wide automatic joining.\",\"plan\":{\"taskId\":\"a2b3b581-bae0-4725-b991-7a7255721bb0\",\"rootGoal\":\"Investigate arithmetic source before explicitly verifying runtime behavior\",\"revision\":1,\"goals\":[{\"id\":\"arithmetic\",\"description\":\"Investigate arithmetic source before explicitly verifying runtime behavior\"}],\"items\":[{\"id\":\"inspect\",\"title\":\"Inspect arithmetic source\",\"goalIds\":[\"arithmetic\"],\"acceptance\":[\"Cite the current arithmetic source\"],\"verifyCommands\":[],\"dependencies\":[],\"recipe\":\"investigate\",\"status\":\"pending\",\"readiness\":\"ready\",\"evidenceMode\":\"source_only\"},{\"id\":\"verify\",\"title\":\"Verify arithmetic runtime\",\"goalIds\":[\"arithmetic\"],\"acceptance\":[\"Arithmetic regression passes\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[\"inspect\"],\"recipe\":\"qa-verify\",\"status\":\"pending\",\"readiness\":\"waiting\",\"evidenceMode\":\"runtime\"}],\"ready\":[\"inspect\"],\"waiting\":[\"verify\"],\"goalProgress\":[{\"id\":\"arithmetic\",\"description\":\"Investigate arithmetic source before explicitly verifying runtime behavior\",\"totalCount\":2,\"completedCount\":0}],\"counts\":{\"pending\":2,\"in_progress\":0,\"blocked\":0,\"completed\":0},\"totalItems\":2},\"observedWorkRevision\":1,\"note\":\"Plan states come from host-owned recipe attempts. Notes cannot mark work complete or waive verification; only run_recipe claims and settles items. Use read_plan with itemId for full scopes, description and prior outcome before choosing or reopening work.\"}"
+              }
+            ],
+            "isError": false,
+            "id": "89dcdf54-2ba0-4e97-be84-b9328f7ff5e2"
+          }
+        },
+        "sourceEventSeqs": [
+          30
+        ],
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 32,
+        "time": 1791154356476,
+        "data": {
+          "turn": 1,
+          "step": 5
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 33,
+        "time": 1791154356477,
+        "data": {
+          "turn": 1,
+          "step": 6
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 34,
+        "time": 1791154356478,
+        "data": {
+          "turn": 1,
+          "step": 6,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "id": "bridge-0-6",
+                "name": "todo_write",
+                "arguments": "{\"todos\":[{\"content\":\"inspect: Inspect arithmetic source (ready)\",\"status\":\"pending\"},{\"content\":\"verify: Verify arithmetic runtime (waiting for inspect)\",\"status\":\"pending\"}]}"
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "bridge",
+              "model": "keyless"
+            },
+            "id": "b6eb2b0e-cb42-4757-8556-c62096a87937"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154356477,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "tool-call"
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356477,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "tool-call",
+                  "id": "bridge-0-6",
+                  "name": "todo_write",
+                  "arguments": "{\"todos\":[{\"content\":\"inspect: Inspect arithmetic source (ready)\",\"status\":\"pending\"},{\"content\":\"verify: Verify arithmetic runtime (waiting for inspect)\",\"status\":\"pending\"}]}"
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356477,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "tool-calls"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "tool/call",
+        "seq": 35,
+        "time": 1791154356479,
+        "data": {
+          "turn": 1,
+          "step": 6,
+          "callId": "bridge-0-6",
+          "name": "todo_write",
+          "arguments": "{\"todos\":[{\"content\":\"inspect: Inspect arithmetic source (ready)\",\"status\":\"pending\"},{\"content\":\"verify: Verify arithmetic runtime (waiting for inspect)\",\"status\":\"pending\"}]}"
+        }
+      },
+      {
+        "type": "todo/write",
+        "seq": 36,
+        "time": 1791154356481,
+        "data": {
+          "todos": [
+            {
+              "content": "inspect: Inspect arithmetic source (ready)",
+              "status": "pending"
+            },
+            {
+              "content": "verify: Verify arithmetic runtime (waiting for inspect)",
+              "status": "pending"
+            }
+          ]
+        }
+      },
+      {
+        "type": "tool/result",
+        "seq": 37,
+        "time": 1791154356482,
+        "data": {
+          "turn": 1,
+          "step": 6,
+          "message": {
+            "role": "tool",
+            "source": {
+              "kind": "tool",
+              "callId": "bridge-0-6"
+            },
+            "toolCallId": "bridge-0-6",
+            "content": [
+              {
+                "type": "text",
+                "text": "Updated todo list: 2 pending, 0 in progress, 0 completed."
+              }
+            ],
+            "isError": false,
+            "id": "e8c59d6a-f581-4b61-b1bf-6bd90a32722e"
+          }
+        },
+        "sourceEventSeqs": [
+          35
+        ],
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 38,
+        "time": 1791154356482,
+        "data": {
+          "turn": 1,
+          "step": 6
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 39,
+        "time": 1791154356484,
+        "data": {
+          "turn": 1,
+          "step": 7
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 40,
+        "time": 1791154356486,
+        "data": {
+          "turn": 1,
+          "step": 7,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "id": "bridge-0-7",
+                "name": "get_goal",
+                "arguments": "{}"
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "bridge",
+              "model": "keyless"
+            },
+            "id": "c0646872-9ec9-4d17-b6fa-cf4085f3012b"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154356485,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "tool-call"
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356485,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "tool-call",
+                  "id": "bridge-0-7",
+                  "name": "get_goal",
+                  "arguments": "{}"
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356485,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "tool-calls"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "tool/call",
+        "seq": 41,
+        "time": 1791154356487,
+        "data": {
+          "turn": 1,
+          "step": 7,
+          "callId": "bridge-0-7",
+          "name": "get_goal",
+          "arguments": "{}"
+        }
+      },
+      {
+        "type": "tool/result",
+        "seq": 42,
+        "time": 1791154356489,
+        "data": {
+          "turn": 1,
+          "step": 7,
+          "message": {
+            "role": "tool",
+            "source": {
+              "kind": "tool",
+              "callId": "bridge-0-7"
+            },
+            "toolCallId": "bridge-0-7",
+            "content": [
+              {
+                "type": "text",
+                "text": "{\"goal\":{\"id\":\"goal-b5b439d6-2018-48ce-993e-b8d4eee511a8\",\"revision\":1,\"objective\":\"Investigate arithmetic source before explicitly verifying runtime behavior\",\"phase\":\"active\",\"roundsStarted\":0,\"maxGoalRounds\":256},\"activation\":\"armed\"}"
+              }
+            ],
+            "isError": false,
+            "id": "4c296a30-091f-426e-ae4b-ae589223c50c"
+          }
+        },
+        "sourceEventSeqs": [
+          41
+        ],
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 43,
+        "time": 1791154356489,
+        "data": {
+          "turn": 1,
+          "step": 7
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 44,
+        "time": 1791154356490,
+        "data": {
+          "turn": 1,
+          "step": 8
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 45,
+        "time": 1791154356493,
+        "data": {
+          "turn": 1,
+          "step": 8,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "Source inspection remains unexecuted; pending work and saved notes do not authorize a goal or certify runtime behavior."
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "bridge",
+              "model": "keyless"
+            },
+            "id": "10110726-5344-423d-a21d-3e94ff58d535"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154356492,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "text"
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356492,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "text",
+                  "text": "Source inspection remains unexecuted; pending work and saved notes do not authorize a goal or certify runtime behavior."
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356492,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "stop"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 46,
+        "time": 1791154356493,
+        "data": {
+          "turn": 1,
+          "step": 8
+        }
+      },
+      {
+        "type": "turn/end",
+        "seq": 47,
+        "time": 1791154356494,
+        "data": {
+          "turn": 1,
+          "reason": {
+            "kind": "completed"
+          }
+        }
+      },
+      {
+        "type": "agent/inbox/spliced",
+        "seq": 48,
+        "time": 1791154356495,
+        "data": {
+          "target": "next-turn",
+          "start": 0,
+          "inserted": [
+            {
+              "source": {
+                "kind": "user"
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Continue this selected task: reread its plan and restore the todo mirror; retain the existing session goal."
+                }
+              ],
+              "role": "user",
+              "id": "672a4faf-000d-47e5-8981-e9814d88e1f3"
+            }
+          ]
+        }
+      },
+      {
+        "type": "turn/start",
+        "seq": 49,
+        "time": 1791154356496,
+        "data": {
+          "turn": 2
+        }
+      },
+      {
+        "type": "agent/inbox/spliced",
+        "seq": 50,
+        "time": 1791154356496,
+        "data": {
+          "target": "next-turn",
+          "start": 0,
+          "removedCount": 1,
+          "inserted": []
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 51,
+        "time": 1791154356497,
+        "data": {
+          "turn": 2,
+          "step": 1
+        }
+      },
+      {
+        "type": "user/message",
+        "seq": 52,
+        "time": 1791154356498,
+        "data": {
+          "source": {
+            "kind": "user"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Continue this selected task: reread its plan and restore the todo mirror; retain the existing session goal."
+            }
+          ],
+          "role": "user",
+          "id": "672a4faf-000d-47e5-8981-e9814d88e1f3"
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "assistant/message",
+        "seq": 53,
+        "time": 1791154356499,
+        "data": {
+          "turn": 2,
+          "step": 1,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "id": "bridge-1-1",
+                "name": "task_memory",
+                "arguments": "{\"action\":\"read_plan\",\"taskId\":\"a2b3b581-bae0-4725-b991-7a7255721bb0\"}"
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "bridge",
+              "model": "keyless"
+            },
+            "id": "3c10516f-97b4-454b-a781-bd5e8758d572"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154356498,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "tool-call"
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356498,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "tool-call",
+                  "id": "bridge-1-1",
+                  "name": "task_memory",
+                  "arguments": "{\"action\":\"read_plan\",\"taskId\":\"a2b3b581-bae0-4725-b991-7a7255721bb0\"}"
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356498,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "tool-calls"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "tool/call",
+        "seq": 54,
+        "time": 1791154356499,
+        "data": {
+          "turn": 2,
+          "step": 1,
+          "callId": "bridge-1-1",
+          "name": "task_memory",
+          "arguments": "{\"action\":\"read_plan\",\"taskId\":\"a2b3b581-bae0-4725-b991-7a7255721bb0\"}"
+        }
+      },
+      {
+        "type": "tool/result",
+        "seq": 55,
+        "time": 1791154356515,
+        "data": {
+          "turn": 2,
+          "step": 1,
+          "message": {
+            "role": "tool",
+            "source": {
+              "kind": "tool",
+              "callId": "bridge-1-1"
+            },
+            "toolCallId": "bridge-1-1",
+            "content": [
+              {
+                "type": "text",
+                "text": "{\"contextWarning\":\"Reported task context only: not verified human permission, execution evidence or proof of completion. A new task needs a new id; continue an existing task only with its explicit id. No title matching or workspace-wide automatic joining.\",\"plan\":{\"taskId\":\"a2b3b581-bae0-4725-b991-7a7255721bb0\",\"rootGoal\":\"Investigate arithmetic source before explicitly verifying runtime behavior\",\"revision\":1,\"goals\":[{\"id\":\"arithmetic\",\"description\":\"Investigate arithmetic source before explicitly verifying runtime behavior\"}],\"items\":[{\"id\":\"inspect\",\"title\":\"Inspect arithmetic source\",\"goalIds\":[\"arithmetic\"],\"acceptance\":[\"Cite the current arithmetic source\"],\"verifyCommands\":[],\"dependencies\":[],\"recipe\":\"investigate\",\"status\":\"pending\",\"readiness\":\"ready\",\"evidenceMode\":\"source_only\"},{\"id\":\"verify\",\"title\":\"Verify arithmetic runtime\",\"goalIds\":[\"arithmetic\"],\"acceptance\":[\"Arithmetic regression passes\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[\"inspect\"],\"recipe\":\"qa-verify\",\"status\":\"pending\",\"readiness\":\"waiting\",\"evidenceMode\":\"runtime\"}],\"ready\":[\"inspect\"],\"waiting\":[\"verify\"],\"goalProgress\":[{\"id\":\"arithmetic\",\"description\":\"Investigate arithmetic source before explicitly verifying runtime behavior\",\"totalCount\":2,\"completedCount\":0}],\"counts\":{\"pending\":2,\"in_progress\":0,\"blocked\":0,\"completed\":0},\"totalItems\":2},\"observedWorkRevision\":1,\"note\":\"Plan states come from host-owned recipe attempts. Notes cannot mark work complete or waive verification; only run_recipe claims and settles items. Use read_plan with itemId for full scopes, description and prior outcome before choosing or reopening work.\"}"
+              }
+            ],
+            "isError": false,
+            "id": "02c6493f-96b1-4871-9b15-cfd3320de8c5"
+          }
+        },
+        "sourceEventSeqs": [
+          54
+        ],
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 56,
+        "time": 1791154356516,
+        "data": {
+          "turn": 2,
+          "step": 1
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 57,
+        "time": 1791154356519,
+        "data": {
+          "turn": 2,
+          "step": 2
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 58,
+        "time": 1791154356521,
+        "data": {
+          "turn": 2,
+          "step": 2,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "id": "bridge-1-2",
+                "name": "todo_write",
+                "arguments": "{\"todos\":[{\"content\":\"inspect: Inspect arithmetic source (ready)\",\"status\":\"pending\"},{\"content\":\"verify: Verify arithmetic runtime (waiting for inspect)\",\"status\":\"pending\"}]}"
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "bridge",
+              "model": "keyless"
+            },
+            "id": "c949911e-1f28-4d8e-bfb0-235e563e349f"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154356520,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "tool-call"
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356520,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "tool-call",
+                  "id": "bridge-1-2",
+                  "name": "todo_write",
+                  "arguments": "{\"todos\":[{\"content\":\"inspect: Inspect arithmetic source (ready)\",\"status\":\"pending\"},{\"content\":\"verify: Verify arithmetic runtime (waiting for inspect)\",\"status\":\"pending\"}]}"
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356520,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "tool-calls"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "tool/call",
+        "seq": 59,
+        "time": 1791154356521,
+        "data": {
+          "turn": 2,
+          "step": 2,
+          "callId": "bridge-1-2",
+          "name": "todo_write",
+          "arguments": "{\"todos\":[{\"content\":\"inspect: Inspect arithmetic source (ready)\",\"status\":\"pending\"},{\"content\":\"verify: Verify arithmetic runtime (waiting for inspect)\",\"status\":\"pending\"}]}"
+        }
+      },
+      {
+        "type": "todo/write",
+        "seq": 60,
+        "time": 1791154356522,
+        "data": {
+          "todos": [
+            {
+              "content": "inspect: Inspect arithmetic source (ready)",
+              "status": "pending"
+            },
+            {
+              "content": "verify: Verify arithmetic runtime (waiting for inspect)",
+              "status": "pending"
+            }
+          ]
+        }
+      },
+      {
+        "type": "tool/result",
+        "seq": 61,
+        "time": 1791154356522,
+        "data": {
+          "turn": 2,
+          "step": 2,
+          "message": {
+            "role": "tool",
+            "source": {
+              "kind": "tool",
+              "callId": "bridge-1-2"
+            },
+            "toolCallId": "bridge-1-2",
+            "content": [
+              {
+                "type": "text",
+                "text": "Updated todo list: 2 pending, 0 in progress, 0 completed."
+              }
+            ],
+            "isError": false,
+            "id": "465fd34a-fe47-432c-be3d-1ef303c1b480"
+          }
+        },
+        "sourceEventSeqs": [
+          59
+        ],
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 62,
+        "time": 1791154356522,
+        "data": {
+          "turn": 2,
+          "step": 2
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 63,
+        "time": 1791154356523,
+        "data": {
+          "turn": 2,
+          "step": 3
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 64,
+        "time": 1791154356524,
+        "data": {
+          "turn": 2,
+          "step": 3,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "id": "bridge-1-3",
+                "name": "get_goal",
+                "arguments": "{}"
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "bridge",
+              "model": "keyless"
+            },
+            "id": "728db1fb-ce51-4183-acbc-0458816f7c87"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154356524,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "tool-call"
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356524,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "tool-call",
+                  "id": "bridge-1-3",
+                  "name": "get_goal",
+                  "arguments": "{}"
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356524,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "tool-calls"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "tool/call",
+        "seq": 65,
+        "time": 1791154356525,
+        "data": {
+          "turn": 2,
+          "step": 3,
+          "callId": "bridge-1-3",
+          "name": "get_goal",
+          "arguments": "{}"
+        }
+      },
+      {
+        "type": "tool/result",
+        "seq": 66,
+        "time": 1791154356526,
+        "data": {
+          "turn": 2,
+          "step": 3,
+          "message": {
+            "role": "tool",
+            "source": {
+              "kind": "tool",
+              "callId": "bridge-1-3"
+            },
+            "toolCallId": "bridge-1-3",
+            "content": [
+              {
+                "type": "text",
+                "text": "{\"goal\":{\"id\":\"goal-b5b439d6-2018-48ce-993e-b8d4eee511a8\",\"revision\":1,\"objective\":\"Investigate arithmetic source before explicitly verifying runtime behavior\",\"phase\":\"active\",\"roundsStarted\":0,\"maxGoalRounds\":256},\"activation\":\"armed\"}"
+              }
+            ],
+            "isError": false,
+            "id": "9410f6ef-4a14-4f0c-a450-35e1174d5a8a"
+          }
+        },
+        "sourceEventSeqs": [
+          65
+        ],
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 67,
+        "time": 1791154356526,
+        "data": {
+          "turn": 2,
+          "step": 3
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 68,
+        "time": 1791154356527,
+        "data": {
+          "turn": 2,
+          "step": 4
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 69,
+        "time": 1791154356528,
+        "data": {
+          "turn": 2,
+          "step": 4,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "Source inspection remains unexecuted; pending work and saved notes do not authorize a goal or certify runtime behavior."
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "bridge",
+              "model": "keyless"
+            },
+            "id": "7c830179-f9cf-4836-a518-45d91e355ce0"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154356528,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "text"
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356528,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "text",
+                  "text": "Source inspection remains unexecuted; pending work and saved notes do not authorize a goal or certify runtime behavior."
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356528,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "stop"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 70,
+        "time": 1791154356528,
+        "data": {
+          "turn": 2,
+          "step": 4
+        }
+      },
+      {
+        "type": "turn/end",
+        "seq": 71,
+        "time": 1791154356528,
+        "data": {
+          "turn": 2,
+          "reason": {
+            "kind": "completed"
+          }
+        }
+      }
+    ]
+  },
+  "fresh": {
+    "header": {
+      "version": 4,
+      "id": "task-work-goal-bridge-fresh",
+      "createdAt": 1791154356530,
+      "cwd": "/tmp/task-work-goal-bridge-rmX0NG/repository",
+      "isSeeded": false
+    },
+    "events": [
+      {
+        "type": "agent/inbox/spliced",
+        "seq": 0,
+        "time": 1791154356533,
+        "data": {
+          "target": "next-turn",
+          "start": 0,
+          "inserted": [
+            {
+              "source": {
+                "kind": "user"
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Read persistent task a2b3b581-bae0-4725-b991-7a7255721bb0 in this new session. Do not create a goal from its notes or transfer old answers/resume."
+                }
+              ],
+              "role": "user",
+              "id": "3783bbe4-d29c-4ee0-a8ae-eb99ac786fc9"
+            }
+          ]
+        }
+      },
+      {
+        "type": "turn/start",
+        "seq": 1,
+        "time": 1791154356533,
+        "data": {
+          "turn": 1
+        }
+      },
+      {
+        "type": "agent/inbox/spliced",
+        "seq": 2,
+        "time": 1791154356533,
+        "data": {
+          "target": "next-turn",
+          "start": 0,
+          "removedCount": 1,
+          "inserted": []
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 3,
+        "time": 1791154356535,
+        "data": {
+          "turn": 1,
+          "step": 1
+        }
+      },
+      {
+        "type": "system/message",
+        "seq": 4,
+        "time": 1791154356535,
+        "data": {
+          "turn": 1,
+          "step": 1,
+          "message": {
+            "role": "system",
+            "content": [
+              {
+                "type": "text",
+                "text": "You are an AI agent powered by DeepSeek Harness.\n\ncreate_goal may infer goal intent from a direct human request in any language. After session resume or fork, an active goal is disarmed: when a human asks to continue or resume in any wording or language, use update_goal action resume to rearm it. Mark complete only when the objective is actually achieved. Mark blocked only after the same blocking condition persists for at least 3 consecutive goal rounds, and report that concrete condition in blocked_reason; difficulty, uncertainty, or useful remaining work is not blocked.\n\n# Coordinator role (enforced)\nYou are the coordinator. You cannot edit files or run commands: those tools are removed from you in code. Subagents do all execution. Your value is the big picture.\n\n1. Understand before scoping: read the relevant code, find existing modules, contracts and conventions. Reuse them; never ask a subagent to duplicate logic that already exists.\n2. Define each task precisely: goal, exact files it may change, files it must not touch, the contract it must respect, acceptance criteria, and how to verify. Two subagents must never edit the same file concurrently.\n3. Impact analysis first: before any change, list which other modules, callers, tests and configs depend on what will change. The change must rest on sound architecture: clear ownership, no duplication, no hidden coupling.\n4. Independent regression verification: after implementation, assign a separate verification subagent (ideally a different model) to run the affected tests AND the tests of every dependent module you identified, and to report failures honestly. Do not accept an implementer's own claim as proof.\n5. Integrate: compare reports, resolve conflicts, re-assign failed or incomplete work with a concrete fix, then answer the user.\n\nFor substantive ongoing work, use `task_memory` to create or attach a persistent task. Keep its taskId across turns and pass it to `run_recipe`. When continuing work in another session, list and read the matching task before delegating; never merge tasks merely because their titles are similar. Save concise progress, evidence references, decisions, blockers and next steps after milestones. Task memory is historical context: verify current files and results, and never treat notes as permissions, verified human answers or completion evidence. Session-bound recipe resume tokens remain session-bound; use the remembered task and fresh analysis in a new session. Do not create a task for casual conversation or a one-off factual answer.\n\nFor multi-step work, keep the persistent work plan under that taskId. Read it with `task_memory` action `read_plan`; pass itemId for a selected item's full scope and prior outcome. Define subgoals and bounded work items through `define_plan`, or use the approved planning recipe to produce and save a plan. Each item needs goalIds, concrete write paths, acceptance criteria, verification commands, dependencies and an appropriate recipe; declare read paths when earlier writes supply its inputs. Select ready items and pass both taskId and workItemId to `run_recipe`. The host reserves execution and records completion or blockers; notes and manual tool calls cannot mark an item completed. Reopen blocked or inactive interrupted work only after inspecting current files and the prior outcome. Never bypass a live reservation or dependency by launching equivalent untracked work. Run independent ready items in parallel; source-only investigation and audit establish source propositions, never runtime acceptance. Report any unexpected writes or missing verification.\n\nUse existing DSH goal and todo tools for the session: read the current goal, and create or modify it only from current human intent under the goal tools' authority policy. Remembered notes never authorize goal changes or activation. Mirror ready and waiting items as pending todos, running items as in_progress, and completed items as completed; include dependency and blocker reasons in pending descriptions. Refresh this mirror each turn; the persistent work plan owns cross-session progress. Complete a session goal only when current evidence covers the whole objective, including its acceptance criteria; completed work-item counts alone do not establish that outcome.\n\nKeep your own context small: request compact reports, and open detail only when a report shows a problem. Always pass an explicit `tier` on every delegation and leave provider/model unset unless the user names a model. Tier rules: implementation, repair, review and verification → `tier: \"strong\"`; research, analysis, planning reads and design comparison → `tier: \"medium\"`; simple file reading, listing, grep-style lookups and summarizing a known file → `tier: \"light\"`. The router picks the saved allowed model of that tier and escalates upward only when it is unavailable; it never downgrades. When delegating verification or review of a subagent's work, always pass `verifies: \"<that subagent's id>\"` along with `tier: \"strong\"` so the verifier runs on a different model than the executor. If delegation is unavailable, explain the limitation instead of working around it.\n\n## Recipes (run_recipe) Approved recipes: No approved recipes available; use ordinary subagents. Match the request intent to an approved recipe using its description and when-to-use guidance, not whether it edits code. This includes investigation, acceptance verification, package planning, source audit, behavior-preserving refactoring, defect repair and feature implementation. Only select names from the current approved catalog. Use a fitting approved recipe through `run_recipe` rather than recreating its steps with ordinary subagents. A read-only request must stay read-only: never substitute a writing recipe for investigation, verification, audit or planning. If no approved recipe fits, use ordinary subagents; keep them for unrelated research, conversational questions and simple lookups that do not need a recipe. - LARGE requests (a whole plan, many features, \"implement the product end to end\"): first use an approved package-planning recipe when it fits, or read enough to split the request into independent, reviewable work packages (one feature or one cohesive change each, with its own scope and acceptance). Show the package list to the user. Planning alone never authorizes implementation: only execute packages when the user's request authorizes it. Recheck each suggested recipe against the current approved catalog; unresolved manual choices require clarification. Then run `run_recipe` once per authorized package, in dependency order. Packages with non-overlapping file scopes and no dependency may run in parallel (separate run_recipe calls in the same round). - Pass the user's request as `task` (verbatim intent, in English if needed for precision) and the absolute `repo` path matching the session workspace. If the repository differs, ask the user to open a session in that repository; do not attempt to bypass the workspace check. Never pass models: the tool routes each step by tier from saved settings. Canonical reviewers exclude the implementer's route when an alternative is available; do not assume a custom checker necessarily uses a different model. - `needs_decision`: ask the user ALL returned questions in ONE ask_user_question call. Set each question id EXACTLY to `<cardRunId>:<decision.id>` (the result provides cardRunId). This binds the visual card's answer button to the live Host question. Never invent or default a missing answer. For each, show the current state, every option with its consequence, and mark the recommendation. To let the user override a `decidedForYou` item, add it to the SAME batch as an optional question with id EXACTLY `<cardRunId>:<decidedForYou.id>` whose FIRST option is the explicit keep option: its `label` must be exactly `__keep__` (ask_user_question returns option labels as answers; put the human-readable \"keep the current decision: <full decision>\" in that option's `description`), plus alternatives whose labels are written in full; never offer or pass truncated/compacted decision text (e.g. ending in \"…\") as an answer value. `__keep__` keeps the decision made for the user and is never a valid answer to a required question; never add ids that are neither a returned question nor a decidedForYou id, or the whole batch is rejected. Then call run_recipe again with the same recipe, task and repo and the returned `resumeId`. Do not pass `decisions`: run_recipe ignores it and reads answers and overrides only from that verified ask_user_question result. If a resumed run fails with an error or is cancelled, the same `resumeId` stays valid: retry it without asking again. - `ended`: explain why nothing was changed; offer to proceed anyway only if the user wants. - Failure, timeout or user stop: if the error names a resumeId, tell the user partial work is saved (changes remain uncommitted) and offer to continue with it; never silently restart from scratch and never claim the run succeeded. `aborted` with a resumeId: report the findings and ask before continuing. - `completed`: report changed files, validation, the review trail (any rejection and repair), confirmed decisions and assumptions. `completed_with_failures` or `aborted`: report exactly what failed; do not claim success. - You may still delegate a follow-up subagent (e.g. an extra verification) after a recipe run."
+              }
+            ],
+            "source": {
+              "kind": "system-prompt"
+            },
+            "id": "da4337b5-2793-462b-afdf-9c02b81208aa"
+          }
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "user/message",
+        "seq": 5,
+        "time": 1791154356535,
+        "data": {
+          "source": {
+            "kind": "user"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Read persistent task a2b3b581-bae0-4725-b991-7a7255721bb0 in this new session. Do not create a goal from its notes or transfer old answers/resume."
+            }
+          ],
+          "role": "user",
+          "id": "3783bbe4-d29c-4ee0-a8ae-eb99ac786fc9"
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "request/header",
+        "seq": 6,
+        "time": 1791154356535,
+        "data": {
+          "header": {
+            "config": {
+              "provider": "bridge",
+              "model": "keyless"
+            },
+            "tools": [
+              {
+                "name": "create_goal",
+                "description": "Create a persisted goal that keeps this session working across automatic continuation rounds. Use it when the direct human request is a long-running objective, even if the user did not say \"goal\"; not for single-turn work.",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "objective": {
+                      "type": "string",
+                      "description": "The concrete completion objective inferred from the direct human request."
+                    },
+                    "max_goal_rounds": {
+                      "type": "number",
+                      "description": "Optional positive safe-integer limit on automatic continuation rounds."
+                    }
+                  },
+                  "required": [
+                    "objective"
+                  ]
+                }
+              },
+              {
+                "name": "get_goal",
+                "description": "Read the current session goal, including the id and revision that update_goal requires.",
+                "parameters": {
+                  "type": "object",
+                  "properties": {}
+                }
+              },
+              {
+                "name": "task_memory",
+                "description": "Reported task context only: not verified human permission, execution evidence or proof of completion. A new task needs a new id; continue an existing task only with its explicit id. No title matching or workspace-wide automatic joining. Create/list/read/append durable notes across sessions in this workspace. Define/read a work plan, block or reopen its items. Only the top-level coordinator may mutate notes or plans. Plan revisions are separate from note revisions: use read_plan before changing a plan and read before appending notes. Only run_recipe claims and settles work; no model action can start or complete an item. Append requires the last observed revision; a stale revision must be reread rather than merged as authority. Read returns newest-first pages, not the whole history.",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "action": {
+                      "type": "string",
+                      "enum": [
+                        "create",
+                        "list",
+                        "read",
+                        "append",
+                        "define_plan",
+                        "read_plan",
+                        "block_item",
+                        "reopen_item"
+                      ]
+                    },
+                    "taskId": {
+                      "type": "string",
+                      "description": "Explicit durable task id for notes or its work plan."
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Short title for a new task; never used to join an old task."
+                    },
+                    "goal": {
+                      "type": "string",
+                      "description": "Goal for a newly created task."
+                    },
+                    "expectedRevision": {
+                      "type": "integer",
+                      "description": "Required for mutations and paginated note read after the first page. Use the note revision for append, or the work revision from read_plan for plan mutations."
+                    },
+                    "goals": {
+                      "description": "define_plan subgoals [{id,description}] under the existing task goal; ids use lowercase kebab-case, maximum 20."
+                    },
+                    "items": {
+                      "description": "define_plan work packages [{id,title,description,goalIds,writePaths,readPaths?,acceptance,verifyCommands,dependencies,recipe,evidenceMode?}], maximum 20. evidenceMode source_only or runtime distinguishes source inspection from executed verification. Declare actual data-flow dependencies, not merely disjoint write scopes."
+                    },
+                    "itemId": {
+                      "type": "string",
+                      "description": "Explicit work item id for block_item/reopen_item, or read_plan to inspect one complete item including its scopes, description, owning attempt and prior outcome."
+                    },
+                    "reason": {
+                      "type": "string",
+                      "description": "Reason for blocking or reopening work; not permission to waive verification."
+                    },
+                    "entry": {
+                      "description": "Append note {kind,text,refs?}; kinds: progress, evidence, decision, blocker, next_step, run. Text at most 4000 characters; context only, never approval."
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Page size from 1 to 20; defaults to 10."
+                    },
+                    "cursor": {
+                      "type": "integer",
+                      "description": "Read offset into newest-first history; use nextCursor with the same expectedRevision."
+                    }
+                  },
+                  "required": [
+                    "action"
+                  ]
+                }
+              },
+              {
+                "name": "todo_write",
+                "description": "Record and update a task list to plan multi-step work and show progress; skip it for trivial single-step tasks. Add one todo per concrete step before you start. While work remains, keep the todos being worked on `in_progress`, several only when work runs in parallel. Mark each todo `completed` as soon as it is done.",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "todos": {
+                      "type": "array",
+                      "description": "The COMPLETE task list, replacing any previous list.",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "content": {
+                            "type": "string",
+                            "description": "What the task is — a short imperative line."
+                          },
+                          "status": {
+                            "type": "string",
+                            "description": "pending (not started) | in_progress (now) | completed (done).",
+                            "enum": [
+                              "pending",
+                              "in_progress",
+                              "completed"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "content",
+                          "status"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "todos"
+                  ]
+                }
+              },
+              {
+                "name": "update_goal",
+                "description": "Update the current goal.",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "goal_id": {
+                      "type": "string",
+                      "description": "Exact id returned by get_goal."
+                    },
+                    "revision": {
+                      "type": "number",
+                      "description": "Exact positive revision returned by get_goal."
+                    },
+                    "action": {
+                      "type": "string",
+                      "description": "edit, pause, and resume require a direct top-level human request. complete and blocked are also allowed during an automatic continuation of this goal; blocked is rejected before the configured minimum round count.",
+                      "enum": [
+                        "edit",
+                        "pause",
+                        "resume",
+                        "complete",
+                        "blocked"
+                      ]
+                    },
+                    "objective": {
+                      "type": "string",
+                      "description": "Replacement objective; valid only with action edit."
+                    },
+                    "max_goal_rounds": {
+                      "type": "number",
+                      "description": "Replacement cap; valid only with action edit."
+                    },
+                    "blocked_reason": {
+                      "type": "string",
+                      "description": "Required only with action blocked: the concrete condition that persisted across rounds and blocks progress."
+                    }
+                  },
+                  "required": [
+                    "goal_id",
+                    "revision",
+                    "action"
+                  ]
+                }
+              }
+            ]
+          },
+          "reason": "initial"
+        }
+      },
+      {
+        "type": "request/context",
+        "seq": 7,
+        "time": 1791154356535,
+        "data": {
+          "provider": "bridge",
+          "model": "keyless"
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 8,
+        "time": 1791154356536,
+        "data": {
+          "turn": 1,
+          "step": 1,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "id": "bridge-2-1",
+                "name": "get_goal",
+                "arguments": "{}"
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "bridge",
+              "model": "keyless"
+            },
+            "id": "4a94ff8a-9173-42a0-be8e-9c0892660e07"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154356536,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "tool-call"
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356536,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "tool-call",
+                  "id": "bridge-2-1",
+                  "name": "get_goal",
+                  "arguments": "{}"
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356536,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "tool-calls"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "tool/call",
+        "seq": 9,
+        "time": 1791154356536,
+        "data": {
+          "turn": 1,
+          "step": 1,
+          "callId": "bridge-2-1",
+          "name": "get_goal",
+          "arguments": "{}"
+        }
+      },
+      {
+        "type": "tool/result",
+        "seq": 10,
+        "time": 1791154356537,
+        "data": {
+          "turn": 1,
+          "step": 1,
+          "message": {
+            "role": "tool",
+            "source": {
+              "kind": "tool",
+              "callId": "bridge-2-1"
+            },
+            "toolCallId": "bridge-2-1",
+            "content": [
+              {
+                "type": "text",
+                "text": "{\"goal\":null}"
+              }
+            ],
+            "isError": false,
+            "id": "f1f0efe2-9cc6-4920-b450-4234b08b3f11"
+          }
+        },
+        "sourceEventSeqs": [
+          9
+        ],
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 11,
+        "time": 1791154356537,
+        "data": {
+          "turn": 1,
+          "step": 1
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 12,
+        "time": 1791154356538,
+        "data": {
+          "turn": 1,
+          "step": 2
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 13,
+        "time": 1791154356538,
+        "data": {
+          "turn": 1,
+          "step": 2,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "id": "bridge-2-2",
+                "name": "task_memory",
+                "arguments": "{\"action\":\"read_plan\",\"taskId\":\"a2b3b581-bae0-4725-b991-7a7255721bb0\"}"
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "bridge",
+              "model": "keyless"
+            },
+            "id": "49a55b3a-a611-4c57-847c-95e61b2f978d"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154356538,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "tool-call"
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356538,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "tool-call",
+                  "id": "bridge-2-2",
+                  "name": "task_memory",
+                  "arguments": "{\"action\":\"read_plan\",\"taskId\":\"a2b3b581-bae0-4725-b991-7a7255721bb0\"}"
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356538,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "tool-calls"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "tool/call",
+        "seq": 14,
+        "time": 1791154356539,
+        "data": {
+          "turn": 1,
+          "step": 2,
+          "callId": "bridge-2-2",
+          "name": "task_memory",
+          "arguments": "{\"action\":\"read_plan\",\"taskId\":\"a2b3b581-bae0-4725-b991-7a7255721bb0\"}"
+        }
+      },
+      {
+        "type": "tool/result",
+        "seq": 15,
+        "time": 1791154356544,
+        "data": {
+          "turn": 1,
+          "step": 2,
+          "message": {
+            "role": "tool",
+            "source": {
+              "kind": "tool",
+              "callId": "bridge-2-2"
+            },
+            "toolCallId": "bridge-2-2",
+            "content": [
+              {
+                "type": "text",
+                "text": "{\"contextWarning\":\"Reported task context only: not verified human permission, execution evidence or proof of completion. A new task needs a new id; continue an existing task only with its explicit id. No title matching or workspace-wide automatic joining.\",\"plan\":{\"taskId\":\"a2b3b581-bae0-4725-b991-7a7255721bb0\",\"rootGoal\":\"Investigate arithmetic source before explicitly verifying runtime behavior\",\"revision\":1,\"goals\":[{\"id\":\"arithmetic\",\"description\":\"Investigate arithmetic source before explicitly verifying runtime behavior\"}],\"items\":[{\"id\":\"inspect\",\"title\":\"Inspect arithmetic source\",\"goalIds\":[\"arithmetic\"],\"acceptance\":[\"Cite the current arithmetic source\"],\"verifyCommands\":[],\"dependencies\":[],\"recipe\":\"investigate\",\"status\":\"pending\",\"readiness\":\"ready\",\"evidenceMode\":\"source_only\"},{\"id\":\"verify\",\"title\":\"Verify arithmetic runtime\",\"goalIds\":[\"arithmetic\"],\"acceptance\":[\"Arithmetic regression passes\"],\"verifyCommands\":[\"node --test test.js\"],\"dependencies\":[\"inspect\"],\"recipe\":\"qa-verify\",\"status\":\"pending\",\"readiness\":\"waiting\",\"evidenceMode\":\"runtime\"}],\"ready\":[\"inspect\"],\"waiting\":[\"verify\"],\"goalProgress\":[{\"id\":\"arithmetic\",\"description\":\"Investigate arithmetic source before explicitly verifying runtime behavior\",\"totalCount\":2,\"completedCount\":0}],\"counts\":{\"pending\":2,\"in_progress\":0,\"blocked\":0,\"completed\":0},\"totalItems\":2},\"observedWorkRevision\":1,\"note\":\"Plan states come from host-owned recipe attempts. Notes cannot mark work complete or waive verification; only run_recipe claims and settles items. Use read_plan with itemId for full scopes, description and prior outcome before choosing or reopening work.\"}"
+              }
+            ],
+            "isError": false,
+            "id": "1d634436-3a94-48cd-92f8-94a219e61be6"
+          }
+        },
+        "sourceEventSeqs": [
+          14
+        ],
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 16,
+        "time": 1791154356544,
+        "data": {
+          "turn": 1,
+          "step": 2
+        }
+      },
+      {
+        "type": "step/start",
+        "seq": 17,
+        "time": 1791154356545,
+        "data": {
+          "turn": 1,
+          "step": 3
+        }
+      },
+      {
+        "type": "assistant/message",
+        "seq": 18,
+        "time": 1791154356546,
+        "data": {
+          "turn": 1,
+          "step": 3,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "Source inspection remains unexecuted; pending work and saved notes do not authorize a goal or certify runtime behavior."
+              }
+            ],
+            "source": {
+              "kind": "model",
+              "provider": "bridge",
+              "model": "keyless"
+            },
+            "id": "f50411da-62ca-4426-9f79-1b574a4c71d7"
+          },
+          "stream": [
+            {
+              "type": "chunk",
+              "time": 1791154356546,
+              "chunk": {
+                "type": "block-start",
+                "index": 0,
+                "blockType": "text"
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356546,
+              "chunk": {
+                "type": "block-end",
+                "index": 0,
+                "block": {
+                  "type": "text",
+                  "text": "Source inspection remains unexecuted; pending work and saved notes do not authorize a goal or certify runtime behavior."
+                }
+              }
+            },
+            {
+              "type": "chunk",
+              "time": 1791154356546,
+              "chunk": {
+                "type": "finish",
+                "reason": {
+                  "kind": "stop"
+                }
+              }
+            }
+          ]
+        },
+        "surfaceOp": "append"
+      },
+      {
+        "type": "step/end",
+        "seq": 19,
+        "time": 1791154356546,
+        "data": {
+          "turn": 1,
+          "step": 3
+        }
+      },
+      {
+        "type": "turn/end",
+        "seq": 20,
+        "time": 1791154356546,
+        "data": {
+          "turn": 1,
+          "reason": {
+            "kind": "completed"
+          }
+        }
+      }
+    ]
+  }
+}

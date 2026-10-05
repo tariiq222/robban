@@ -22,7 +22,7 @@
 //   implementer          (optional) { provider?, model? } route for the coder
 //   routes               (set by run_recipe) { setup, analysis, requirements, design, designReview, plan,
 //                        implementer, aggregate, validate: {provider, model}, reviewers: [{label, provider, model}] }
-//   fastPath             (default true) 1..2 concrete scoped file paths (no directories, globs, . or ..),
+//   fastPath             (requires a validated compactSpec from analysis; default true) 1..2 concrete scoped file paths (no directories, globs, . or ..),
 //                        no needs_user/open/pending decisions
 //   earlyValidate        (default true) validate beside reviewers; discard on rejection
 //   useAggregator        (default false) optional agent merge, always safety-gated
@@ -38,11 +38,12 @@ const invokeAgent = (prompt, opts) => {
   const role = base === 'quick-spec' ? 'requirements' : base === 'design-draft' ? 'design' : base === 'design-review' ? 'designReview' : base === 'implement' || base === 'fault-injector' ? 'implementer' : /^review(?:-|$)/.test(base) ? 'reviewer' : base;
   const defaults = { setup: 180000, analysis: 360000, requirements: 300000, plan: 300000, design: 360000, designReview: 360000, implementer: 1200000, reviewer: 600000, aggregate: 300000, validate: 480000 };
   const configured = typeof args.stepTimeoutMs === 'number' ? args.stepTimeoutMs : args.stepTimeoutMs?.[base] ?? args.stepTimeoutMs?.[role];
+  const readOnly = ['setup', 'analysis', 'requirements', 'design', 'designReview', 'plan'].includes(role);
   const timeoutMs = Number.isSafeInteger(configured) && configured > 0 ? configured : defaults[role];
   // This engine rejects timeoutMs/signal in agent() opts. The authenticated marker bridges
   // the per-attempt timeout to the private routing provider without changing engine options.
   if (!args.routingToken) return agent(prompt, opts);
-  return agent('__AUTO_RECIPE_ROLE__' + JSON.stringify({token: args.routingToken, role, label: opts.label, timeoutMs}) + '\n' + prompt, opts);
+  return agent('__AUTO_RECIPE_ROLE__' + JSON.stringify({token: args.routingToken, role, label: opts.label, timeoutMs, readOnly}) + '\n' + prompt, opts);
 };
 
 const task = typeof args?.task === 'string' ? args.task.trim() : '';
@@ -248,6 +249,7 @@ Task context: ${task}`, {
 
 const CONTEXT = `${COMMON}
 Stack: ${setup.stack}
+Preparation is source inspection only: do not execute commands or edit files.
 Test commands: ${setup.testCommands.join(' ; ') || '(none found)'}
 Lint/typecheck commands: ${setup.lintCommands.join(' ; ') || '(none found)'}
 Conventions:
@@ -268,6 +270,13 @@ Report:
 - outcome: "proceed"; "already_satisfied" if the code already does what is asked; or
   "not_recommended" if the change would break something or has no benefit (explain in outcomeReason).
 - decisions: the decision brief.
+- compactSpec: ONLY for a simple decision-free change in one or two concrete files,
+  provide { files, impact, acceptance, verifyCommands, plan } in this same analysis. files must match
+  scope.files exactly; acceptance must contain nonempty unique testable criteria; verifyCommands
+  must be exact existing commands grounded in the repository; plan must describe ordered
+  changes limited to those files. Never use this for security, deletion or shared contracts.
+  impact must be local, api, security, data or architecture; only local qualifies.
+  Otherwise omit compactSpec; the full requirements/design/plan path will run.
 
 ${BRIEF_POLICY}
 ${ANSWERS}
@@ -287,6 +296,10 @@ Request: ${task}`, {
         outcome: { type: 'string', enum: ['proceed', 'already_satisfied', 'not_recommended'] },
         outcomeReason: { type: 'string' },
         decisions: { type: 'array', items: briefDecisionSchema },
+        compactSpec: {
+          type: 'object', properties: { files: stringList, impact: { type: 'string', enum: ['local', 'api', 'security', 'data', 'architecture'] }, acceptance: stringList, verifyCommands: stringList, plan: { type: 'string' } },
+          required: ['files', 'impact', 'acceptance', 'verifyCommands', 'plan'], additionalProperties: false,
+        },
       },
       required: ['scope', 'currentState', 'gaps', 'outcome', 'outcomeReason', 'decisions'],
       additionalProperties: false,
@@ -336,13 +349,27 @@ ${analysis.decisions.map(d => `- [${d.id}] ${d.question} → ${answers[d.id] ?? 
 // ── requirements / bounded fast path ───────────────────────────────────────
 const scopedFiles = analysis.scope.files;
 const boundedFileCount = scopedFiles.length >= 1 && scopedFiles.length <= 2;
-const concreteFiles = scopedFiles.every(file => typeof file === 'string' && file.trim().length > 0
-  && file !== '.' && file !== '..' && !file.endsWith('/') && !/[*?[{]/.test(file));
-const fastPath = savedProgress ? savedProgress.fastPath === true : args.fastPath !== false && boundedFileCount && concreteFiles
-  && !analysis.decisions.some(d => d.kind === 'needs_user') && openBrief.length === 0 && pendingDecisions.length === 0;
+const concreteFile = file => typeof file === 'string' && file.trim().length > 0
+  && file === file.trim() && !file.startsWith('/') && !/[\\:*?\[\]{}\x00-\x1f\x7f]/.test(file)
+  && file.split('/').every(segment => segment && segment !== '.' && segment !== '..');
+const concreteFiles = scopedFiles.every(concreteFile);
+const nonemptyUniqueStrings = values => Array.isArray(values) && values.length > 0
+  && values.every(value => typeof value === 'string' && value.trim().length > 0)
+  && new Set(values.map(value => value.trim())).size === values.length;
+const compactSpec = analysis.compactSpec;
+const validCompactSpec = !!compactSpec && typeof compactSpec === 'object' && !Array.isArray(compactSpec)
+  && Object.keys(compactSpec).every(key => ['files', 'impact', 'acceptance', 'verifyCommands', 'plan'].includes(key))
+  && compactSpec.impact === 'local'
+  && nonemptyUniqueStrings(compactSpec.files) && compactSpec.files.length === scopedFiles.length
+  && compactSpec.files.every((file, index) => file === scopedFiles[index])
+  && nonemptyUniqueStrings(compactSpec.acceptance) && nonemptyUniqueStrings(compactSpec.verifyCommands)
+  && typeof compactSpec.plan === 'string' && compactSpec.plan.trim().length > 0;
+const fastPath = savedProgress ? savedProgress.fastPath === true : args.fastPath !== false && boundedFileCount && concreteFiles && validCompactSpec
+  && !analysis.decisions.some(d => d.kind !== 'auto') && openBrief.length === 0 && pendingDecisions.length === 0;
 if (savedProgress) log('resuming from saved plan: requirements, design and plan are reused');
 if (!fastPath && !savedProgress) {
   const reasons = [];
+  if (!validCompactSpec) reasons.push('complete scoped compact specification missing or invalid');
   if (args.fastPath === false) reasons.push('disabled by fastPath:false');
   if (!boundedFileCount) reasons.push(`scope must contain 1–2 files (got ${scopedFiles.length})`);
   if (!concreteFiles) reasons.push('scope entries must be concrete files, not directories, globs, . or ..');
@@ -356,14 +383,11 @@ if (savedProgress) {
   requirements = savedProgress.requirements;
   quickSpec = savedProgress.quickSpec ?? null;
 } else if (fastPath) {
-  log('fast path: combined requirements and plan; design review skipped');
+  log('fast path: reuse compact specification from scoped analysis; design review skipped');
   signal('status', { fastPath: true });
-  quickSpec = must(await invokeAgent(`${CONTEXT}\n\n${BRIEF}\n\n${ANSWERS}\nRequest: ${task}\nProduce precise, testable acceptance criteria, exact existing verify commands, and an ordered implementation plan for ONLY the scoped files. Change nothing. Do not invent or widen decisions.`, {
-    label: 'quick-spec', phase: 'requirements', ...R('requirements'),
-    schema: { type: 'object', properties: { acceptance: stringList, verifyCommands: stringList, plan: { type: 'string' } }, required: ['acceptance', 'verifyCommands', 'plan'], additionalProperties: false },
-  }), 'quick-spec');
+  quickSpec = compactSpec;
   requirements = { goal: task, acceptance: quickSpec.acceptance, nonGoals: [], decisions: [] };
-  record('quick-spec', quickSpec);
+  record('analysis-spec', quickSpec);
 } else {
 requirements = must(await invokeAgent(`${CONTEXT}
 
@@ -519,15 +543,18 @@ const unionFindings = list => {
   return [...union.values()];
 };
 
-const validate = () => invokeAgent(`${CONTEXT}\n\n${REQS}\n\nFinal validation. Do not edit files. For each acceptance criterion, check the current repository state\n(read code, run the relevant commands) and report pass/fail with concrete evidence.\nCopy each requirements acceptance string EXACTLY into "criterion", once each: no omitted, duplicate,\nrenamed or additional criteria.`, {
+const validate = () => invokeAgent(`${CONTEXT}\n\n${REQS}\n\nFinal validation. Do not edit files. For each acceptance criterion, check the current repository state\n(read code, run the relevant commands) and report pass/fail with concrete evidence.\nCopy each requirements acceptance string EXACTLY into "criterion", once each: no omitted, duplicate,\nrenamed or additional criteria.\nRun every planned verify command NOW against this implementation. Report commands with the exact command string, integer exitCode, and concrete output/evidence; each once, no extra commands.\nPlanned verify commands: ${JSON.stringify(plan.verifyCommands)}`, {
   label: 'validate', phase: 'validate', ...R('validate'),
   schema: {
     type: 'object', properties: {
       results: { type: 'array', items: { type: 'object', properties: {
         criterion: { type: 'string' }, status: { type: 'string', enum: ['passed', 'failed'] }, evidence: { type: 'string' },
       }, required: ['criterion', 'status', 'evidence'], additionalProperties: false } },
+      commands: { type: 'array', items: { type: 'object', properties: {
+        command: { type: 'string' }, exitCode: { type: 'integer' }, evidence: { type: 'string' },
+      }, required: ['command', 'exitCode', 'evidence'], additionalProperties: false } },
       summary: { type: 'string' },
-    }, required: ['results', 'summary'], additionalProperties: false,
+    }, required: ['results', 'commands', 'summary'], additionalProperties: false,
   },
 });
 let earlyValidation = null;
@@ -706,6 +733,27 @@ for (const result of validation.results) {
 }
 for (const criterion of expectedCriteria) {
   if (!seenCriteria.has(criterion)) coverageFailures.push(validationFailure(criterion, 'Missing validation: check this acceptance criterion and report concrete evidence.'));
+}
+const expectedCommands = new Set(plan.verifyCommands);
+const seenCommands = new Set();
+if (!Array.isArray(plan.verifyCommands) || expectedCommands.size !== plan.verifyCommands.length
+  || plan.verifyCommands.some(command => typeof command !== 'string' || !command.trim())) {
+  coverageFailures.push(validationFailure('(verify commands)', 'Planned commands must be unique nonempty strings.'));
+}
+const receipts = Array.isArray(validation.commands) ? validation.commands : [];
+if (!Array.isArray(validation.commands) && expectedCommands.size > 0) {
+  coverageFailures.push(validationFailure('(verify commands)', 'Final validation must report fresh command receipts.'));
+}
+for (const receipt of receipts) {
+  if (!receipt || typeof receipt !== 'object' || !expectedCommands.has(receipt.command)
+    || seenCommands.has(receipt.command) || receipt.exitCode !== 0
+    || typeof receipt.evidence !== 'string' || receipt.evidence.trim().length < 8) {
+    coverageFailures.push(validationFailure('(verify commands)', 'Unknown, duplicate, failed or insufficient command receipt.'));
+  }
+  if (receipt && typeof receipt === 'object') seenCommands.add(receipt.command);
+}
+for (const command of expectedCommands) {
+  if (!seenCommands.has(command)) coverageFailures.push(validationFailure(command, 'Missing fresh verification command receipt.'));
 }
 const approvalFailures = [];
 if (!fastPath && designReview.verdict !== 'APPROVED') approvalFailures.push(validationFailure('(design approval)', 'Obtain independent design approval; abortIfUnapproved=false permits continuation, not certification.'));

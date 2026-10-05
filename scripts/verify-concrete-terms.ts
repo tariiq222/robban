@@ -1,6 +1,7 @@
 /** Reject one ambiguous origin label from maintained tracked files. */
 
 import { execFileSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { lstatSync, readFileSync, readlinkSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -9,6 +10,13 @@ import { historicalSchemaRegion } from './historical-schema-region.ts'
 const root = resolve(import.meta.dirname, '..')
 const blockedTerm = 'prove' + 'nance'
 const excludedPrefixes = ['vendor/', '.agents/notes/archived/'] as const
+// These four immutable Auto payloads retain identifiers from their recorded 0.1.5 source.
+const historicalPayloadHashes = new Map([
+  ['tariq/packages/auto-subagents/core-patches/session/original.js', '05e94f57d96e7979670a5b51024c8591572eb0051ce793613dbdec35cf2c47bf'],
+  ['tariq/packages/auto-subagents/core-patches/session/patched.js', '4de382d62fae58fc35ae5160e01b79b9960b3fb4deaa5e66890c85291a5b4412'],
+  ['tariq/packages/auto-subagents/core-patches/tool-cordis-metadata/original.js', '55fb66ceb75ee92fdbd75e89db813f59edb8774cfa113968cdd132fade65edfe'],
+  ['tariq/packages/auto-subagents/core-patches/tool-cordis-metadata/patched.js', '066d1e3ae0af00595dd420b18475f4cb0758b072324f6e2e1b355b4e03a1bbfa'],
+])
 
 /** One blocked term occurrence in a tracked path or text line. */
 export interface ConcreteTermViolation {
@@ -34,10 +42,12 @@ function containsBlockedTerm(value: string): boolean {
  * Find the blocked term in one maintained tracked file.
  * @param file - repository-relative tracked path.
  * @param source - text contents or symlink target.
- * @returns violations outside vendored sources, frozen Agent Notes, historical schemas and their checked generated regions.
+ * @returns violations in maintained files; vendored/frozen sources, pinned payloads and declared historical schemas are exempt.
  */
 export function findConcreteTermViolations(file: string, source: string): ConcreteTermViolation[] {
   if (isExcluded(file)) return []
+  const payloadHash = historicalPayloadHashes.get(file)
+  if (payloadHash !== undefined && createHash('sha256').update(source, 'utf8').digest('hex') === payloadHash) return []
   const violations: ConcreteTermViolation[] = []
   if (containsBlockedTerm(file)) violations.push({ file, line: null })
   const lines = source.split(/\r?\n/u)

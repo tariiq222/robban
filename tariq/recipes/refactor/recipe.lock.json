@@ -2,9 +2,9 @@
   "version": 1,
   "name": "refactor",
   "sha256": {
-    "meta": "d15a31b408b208c93fdbb3746a81d8365cb9c204dceb60d4237a54644b1c05e7",
-    "script": "acf9c3b23d89cfd0bb3ae10923ceec8342c3dc3bad48bc79b6270b2177de6d91"
+    "meta": "a16c19186a5965064d8b5c4ee9e399cd3967c8f9c406a1374d1d7df166787dde",
+    "script": "acbdbcea2bf622cc38076a86df79b5b8b03e29e124401e66de18b86f25b363f2"
   },
-  "approvedAt": "2026-10-03T18:27:32.055Z",
-  "approvedBy": "audit-repairs-independent-review-01e3039a"
+  "approvedAt": "2026-10-04T21:25:52.493Z",
+  "approvedBy": "user-authorized-recipe-simplification"
 }

@@ -8,6 +8,16 @@
     "docs/cordis-api/inherited.md",
     "docs/i18n/style-samples.md",
     "docs/i18n/terminology.md",
-    "docs/i18n/translation-prompt.md"
+    "docs/i18n/translation-prompt.md",
+    "tariq/README.md",
+    "tariq/packages/auto-subagents/README.md",
+    "tariq/recipes/bug-fix/README.md",
+    "tariq/recipes/code-audit/README.md",
+    "tariq/recipes/feature-pipeline/README.md",
+    "tariq/recipes/investigate/README.md",
+    "tariq/recipes/plan-to-packages/README.md",
+    "tariq/recipes/qa-verify/README.md",
+    "tariq/recipes/refactor/README.md",
+    "tariq/reference/subagent-model-colors/README.md"
   ]
 }

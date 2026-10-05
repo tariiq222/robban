@@ -1,9 +1,9 @@
 {
   "name": "feature-pipeline",
-  "version": "0.3.0",
-  "description": "Cached setup -> scoped analysis -> quick-spec for decision-free changes of at most two files, otherwise requirements/design/plan -> implement -> parallel independent reviews and validation -> deterministic gated completion.",
+  "version": "0.3.1",
+  "description": "Cached setup -> scoped analysis -> complete compact specification within scoped analysis for decision-free changes of at most two files, otherwise requirements/design/plan -> implement -> parallel independent reviews and validation -> deterministic gated completion. Final validation requires exact successful command receipts.",
   "args": {
-    "fastPath": "boolean, default true; quick-spec only for <=2 scoped files with no needs_user or pending decisions",
+    "fastPath": "boolean, default true; complete validated analysis compactSpec only for 1..2 concrete scoped files without user or pending decisions; compactSpec impact must be local (API/security/data/architecture use full path)",
     "earlyValidate": "boolean, default true; run validate beside reviewers, discard on rejection",
     "useAggregator": "boolean, default false; optional aggregate agent cannot overrule deterministic safety gates",
     "stepTimeoutMs": "positive integer or role/label map; defaults in minutes: setup 3, analysis 6, quick-spec/requirements/plan 5, design/designReview 6, implementer 20, reviewer 10, validate 8; private routing marker carries timeoutMs",
@@ -11,12 +11,33 @@
   },
   "whenToUse": "A non-trivial feature or change in a repository that benefits from separate design, implementation, independent multi-model review and final validation.",
   "phases": [
-    { "title": "setup", "detail": "Inspect repo: stack, test/lint commands, conventions" },
-    { "title": "analysis", "detail": "Inspect only the requested change scope and produce a current-state decision brief" },
-    { "title": "requirements", "detail": "Turn the request into testable acceptance criteria" },
-    { "title": "design-loop", "detail": "Draft design, review, repeat until APPROVED (max N)" },
-    { "title": "plan", "detail": "Ordered implementation plan with file scope and verify commands" },
-    { "title": "code-loop", "detail": "Implement, parallel independent reviews, aggregate verdict, repeat until APPROVED (max N)" },
-    { "title": "validate", "detail": "Check the final result against the original requirements" }
+    {
+      "title": "setup",
+      "detail": "Inspect repo: stack, test/lint commands, conventions"
+    },
+    {
+      "title": "analysis",
+      "detail": "Inspect only the requested change scope and produce a current-state decision brief"
+    },
+    {
+      "title": "requirements",
+      "detail": "Turn the request into testable acceptance criteria"
+    },
+    {
+      "title": "design-loop",
+      "detail": "Draft design, review, repeat until APPROVED (max N)"
+    },
+    {
+      "title": "plan",
+      "detail": "Ordered implementation plan with file scope and verify commands"
+    },
+    {
+      "title": "code-loop",
+      "detail": "Implement, parallel independent reviews, aggregate verdict, repeat until APPROVED (max N)"
+    },
+    {
+      "title": "validate",
+      "detail": "Check the final result against the original requirements"
+    }
   ]
 }

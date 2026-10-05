@@ -432,3 +432,34 @@ test('alias ids (background job ids) resolve to the executor route', async () =>
   f.router.childDisposed('subagent-7');
   assert.equal(f.router.activeCount(a), 0);
 });
+
+for (const mode of ['selection', 'verification fallback', 'recovery']) {
+  test(`${mode} rejects a route downgraded while its availability is checked`, async () => {
+    const f = fixture([a, b], tiers([a, 'strong'], [b, 'strong']));
+    if (mode === 'verification fallback') f.router.adoptChild('executor', a);
+    f.setFailure(config => {
+      if (mode === 'verification fallback' && config.model === b.model) return unavailable();
+      f.setPreference({ enabled: true, allowedModels: [a, b], modelTiers: tiers([a, 'light'], [b, 'strong']) });
+    });
+    if (mode === 'verification fallback') {
+      await assert.rejects(f.router.select(f.parent, { tier: 'strong', verifies: 'executor' }, f.signal), /no usable/);
+    } else {
+      const picked = mode === 'recovery'
+        ? await f.router.fallback(b, new Set(), f.signal)
+        : await f.router.select(f.parent, { tier: 'strong' }, f.signal);
+      if (mode === 'recovery') assert.equal(picked, undefined);
+      else { assert.deepEqual(picked.route, b); picked.token.release(); }
+    }
+    assert.equal(f.router.activeCount(a), 0);
+    assert.equal(f.router.activeCount(b), 0);
+  });
+}
+
+test('explicit route remains usable when its tier changes during preflight', async () => {
+  const f = fixture([a], tiers([a, 'strong']));
+  f.setFailure(() => f.setPreference({ enabled: true, allowedModels: [a], modelTiers: tiers([a, 'light']) }));
+  const picked = await f.router.select(f.parent, { provider: a.provider, model: a.model, tier: 'strong' }, f.signal);
+  assert.deepEqual(picked.route, a);
+  assert.equal(picked.tier, 'light');
+  picked.token.release();
+});

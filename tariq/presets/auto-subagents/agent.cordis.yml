@@ -16,6 +16,8 @@
   name: dsh-auto-subagents/runtime
 - id: auto-subagents-coordinator
   name: dsh-auto-subagents/coordinator
+- id: auto-task-memory
+  name: dsh-auto-subagents/task-memory
 - id: agent-instructions
   name: '@deepseek-ai/dsh-agent-instructions'
   config:

@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, symlinkSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync, symlinkSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -7,6 +7,21 @@ import { findConcreteTermViolations, readTrackedSource } from './verify-concrete
 const blockedTerm = 'prove' + 'nance'
 
 describe('concrete terminology policy', () => {
+  it.each([
+    'tariq/packages/auto-subagents/core-patches/session/original.js',
+    'tariq/packages/auto-subagents/core-patches/session/patched.js',
+    'tariq/packages/auto-subagents/core-patches/tool-cordis-metadata/original.js',
+    'tariq/packages/auto-subagents/core-patches/tool-cordis-metadata/patched.js',
+  ])('exempts only the pinned historical bytes at %s', (file) => {
+    const source = readFileSync(new URL(`../${file}`, import.meta.url), 'utf8')
+    expect(findConcreteTermViolations(file, source)).toEqual([])
+    expect(findConcreteTermViolations(file, `${source}\n${blockedTerm}`)).not.toEqual([])
+    expect(findConcreteTermViolations(file, blockedTerm)).toEqual([{ file, line: 1 }])
+    for (const otherPath of [`${file}.backup`, `copies/${file}`, file.replace(/[^/]+$/u, 'new.js')]) {
+      expect(findConcreteTermViolations(otherPath, `${source}\n${blockedTerm}`)).not.toEqual([])
+    }
+  })
+
   it('rejects case variants in paths, prose, and identifiers', () => {
     expect(findConcreteTermViolations(`docs/${blockedTerm}-notes.md`, [
       'origin metadata',

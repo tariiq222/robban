@@ -10,6 +10,8 @@ import { RECIPES_DIR } from '../lib/dsh-paths.mjs';
 // Real recipe, bounded VM and fake hooks only: never executes child prompts or writes .runs.
 const source = await readFile(path.join(RECIPES_DIR, 'feature-pipeline', 'script.js'), 'utf8');
 const acceptance = ['Criterion one', 'Criterion two'];
+const compactSpec = files => ({ files, impact: 'local', acceptance, verifyCommands: ['node --test'], plan: 'Change only scoped files' });
+const commandReceipts = [{ command: 'node --test', exitCode: 0, evidence: 'Executed node tests: all tests passed' }];
 const setup = { stack: 'JS', testCommands: ['node --test'], lintCommands: [], conventions: [] };
 const approved = { verdict: 'APPROVED', summary: 'ok', findings: [] };
 const problem = { id: 'old', severity: 'high', problem: 'Old problem', requiredFix: 'Fix old problem' };
@@ -18,14 +20,14 @@ async function run(overrides = {}, extra = {}) {
   const calls = [], logs = [], batches = [];
   const defaults = {
     setup,
-    analysis: { scope: { files: ['one.js'], symbols: [], dependents: [], tests: [] }, currentState: 'current', gaps: [], outcome: 'proceed', outcomeReason: '', decisions: [] },
+    analysis: { scope: { files: ['one.js'], symbols: [], dependents: [], tests: [] }, compactSpec: compactSpec(['one.js']), currentState: 'current', gaps: [], outcome: 'proceed', outcomeReason: '', decisions: [] },
     'quick-spec': { acceptance, verifyCommands: ['node --test'], plan: 'Change one.js' },
     requirements: { goal: 'Goal', acceptance, nonGoals: [], decisions: [] },
     'design-draft': 'Design', 'design-review': { ...approved, decisions: [] },
     plan: { steps: [], inScope: ['one.js'], verifyCommands: ['node --test'] },
     implement: { changedPaths: ['one.js'], commands: [], notes: '', decisions: [] },
     'review-a': approved, 'review-b': approved, aggregate: approved,
-    validate: { results: acceptance.map(criterion => ({ criterion, status: 'passed', evidence: 'Checked' })), summary: 'Validated' },
+    validate: { commands: commandReceipts, results: acceptance.map(criterion => ({ criterion, status: 'passed', evidence: 'Checked' })), summary: 'Validated' },
   };
   const context = vm.createContext({ args: { task: 'Change', repo: '/fake', maxCodeIterations: 2, ...extra },
     agent: async (prompt, opts) => {
@@ -81,7 +83,7 @@ test('production defaults take one-file fast path, merge without agent and valid
   assert.equal(result.status, 'completed');
   assert.equal(result.fastPath, true);
   assert.equal(result.designReview, 'skipped (fast path)');
-  assert.equal(calls.filter(c => c.label === 'quick-spec').length, 1);
+  assert.equal(calls.filter(c => c.label === 'quick-spec').length, 0);
   assert.ok(!calls.some(c => /requirements|design|plan|aggregate/.test(c.label)));
   assert.ok(batches[0].includes('validate'));
   assert.ok(logs.some(l => /fast path/.test(l)));
@@ -96,7 +98,7 @@ test('fast path can be disabled and does not run for three files', async () => {
   }
 });
 test('two files qualify while persisted pending decisions stop before quick-spec', async () => {
-  const analysis = { scope: { files: ['one.js', 'two.js'], symbols: [], dependents: [], tests: [] }, currentState: '', gaps: [], outcome: 'proceed', outcomeReason: '', decisions: [] };
+  const analysis = { scope: { files: ['one.js', 'two.js'], symbols: [], dependents: [], tests: [] }, compactSpec: compactSpec(['one.js', 'two.js']), currentState: '', gaps: [], outcome: 'proceed', outcomeReason: '', decisions: [] };
   const two = await run({ analysis }, speedups);
   assert.equal(two.result.fastPath, true);
   const pending = await run({}, { ...speedups, resume: { task: 'Change', repo: '/fake', round: 2, setup, analysis, decisionLedger: [{ ...decision, kind: 'high_risk', stage: 'design', requiresAnswer: true }] } });
@@ -110,18 +112,18 @@ for (const [name, files, eligible] of [
   ['glob entry', ['src/*.js'], false],
   ['two concrete files', ['one.js', 'two.js'], true],
 ]) test(`fast path eligibility: ${name}`, async () => {
-  const analysis = { scope: { files, symbols: [], dependents: [], tests: [] }, currentState: '', gaps: [], outcome: 'proceed', outcomeReason: '', decisions: [] };
+  const analysis = { scope: { files, symbols: [], dependents: [], tests: [] }, compactSpec: compactSpec(files), currentState: '', gaps: [], outcome: 'proceed', outcomeReason: '', decisions: [] };
   const { result, calls, logs } = await run({ analysis }, speedups);
   assert.equal(result.status, 'completed');
   assert.equal(result.fastPath, eligible);
-  assert.equal(calls.some(c => c.label === 'quick-spec'), eligible);
+  assert.equal(calls.some(c => c.label === 'quick-spec'), false);
   assert.equal(calls.some(c => c.label === 'requirements'), !eligible);
   if (!eligible) assert.ok(logs.some(l => /fast path ineligible:/.test(l)), 'full path explains the invalid scope');
 });
 
 for (const missingSecond of [false, true]) test(`validation belongs to approved iteration: ${missingSecond ? 'missing early result runs fresh' : 'distinct second result'}`, async () => {
   let validations = 0;
-  const validation = summary => ({ results: acceptance.map(criterion => ({ criterion, status: 'passed', evidence: summary })), summary });
+  const validation = summary => ({ commands: commandReceipts, results: acceptance.map(criterion => ({ criterion, status: 'passed', evidence: summary })), summary });
   const { result, calls, logs } = await run({
     'review-a': opts => opts.label.endsWith('#1') ? { ...approved, verdict: 'NEEDS_REVISION', findings: [problem] } : approved,
     validate: () => {
@@ -142,7 +144,7 @@ test('unapproved early validation is never stored even when continuation is allo
   let validations = 0;
   const { result } = await run({
     'review-a': { ...approved, verdict: 'NEEDS_REVISION', findings: [problem] },
-    validate: () => ({ results: acceptance.map(criterion => ({ criterion, status: 'passed', evidence: 'Checked' })), summary: ++validations === 1 ? 'REJECTED early result' : 'FRESH unapproved result' }),
+    validate: () => ({ commands: commandReceipts, results: acceptance.map(criterion => ({ criterion, status: 'passed', evidence: 'Checked' })), summary: ++validations === 1 ? 'REJECTED early result' : 'FRESH unapproved result' }),
   }, { ...speedups, maxCodeIterations: 1, abortIfUnapproved: false });
   assert.equal(result.status, 'completed_with_failures');
   assert.equal(result.validationSummary, 'FRESH unapproved result');
@@ -203,7 +205,7 @@ for (const review of [null, { ...approved, verdict: 'NEEDS_REVISION' }, { ...app
   });
 }
 test('fast path keeps exact acceptance coverage mandatory', async () => {
-  const { result } = await run({ validate: { results: [], summary: '' } }, speedups);
+  const { result } = await run({ validate: { commands: commandReceipts, results: [], summary: '' } }, speedups);
   assert.equal(result.status, 'completed_with_failures');
   assert.equal(result.failedCriteria.length, 2);
 });
@@ -211,9 +213,81 @@ test('authenticated role marker carries timeout defaults and overrides without u
   const { calls } = await run({}, { ...speedups, routingToken: 'secret', stepTimeoutMs: { reviewer: 1234 } });
   const metadata = c => JSON.parse(c.prompt.split('\n')[0].slice('__AUTO_RECIPE_ROLE__'.length));
   assert.equal(metadata(calls.find(c => c.label === 'setup')).timeoutMs, 180000);
-  assert.equal(metadata(calls.find(c => c.label === 'quick-spec')).role, 'requirements');
-  assert.equal(metadata(calls.find(c => c.label === 'quick-spec')).timeoutMs, 300000);
+  assert.equal(metadata(calls.find(c => c.label === 'analysis')).role, 'analysis');
+  assert.equal(metadata(calls.find(c => c.label === 'analysis')).timeoutMs, 360000);
   assert.equal(metadata(calls.find(c => c.label === 'implement #1')).timeoutMs, 1200000);
   assert.equal(metadata(calls.find(c => c.label === 'review-a #1')).timeoutMs, 1234);
   assert.ok(calls.every(c => !Object.hasOwn(c, 'timeoutMs')));
+});
+
+for (const [name, specification] of [
+  ['security impact', { ...compactSpec(['one.js']), impact: 'security' }],
+  ['api impact', { ...compactSpec(['one.js']), impact: 'api' }],
+  ['data impact', { ...compactSpec(['one.js']), impact: 'data' }],
+  ['architecture impact', { ...compactSpec(['one.js']), impact: 'architecture' }],
+  ['missing', undefined], ['null', null], ['empty object', {}],
+  ['wrong scope', { ...compactSpec(['other.js']) }],
+  ['empty acceptance', { ...compactSpec(['one.js']), acceptance: [] }],
+  ['duplicate acceptance', { ...compactSpec(['one.js']), acceptance: ['same', 'same'] }],
+  ['blank acceptance', { ...compactSpec(['one.js']), acceptance: [' '] }],
+  ['missing commands', { ...compactSpec(['one.js']), verifyCommands: [] }],
+  ['malformed commands', { ...compactSpec(['one.js']), verifyCommands: [42] }],
+  ['blank plan', { ...compactSpec(['one.js']), plan: ' ' }],
+  ['extra field', { ...compactSpec(['one.js']), surprise: true }],
+]) test(`invalid analysis specification uses independently approved full path: ${name}`, async () => {
+  const analysis = { scope: { files: ['one.js'], symbols: [], dependents: [], tests: [] }, currentState: '', gaps: [], outcome: 'proceed', outcomeReason: '', decisions: [], compactSpec: specification };
+  const { result, calls } = await run({ analysis, 'design-review': { ...approved, verdict: 'NEEDS_REVISION', decisions: [] } }, { maxDesignIterations: 1 });
+  assert.equal(result.fastPath, false);
+  assert.equal(result.status, 'aborted');
+  assert.ok(calls.some(call => call.label === 'requirements'));
+  assert.ok(!calls.some(call => call.label.startsWith('implement')));
+});
+
+test('saved fast and full plans resume without preparation and retain review approval', async () => {
+  for (const fastPath of [true, false]) {
+    const first = await run({ 'review-a': { ...approved, verdict: 'NEEDS_REVISION', findings: [problem] } }, { fastPath, maxCodeIterations: 1 });
+    assert.equal(first.result.status, 'aborted');
+    const resumed = await run({ 'review-b': { ...approved, verdict: 'NEEDS_REVISION', findings: [problem] } }, { resume: first.result.resume, maxCodeIterations: 1 });
+    assert.equal(resumed.result.status, 'aborted');
+    assert.equal(resumed.result.fastPath, fastPath);
+    assert.ok(!resumed.calls.some(call => /^(setup|analysis|requirements|quick-spec|plan|design)/.test(call.label)));
+    assert.ok(resumed.calls.some(call => call.label.startsWith('review-a')));
+    assert.ok(resumed.calls.some(call => call.label.startsWith('review-b')));
+  }
+});
+
+for (const [name, commands] of [
+  ['missing', undefined], ['empty', []], ['failed', [{ ...commandReceipts[0], exitCode: 1 }]],
+  ['renamed', [{ ...commandReceipts[0], command: 'npm test' }]],
+  ['duplicate', [...commandReceipts, ...commandReceipts]],
+  ['vague', [{ ...commandReceipts[0], evidence: 'ok' }]],
+]) test(`final command receipts prevent completion: ${name}`, async () => {
+  const { result } = await run({ validate: { results: acceptance.map(criterion => ({ criterion, status: 'passed', evidence: 'Checked' })), commands, summary: 'Claims pass' } });
+  assert.equal(result.status, 'completed_with_failures');
+  assert.ok(result.failedCriteria.some(failure => /receipt/.test(failure.evidence)));
+});
+
+for (const file of ['/absolute.js', '../outside.js', 'a/../b.js', './one.js', 'a/./b.js', 'a//b.js', 'a\\b.js', 'C:one.js', 'a\u0000.js', 'a\u007f.js', ' one.js ']) {
+  test(`compact specification rejects nonliteral relative file ${JSON.stringify(file)}`, async () => {
+    const analysis = { scope: { files: [file], symbols: [], dependents: [], tests: [] }, currentState: '', gaps: [], outcome: 'proceed', outcomeReason: '', decisions: [], compactSpec: compactSpec([file]) };
+    const { result, calls } = await run({ analysis });
+    assert.equal(result.fastPath, false);
+    assert.ok(calls.some(call => call.label === 'requirements'));
+  });
+}
+
+test('authenticated preparation roles carry enforced read-only marker while execution roles retain tools', async () => {
+  const { calls } = await run({}, { fastPath: false, routingToken: 'secret' });
+  const metadata = call => JSON.parse(call.prompt.split('\n')[0].slice('__AUTO_RECIPE_ROLE__'.length));
+  for (const role of ['setup', 'analysis', 'requirements', 'design', 'designReview', 'plan']) {
+    const call = calls.find(call => metadata(call).role === role);
+    assert.ok(call, role);
+    assert.equal(metadata(call).readOnly, true, role);
+  }
+  for (const role of ['implementer', 'reviewer', 'validate']) {
+    assert.ok(calls.some(call => metadata(call).role === role));
+    assert.ok(calls.filter(call => metadata(call).role === role).every(call => metadata(call).readOnly === false));
+  }
+  const validation = calls.find(call => metadata(call).role === 'validate');
+  assert.match(validation.prompt, /Run every planned verify command NOW/);
 });

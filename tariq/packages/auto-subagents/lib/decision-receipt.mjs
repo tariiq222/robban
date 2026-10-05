@@ -9,12 +9,13 @@ import { KEEP_DECISION } from './decision-model.mjs';
 // is a wanted id of this run (no foreign ids). Answers may therefore arrive across several such
 // calls; a later answer for the same id replaces an earlier one. Calls mixing in unrelated ids,
 // error results and blank answers never count.
+// Each result may answer only ids asked by its matching call; malformed answer payloads are ignored.
 //
 // KEEP_DECISION ('__keep__', from decision-model.mjs) means "keep what was decided for you": for an
 // optional id it withdraws any earlier override (the id is absent from the result, so the recipe
 // keeps its own decision and never sees the sentinel). For a REQUIRED id it is not an answer.
 export function verifiedDecisions(events, runId, questions, optionalIds = []) {
-  const calls = new Set();
+  const calls = new Map();
   const found = {};
   const prefix = `${runId}:`;
   const wanted = new Set([...(questions || []).map(q => q.id), ...(Array.isArray(optionalIds) ? optionalIds : [])].map(id => `${prefix}${id}`));
@@ -23,7 +24,7 @@ export function verifiedDecisions(events, runId, questions, optionalIds = []) {
     if (event.type === 'tool/call' && d.name === 'ask_user_question') {
       const args = typeof d.arguments === 'string' ? (() => { try { return JSON.parse(d.arguments); } catch { return {}; } })() : d.arguments;
       const ids = Array.isArray(args?.questions) ? args.questions.map(q => q?.id) : [];
-      if (ids.length > 0 && ids.every(id => typeof id === 'string' && wanted.has(id))) calls.add(d.callId);
+      if (ids.length > 0 && ids.every(id => typeof id === 'string' && wanted.has(id))) calls.set(d.callId, new Set(ids));
     }
     const message = d.message;
     if (event.type !== 'tool/result' || message?.role !== 'tool' || message.source?.kind !== 'tool'
@@ -31,8 +32,9 @@ export function verifiedDecisions(events, runId, questions, optionalIds = []) {
     for (const content of message.content || []) {
         if (content.type !== 'text') continue;
         let body; try { body = JSON.parse(content.text); } catch { continue; }
-        for (const answer of body?.answers || []) {
-          if (typeof answer?.id !== 'string' || !wanted.has(answer.id)) continue;
+        if (!Array.isArray(body?.answers)) continue;
+        for (const answer of body.answers) {
+          if (typeof answer?.id !== 'string' || !calls.get(message.source.callId).has(answer.id)) continue;
           const text = typeof answer.custom === 'string' && answer.custom.trim() ? answer.custom.trim() : (Array.isArray(answer.selected) ? answer.selected : []).join('; ');
           const id = answer.id.slice(prefix.length);
           if (text.trim() === KEEP_DECISION) delete found[id];

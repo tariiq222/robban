@@ -1,0 +1,767 @@
+{
+  "header": {
+    "version": 4,
+    "id": "preparation-bug-fix",
+    "createdAt": 1791149508600,
+    "isSeeded": false
+  },
+  "events": [
+    {
+      "type": "agent/inbox/spliced",
+      "seq": 0,
+      "time": 1791149508611,
+      "data": {
+        "target": "next-turn",
+        "start": 0,
+        "inserted": [
+          {
+            "content": [
+              {
+                "type": "text",
+                "text": "__AUTO_RECIPE_ROLE__{\"token\":\"fixture-routing-token\",\"role\":\"analysis\",\"label\":\"analysis\",\"timeoutMs\":480000,\"readOnly\":true}\nRepository: /fixture/repository\nRequest: Inspect the requested scoped arithmetic change\nWork only inside this repository. Preserve unrelated dirty work. No commit, push, merge, deployment, installs, secrets or destructive cleanup. Only execute existing repository-local verification commands after reading their scripts; do not execute untrusted network installers or destructive commands. Never fabricate a command or evidence. End with structured_output. Read-only reviewers/validator may run safe verification but may NOT edit files.\n\nREAD ONLY: inspect manifests/config and exact existing local verification command definitions, stack and conventions. Never guess commands. Also provide narrow source diagnosis of this defect, direct callers and covering tests. No bash/command execution or edits. Distinguish observed/current from intended behavior with file:line evidence. outcome reproducible means a concrete source-confirmed issue with a feasible regression, NOT a claimed runtime reproduction. Treat this outcome only as a source candidate until the implementer records qualifying RED evidence; source inspection alone never proves runtime reproduction. If no concrete issue, not_reproducible. Scope.files must enumerate literal concrete files permitted to change (include the intended regression test file even if new); do not list directories, globs or reference-only files. Include scope.tests/symbols/dependents. Exact unique acceptance includes regression and existing behavior. Raise stable kebab-case decision ids for security/permissions, deletion or API/visible behavior changes rather than guessing."
+              }
+            ],
+            "source": {
+              "kind": "user"
+            },
+            "role": "user",
+            "id": "a1f4cf56-b54f-4709-ac30-81d814301548"
+          }
+        ]
+      }
+    },
+    {
+      "type": "turn/start",
+      "seq": 1,
+      "time": 1791149508614,
+      "data": {
+        "turn": 1
+      }
+    },
+    {
+      "type": "agent/inbox/spliced",
+      "seq": 2,
+      "time": 1791149508615,
+      "data": {
+        "target": "next-turn",
+        "start": 0,
+        "removedCount": 1,
+        "inserted": []
+      }
+    },
+    {
+      "type": "step/start",
+      "seq": 3,
+      "time": 1791149508618,
+      "data": {
+        "turn": 1,
+        "step": 1
+      }
+    },
+    {
+      "type": "system/message",
+      "seq": 4,
+      "time": 1791149508624,
+      "data": {
+        "turn": 1,
+        "step": 1,
+        "message": {
+          "role": "system",
+          "content": [
+            {
+              "type": "text",
+              "text": "You are an AI agent powered by DeepSeek Harness."
+            }
+          ],
+          "source": {
+            "kind": "system-prompt"
+          },
+          "id": "26bcbc3d-67e0-4811-a004-20d4bebe4a9a"
+        }
+      },
+      "surfaceOp": "append"
+    },
+    {
+      "type": "user/message",
+      "seq": 5,
+      "time": 1791149508626,
+      "data": {
+        "content": [
+          {
+            "type": "text",
+            "text": "__AUTO_RECIPE_ROLE__{\"token\":\"fixture-routing-token\",\"role\":\"analysis\",\"label\":\"analysis\",\"timeoutMs\":480000,\"readOnly\":true}\nRepository: /fixture/repository\nRequest: Inspect the requested scoped arithmetic change\nWork only inside this repository. Preserve unrelated dirty work. No commit, push, merge, deployment, installs, secrets or destructive cleanup. Only execute existing repository-local verification commands after reading their scripts; do not execute untrusted network installers or destructive commands. Never fabricate a command or evidence. End with structured_output. Read-only reviewers/validator may run safe verification but may NOT edit files.\n\nREAD ONLY: inspect manifests/config and exact existing local verification command definitions, stack and conventions. Never guess commands. Also provide narrow source diagnosis of this defect, direct callers and covering tests. No bash/command execution or edits. Distinguish observed/current from intended behavior with file:line evidence. outcome reproducible means a concrete source-confirmed issue with a feasible regression, NOT a claimed runtime reproduction. Treat this outcome only as a source candidate until the implementer records qualifying RED evidence; source inspection alone never proves runtime reproduction. If no concrete issue, not_reproducible. Scope.files must enumerate literal concrete files permitted to change (include the intended regression test file even if new); do not list directories, globs or reference-only files. Include scope.tests/symbols/dependents. Exact unique acceptance includes regression and existing behavior. Raise stable kebab-case decision ids for security/permissions, deletion or API/visible behavior changes rather than guessing."
+          }
+        ],
+        "source": {
+          "kind": "user"
+        },
+        "role": "user",
+        "id": "a1f4cf56-b54f-4709-ac30-81d814301548"
+      },
+      "surfaceOp": "append"
+    },
+    {
+      "type": "request/header",
+      "seq": 6,
+      "time": 1791149508628,
+      "data": {
+        "header": {
+          "config": {
+            "provider": "fixture",
+            "model": "keyless"
+          },
+          "tools": [
+            {
+              "name": "read",
+              "description": "Read fixed fixture source only",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path"
+                ]
+              }
+            },
+            {
+              "name": "structured_output",
+              "description": "Return preparation fields",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "result": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "setup": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "stack": {
+                            "type": "string"
+                          },
+                          "verifyCommands": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "conventions": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "stack",
+                          "verifyCommands",
+                          "conventions"
+                        ]
+                      },
+                      "analysis": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "scope": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                              "files": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "tests": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "symbols": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "dependents": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "required": [
+                              "files",
+                              "tests",
+                              "symbols",
+                              "dependents"
+                            ]
+                          },
+                          "outcome": {
+                            "type": "string",
+                            "enum": [
+                              "reproducible",
+                              "not_reproducible"
+                            ]
+                          },
+                          "reason": {
+                            "type": "string"
+                          },
+                          "currentState": {
+                            "type": "string"
+                          },
+                          "expectedBehavior": {
+                            "type": "string"
+                          },
+                          "acceptance": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "decisions": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "question": {
+                                  "type": "string"
+                                },
+                                "current": {
+                                  "type": "string"
+                                },
+                                "options": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                      "label": {
+                                        "type": "string"
+                                      },
+                                      "consequence": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "label",
+                                      "consequence"
+                                    ]
+                                  }
+                                },
+                                "recommendation": {
+                                  "type": "string"
+                                },
+                                "why": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "question",
+                                "current",
+                                "options",
+                                "recommendation",
+                                "why"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "scope",
+                          "outcome",
+                          "reason",
+                          "currentState",
+                          "expectedBehavior",
+                          "acceptance",
+                          "decisions"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "setup",
+                      "analysis"
+                    ]
+                  }
+                },
+                "required": [
+                  "result"
+                ]
+              }
+            }
+          ]
+        },
+        "reason": "initial"
+      }
+    },
+    {
+      "type": "request/context",
+      "seq": 7,
+      "time": 1791149508628,
+      "data": {
+        "provider": "fixture",
+        "model": "keyless"
+      }
+    },
+    {
+      "type": "assistant/message",
+      "seq": 8,
+      "time": 1791149508635,
+      "data": {
+        "turn": 1,
+        "step": 1,
+        "message": {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "tool-call",
+              "id": "preparation-bug-fix-call-1",
+              "name": "read",
+              "arguments": "{\"path\":\"src.js\"}"
+            }
+          ],
+          "source": {
+            "kind": "model",
+            "provider": "fixture",
+            "model": "keyless"
+          },
+          "id": "0face948-651a-4678-ab12-d37cdfab9fe1"
+        },
+        "stream": [
+          {
+            "type": "chunk",
+            "time": 1791149508631,
+            "chunk": {
+              "type": "block-start",
+              "index": 0,
+              "blockType": "tool-call"
+            }
+          },
+          {
+            "type": "chunk",
+            "time": 1791149508633,
+            "chunk": {
+              "type": "block-end",
+              "index": 0,
+              "block": {
+                "type": "tool-call",
+                "id": "preparation-bug-fix-call-1",
+                "name": "read",
+                "arguments": "{\"path\":\"src.js\"}"
+              }
+            }
+          },
+          {
+            "type": "chunk",
+            "time": 1791149508633,
+            "chunk": {
+              "type": "finish",
+              "reason": {
+                "kind": "tool-calls"
+              }
+            }
+          }
+        ]
+      },
+      "surfaceOp": "append"
+    },
+    {
+      "type": "tool/call",
+      "seq": 9,
+      "time": 1791149508637,
+      "data": {
+        "turn": 1,
+        "step": 1,
+        "callId": "preparation-bug-fix-call-1",
+        "name": "read",
+        "arguments": "{\"path\":\"src.js\"}"
+      }
+    },
+    {
+      "type": "tool/result",
+      "seq": 10,
+      "time": 1791149508643,
+      "data": {
+        "turn": 1,
+        "step": 1,
+        "message": {
+          "role": "tool",
+          "source": {
+            "kind": "tool",
+            "callId": "preparation-bug-fix-call-1"
+          },
+          "toolCallId": "preparation-bug-fix-call-1",
+          "content": [
+            {
+              "type": "text",
+              "text": "export const sum = (a, b) => a - b;\n"
+            }
+          ],
+          "isError": false,
+          "id": "0108924e-9ffd-4422-b98b-e3a7fc5803e3"
+        }
+      },
+      "sourceEventSeqs": [
+        9
+      ],
+      "surfaceOp": "append"
+    },
+    {
+      "type": "step/end",
+      "seq": 11,
+      "time": 1791149508643,
+      "data": {
+        "turn": 1,
+        "step": 1
+      }
+    },
+    {
+      "type": "step/start",
+      "seq": 12,
+      "time": 1791149508644,
+      "data": {
+        "turn": 1,
+        "step": 2
+      }
+    },
+    {
+      "type": "assistant/message",
+      "seq": 13,
+      "time": 1791149508645,
+      "data": {
+        "turn": 1,
+        "step": 2,
+        "message": {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "tool-call",
+              "id": "preparation-bug-fix-call-2",
+              "name": "structured_output",
+              "arguments": "{\"result\":{\"setup\":{\"stack\":\"JavaScript\",\"verifyCommands\":[\"node --test test.js\"],\"conventions\":[\"Preserve callers\"]},\"analysis\":{\"scope\":{\"files\":[\"src.js\",\"test.js\"],\"tests\":[\"test.js\"],\"symbols\":[\"sum\"],\"dependents\":[]},\"outcome\":\"reproducible\",\"reason\":\"src.js:1 subtracts instead of adding; no runtime reproduction claimed\",\"currentState\":\"sum subtracts\",\"expectedBehavior\":\"sum adds\",\"acceptance\":[\"Regression demonstrates correct addition\"],\"decisions\":[]}}}"
+            }
+          ],
+          "source": {
+            "kind": "model",
+            "provider": "fixture",
+            "model": "keyless"
+          },
+          "id": "78a1909e-8ff9-46a0-8877-81f4a2e84708"
+        },
+        "stream": [
+          {
+            "type": "chunk",
+            "time": 1791149508645,
+            "chunk": {
+              "type": "block-start",
+              "index": 0,
+              "blockType": "tool-call"
+            }
+          },
+          {
+            "type": "chunk",
+            "time": 1791149508645,
+            "chunk": {
+              "type": "block-end",
+              "index": 0,
+              "block": {
+                "type": "tool-call",
+                "id": "preparation-bug-fix-call-2",
+                "name": "structured_output",
+                "arguments": "{\"result\":{\"setup\":{\"stack\":\"JavaScript\",\"verifyCommands\":[\"node --test test.js\"],\"conventions\":[\"Preserve callers\"]},\"analysis\":{\"scope\":{\"files\":[\"src.js\",\"test.js\"],\"tests\":[\"test.js\"],\"symbols\":[\"sum\"],\"dependents\":[]},\"outcome\":\"reproducible\",\"reason\":\"src.js:1 subtracts instead of adding; no runtime reproduction claimed\",\"currentState\":\"sum subtracts\",\"expectedBehavior\":\"sum adds\",\"acceptance\":[\"Regression demonstrates correct addition\"],\"decisions\":[]}}}"
+              }
+            }
+          },
+          {
+            "type": "chunk",
+            "time": 1791149508645,
+            "chunk": {
+              "type": "finish",
+              "reason": {
+                "kind": "tool-calls"
+              }
+            }
+          }
+        ]
+      },
+      "surfaceOp": "append"
+    },
+    {
+      "type": "tool/call",
+      "seq": 14,
+      "time": 1791149508645,
+      "data": {
+        "turn": 1,
+        "step": 2,
+        "callId": "preparation-bug-fix-call-2",
+        "name": "structured_output",
+        "arguments": "{\"result\":{\"setup\":{\"stack\":\"JavaScript\",\"verifyCommands\":[\"node --test test.js\"],\"conventions\":[\"Preserve callers\"]},\"analysis\":{\"scope\":{\"files\":[\"src.js\",\"test.js\"],\"tests\":[\"test.js\"],\"symbols\":[\"sum\"],\"dependents\":[]},\"outcome\":\"reproducible\",\"reason\":\"src.js:1 subtracts instead of adding; no runtime reproduction claimed\",\"currentState\":\"sum subtracts\",\"expectedBehavior\":\"sum adds\",\"acceptance\":[\"Regression demonstrates correct addition\"],\"decisions\":[]}}}"
+      }
+    },
+    {
+      "type": "tool/result",
+      "seq": 15,
+      "time": 1791149508648,
+      "data": {
+        "turn": 1,
+        "step": 2,
+        "message": {
+          "role": "tool",
+          "source": {
+            "kind": "tool",
+            "callId": "preparation-bug-fix-call-2"
+          },
+          "toolCallId": "preparation-bug-fix-call-2",
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"setup\":{\"stack\":\"JavaScript\",\"verifyCommands\":[\"node --test test.js\"],\"conventions\":[\"Preserve callers\"]},\"analysis\":{\"scope\":{\"files\":[\"src.js\",\"test.js\"],\"tests\":[\"test.js\"],\"symbols\":[\"sum\"],\"dependents\":[]},\"outcome\":\"reproducible\",\"reason\":\"src.js:1 subtracts instead of adding; no runtime reproduction claimed\",\"currentState\":\"sum subtracts\",\"expectedBehavior\":\"sum adds\",\"acceptance\":[\"Regression demonstrates correct addition\"],\"decisions\":[]}}"
+            }
+          ],
+          "isError": false,
+          "id": "6d091314-7506-4098-9e18-9cef031a1af1"
+        }
+      },
+      "sourceEventSeqs": [
+        14
+      ],
+      "surfaceOp": "append"
+    },
+    {
+      "type": "step/end",
+      "seq": 16,
+      "time": 1791149508648,
+      "data": {
+        "turn": 1,
+        "step": 2
+      }
+    },
+    {
+      "type": "step/start",
+      "seq": 17,
+      "time": 1791149508650,
+      "data": {
+        "turn": 1,
+        "step": 3
+      }
+    },
+    {
+      "type": "assistant/message",
+      "seq": 18,
+      "time": 1791149508653,
+      "data": {
+        "turn": 1,
+        "step": 3,
+        "message": {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "text",
+              "text": "Preparation complete; repository unchanged."
+            }
+          ],
+          "source": {
+            "kind": "model",
+            "provider": "fixture",
+            "model": "keyless"
+          },
+          "id": "55ff38f1-f3ef-415e-9301-9cc49550f988"
+        },
+        "stream": [
+          {
+            "type": "chunk",
+            "time": 1791149508652,
+            "chunk": {
+              "type": "block-start",
+              "index": 0,
+              "blockType": "text"
+            }
+          },
+          {
+            "type": "text-chunks",
+            "time0": 1791149508652,
+            "index": 0,
+            "dt": [],
+            "texts": [
+              "Preparation complete; repository unchanged."
+            ]
+          },
+          {
+            "type": "chunk",
+            "time": 1791149508652,
+            "chunk": {
+              "type": "block-end",
+              "index": 0,
+              "block": {
+                "type": "text",
+                "text": "Preparation complete; repository unchanged."
+              }
+            }
+          },
+          {
+            "type": "chunk",
+            "time": 1791149508652,
+            "chunk": {
+              "type": "finish",
+              "reason": {
+                "kind": "stop"
+              }
+            }
+          }
+        ]
+      },
+      "surfaceOp": "append"
+    },
+    {
+      "type": "step/end",
+      "seq": 19,
+      "time": 1791149508653,
+      "data": {
+        "turn": 1,
+        "step": 3
+      }
+    },
+    {
+      "type": "turn/end",
+      "seq": 20,
+      "time": 1791149508653,
+      "data": {
+        "turn": 1,
+        "reason": {
+          "kind": "completed"
+        }
+      }
+    }
+  ],
+  "requests": [
+    [
+      {
+        "role": "system",
+        "content": [
+          {
+            "type": "text",
+            "text": "You are an AI agent powered by DeepSeek Harness."
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "text",
+            "text": "__AUTO_RECIPE_ROLE__{\"token\":\"fixture-routing-token\",\"role\":\"analysis\",\"label\":\"analysis\",\"timeoutMs\":480000,\"readOnly\":true}\nRepository: /fixture/repository\nRequest: Inspect the requested scoped arithmetic change\nWork only inside this repository. Preserve unrelated dirty work. No commit, push, merge, deployment, installs, secrets or destructive cleanup. Only execute existing repository-local verification commands after reading their scripts; do not execute untrusted network installers or destructive commands. Never fabricate a command or evidence. End with structured_output. Read-only reviewers/validator may run safe verification but may NOT edit files.\n\nREAD ONLY: inspect manifests/config and exact existing local verification command definitions, stack and conventions. Never guess commands. Also provide narrow source diagnosis of this defect, direct callers and covering tests. No bash/command execution or edits. Distinguish observed/current from intended behavior with file:line evidence. outcome reproducible means a concrete source-confirmed issue with a feasible regression, NOT a claimed runtime reproduction. Treat this outcome only as a source candidate until the implementer records qualifying RED evidence; source inspection alone never proves runtime reproduction. If no concrete issue, not_reproducible. Scope.files must enumerate literal concrete files permitted to change (include the intended regression test file even if new); do not list directories, globs or reference-only files. Include scope.tests/symbols/dependents. Exact unique acceptance includes regression and existing behavior. Raise stable kebab-case decision ids for security/permissions, deletion or API/visible behavior changes rather than guessing."
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": [
+          {
+            "type": "text",
+            "text": "You are an AI agent powered by DeepSeek Harness."
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "text",
+            "text": "__AUTO_RECIPE_ROLE__{\"token\":\"fixture-routing-token\",\"role\":\"analysis\",\"label\":\"analysis\",\"timeoutMs\":480000,\"readOnly\":true}\nRepository: /fixture/repository\nRequest: Inspect the requested scoped arithmetic change\nWork only inside this repository. Preserve unrelated dirty work. No commit, push, merge, deployment, installs, secrets or destructive cleanup. Only execute existing repository-local verification commands after reading their scripts; do not execute untrusted network installers or destructive commands. Never fabricate a command or evidence. End with structured_output. Read-only reviewers/validator may run safe verification but may NOT edit files.\n\nREAD ONLY: inspect manifests/config and exact existing local verification command definitions, stack and conventions. Never guess commands. Also provide narrow source diagnosis of this defect, direct callers and covering tests. No bash/command execution or edits. Distinguish observed/current from intended behavior with file:line evidence. outcome reproducible means a concrete source-confirmed issue with a feasible regression, NOT a claimed runtime reproduction. Treat this outcome only as a source candidate until the implementer records qualifying RED evidence; source inspection alone never proves runtime reproduction. If no concrete issue, not_reproducible. Scope.files must enumerate literal concrete files permitted to change (include the intended regression test file even if new); do not list directories, globs or reference-only files. Include scope.tests/symbols/dependents. Exact unique acceptance includes regression and existing behavior. Raise stable kebab-case decision ids for security/permissions, deletion or API/visible behavior changes rather than guessing."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "tool-call",
+            "id": "preparation-bug-fix-call-1",
+            "name": "read",
+            "arguments": "{\"path\":\"src.js\"}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "content": [
+          {
+            "type": "text",
+            "text": "export const sum = (a, b) => a - b;\n"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": [
+          {
+            "type": "text",
+            "text": "You are an AI agent powered by DeepSeek Harness."
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "text",
+            "text": "__AUTO_RECIPE_ROLE__{\"token\":\"fixture-routing-token\",\"role\":\"analysis\",\"label\":\"analysis\",\"timeoutMs\":480000,\"readOnly\":true}\nRepository: /fixture/repository\nRequest: Inspect the requested scoped arithmetic change\nWork only inside this repository. Preserve unrelated dirty work. No commit, push, merge, deployment, installs, secrets or destructive cleanup. Only execute existing repository-local verification commands after reading their scripts; do not execute untrusted network installers or destructive commands. Never fabricate a command or evidence. End with structured_output. Read-only reviewers/validator may run safe verification but may NOT edit files.\n\nREAD ONLY: inspect manifests/config and exact existing local verification command definitions, stack and conventions. Never guess commands. Also provide narrow source diagnosis of this defect, direct callers and covering tests. No bash/command execution or edits. Distinguish observed/current from intended behavior with file:line evidence. outcome reproducible means a concrete source-confirmed issue with a feasible regression, NOT a claimed runtime reproduction. Treat this outcome only as a source candidate until the implementer records qualifying RED evidence; source inspection alone never proves runtime reproduction. If no concrete issue, not_reproducible. Scope.files must enumerate literal concrete files permitted to change (include the intended regression test file even if new); do not list directories, globs or reference-only files. Include scope.tests/symbols/dependents. Exact unique acceptance includes regression and existing behavior. Raise stable kebab-case decision ids for security/permissions, deletion or API/visible behavior changes rather than guessing."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "tool-call",
+            "id": "preparation-bug-fix-call-1",
+            "name": "read",
+            "arguments": "{\"path\":\"src.js\"}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "content": [
+          {
+            "type": "text",
+            "text": "export const sum = (a, b) => a - b;\n"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "tool-call",
+            "id": "preparation-bug-fix-call-2",
+            "name": "structured_output",
+            "arguments": "{\"result\":{\"setup\":{\"stack\":\"JavaScript\",\"verifyCommands\":[\"node --test test.js\"],\"conventions\":[\"Preserve callers\"]},\"analysis\":{\"scope\":{\"files\":[\"src.js\",\"test.js\"],\"tests\":[\"test.js\"],\"symbols\":[\"sum\"],\"dependents\":[]},\"outcome\":\"reproducible\",\"reason\":\"src.js:1 subtracts instead of adding; no runtime reproduction claimed\",\"currentState\":\"sum subtracts\",\"expectedBehavior\":\"sum adds\",\"acceptance\":[\"Regression demonstrates correct addition\"],\"decisions\":[]}}}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"setup\":{\"stack\":\"JavaScript\",\"verifyCommands\":[\"node --test test.js\"],\"conventions\":[\"Preserve callers\"]},\"analysis\":{\"scope\":{\"files\":[\"src.js\",\"test.js\"],\"tests\":[\"test.js\"],\"symbols\":[\"sum\"],\"dependents\":[]},\"outcome\":\"reproducible\",\"reason\":\"src.js:1 subtracts instead of adding; no runtime reproduction claimed\",\"currentState\":\"sum subtracts\",\"expectedBehavior\":\"sum adds\",\"acceptance\":[\"Regression demonstrates correct addition\"],\"decisions\":[]}}"
+          }
+        ]
+      }
+    ]
+  ]
+}

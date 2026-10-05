@@ -17,10 +17,10 @@ const coordinator = await import(moduleUrl).catch(error => {
 // plus a third-party plugin tool the coordinator must never inherit implicitly.
 const PRESET_TOOLS = ['bash', 'pwsh', 'read', 'write', 'edit', 'read_image', 'glob', 'grep', 'job_output', 'job_list', 'job_kill',
   'skill', 'get_goal', 'create_goal', 'update_goal', 'exit_plan_mode', 'send_message', 'interrupt_agent', 'list_subagent_models',
-  'list_agents', 'subagent_fork', 'workflow', 'ralph', 'ask_user_question', 'todo_write', 'web_search', 'web_fetch', 'present'];
+  'list_agents', 'subagent_fork', 'workflow', 'ralph', 'ask_user_question', 'todo_write', 'web_search', 'web_fetch', 'present', 'task_memory'];
 const PLUGIN_TOOL = 'ego_click';
 const EXECUTION = ['bash', 'pwsh', 'write', 'edit', 'job_kill', PLUGIN_TOOL];
-const COORDINATION = ['read', 'glob', 'grep', 'subagent', 'subagent_fork', 'send_message', 'interrupt_agent', 'list_agents', 'list_subagent_models', 'todo_write', 'web_fetch', 'ask_user_question'];
+const COORDINATION = ['read', 'glob', 'grep', 'subagent', 'subagent_fork', 'send_message', 'interrupt_agent', 'list_agents', 'list_subagent_models', 'todo_write', 'web_fetch', 'ask_user_question', 'task_memory'];
 const tick = () => new Promise(resolve => setTimeout(resolve, 10));
 const define = name => defineTool({ name, description: name, parameters: {}, output: { schema: { type: 'string' }, render: () => [] }, execute: async () => `ran ${name}` });
 
@@ -179,6 +179,11 @@ test('coordinator prompt defines scope, architecture, regression verification; c
   assert.match(text, /impact/i);
   assert.match(text, /independent/i);
   assert.match(text, /regression/i);
+  assert.match(text, /read_plan/);
+  assert.match(text, /workItemId/);
+  assert.match(text, /Only|only.*current human intent|current human intent/);
+  assert.match(text, /Refresh this mirror each turn/);
+  assert.match(text, /completed work-item counts alone do not establish/);
   assert.match(text, /duplicat/i);
   assert.match(text, /tier: "strong"/); assert.match(text, /tier: "medium"/); assert.match(text, /tier: "light"/);
   assert.doesNotMatch(text, /gpt-|claude-|gemini|qwen|deepseek-v/i);

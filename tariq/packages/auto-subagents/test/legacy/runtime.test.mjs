@@ -6,8 +6,8 @@ const { automaticRouter } = await import(new URL('../../lib/router.mjs', import.
 const a = { provider: 'one', model: 'a' }, b = { provider: 'two', model: 'b' }, c = { provider: 'three', model: 'c' };
 function fixture() {
   let pref = { enabled: true, allowedModels: [a, b, c] };
-  const listeners = new Map(), logs = [], warnings = [];
-  const ctx = { subagentModelSelection: { current: () => pref }, llm: { listProviders: () => ['one', 'two', 'three'].map(id => ({ id })), async resolveCallConfig(config) { return config; } },
+  const listeners = new Map(), logs = [], warnings = [], preparations = new WeakMap();
+  const ctx = { subagentModelSelection: { current: () => pref }, llm: { listProviders: () => ['one', 'two', 'three'].map(id => ({ id })), async resolveCallConfig(config) { return config; }, bindAutoPreparation(config, recover) { preparations.set(config, recover); } },
     on(name, callback, options) { listeners.set(name, { callback, options }); }, logger: { warn: value => warnings.push(value), info() {} } };
   apply(ctx);
   const agent = { id: 'same-child', options: { ...a }, ctx: { get: () => ({ composedPreset: () => 'auto-subagents' }) }, session: { header: { origin: 'subagent', agentPreset: 'auto-subagents' }, requestHeader: () => ({ config: { ...a } }), append(type, data) { logs.push({ type, data }); } } };
@@ -15,7 +15,7 @@ function fixture() {
   const signal = new AbortController().signal;
   const request = (target = agent, step = 1) => listeners.get('agent/request').callback({ agent: target, turn: 1, step, signal }, async () => ({ ...a, reasoningEffort: 'xhigh', maxTokens: 64000 }));
   const error = (code = 'RATE_LIMIT', target = agent, step = 1, next = async () => { throw new Error('generic retry must not run'); }) => listeners.get('agent/request-error').callback({ agent: target, turn: 1, step, provider: 'one', failure: { code, message: 'provider error' }, signal }, next);
-  return { ctx, agent, created, request, error, listeners, logs, warnings, setPref(value) { pref = value; } };
+  return { ctx, agent, created, request, error, listeners, logs, warnings, preparations, setPref(value) { pref = value; } };
 }
 test('only newly created Auto subagents are managed; existing/main/other preset requests are untouched', async () => {
   const f = fixture();
@@ -79,14 +79,16 @@ test('future prompt assembly follows the fallback route rather than initial opti
   assert.deepEqual(assembled.variables, { ...b, cwd: '/workspace' });
 });
 test('prepare failures use bounded recovery without committing model-facing notices before admission', async () => {
-  const f = fixture(); f.created(f.agent); await f.request();
-  const action = await f.listeners.get('agent/request-prepare-error').callback({ agent: f.agent, turn: 1, step: 1, failure: { code: 'AUTH' }, signal: new AbortController().signal }, async () => undefined);
-  assert.deepEqual(action, { kind: 'retry' }); assert.equal((await f.request()).model, 'b');
+  const f = fixture(); f.created(f.agent); const config = await f.request();
+  const next = await f.preparations.get(config)({ code: 'AUTH' }, config);
+  assert.equal(next.model, 'b'); assert.equal(next.provider, 'two');
+  assert.equal((await f.request()).model, 'b');
   assert.ok(!f.logs.some(event => event.type === 'user/message'));
 });
-test('NO_ADAPTER preparation exhaustion throws terminal error rather than falling through to stream', async () => {
-  const f = fixture(); f.created(f.agent); await f.request(); f.setPref({ enabled: true, allowedModels: [a] });
-  await assert.rejects(f.listeners.get('agent/request-prepare-error').callback({ agent: f.agent, turn: 1, step: 1, failure: { code: 'NO_ADAPTER', message: 'unavailable' }, signal: new AbortController().signal }, async () => undefined), { code: 'NO_ADAPTER' });
+test('NO_ADAPTER preparation exhaustion returns no alternative to the owning provider', async () => {
+  const f = fixture(); f.created(f.agent); const config = await f.request(); f.setPref({ enabled: true, allowedModels: [a] });
+  assert.equal(await f.preparations.get(config)({ code: 'NO_ADAPTER', message: 'unavailable' }, config), undefined);
+  assert.equal(f.listeners.has('agent/request-prepare-error'), false);
 });
 test('removed current model does not consume the sole newly allowed alternative budget', async () => {
   const f = fixture(); f.created(f.agent); await f.request(); f.setPref({ enabled: true, allowedModels: [b] });

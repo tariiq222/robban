@@ -1,15 +1,16 @@
 # feature-pipeline (DSH workflow recipe)
 
-The same pipeline as Kiro's `feature-pipeline`, built for DSH's `workflow` tool.
+Implement a feature against explicit acceptance criteria, independent reviews and final command evidence. Auto selects and runs the saved recipe from the task description.
 
 ```
-setup → scoped analysis (the area being changed only) → decision brief
-  ├─ needs your decision → stops (needs_decision) + resume
-  ├─ already satisfied / not recommended → ends (ended) with no changes
-  └─ nothing needs you → continues straight on
-requirements → design-loop (max 3) → plan
-  → code-loop (max 3): implement → parallel(reviewers…) → aggregate
-  → validate
+setup → scoped analysis
+  ├─ unresolved user decision → one question batch, then resume
+  ├─ already satisfied / not recommended → explain and end
+  ├─ complete local compact specification → implementation
+  └─ other changes → requirements → design review → plan → implementation
+implementation → parallel(two reviewers, validation)
+  ├─ rejected review → bounded repair, fresh reviews and validation
+  └─ approved reviews + exact acceptance + passing command receipts → completed
 ```
 
 - Each step is a separate agent with fresh context. A reviewer never sees the implementer's reasoning.
@@ -19,37 +20,9 @@ requirements → design-loop (max 3) → plan
 
 ## Usage
 
-Ask DSH:
+Select Auto and describe the requested feature, for example: “Add rate limiting to login: five attempts per minute per IP.” The coordinator selects the approved recipe, uses the session repository and routes its children from saved model tiers. The user does not supply recipe paths, model names or phase commands.
 
-> Run the workflow from `~/Desktop/dsh-recipes/feature-pipeline` (meta = meta.json, script = script.js) with args: {...}
-
-`args`:
-
-| Field | Required | Description |
-|---|---|---|
-| `task` | ✓ | Description of the feature |
-| `repo` | ✓ | Absolute path of the repository |
-| `maxDesignIterations` / `maxCodeIterations` | | Default 3 |
-| `reviewers` | | `[{label, provider?, model?}]`; default is two reviewers |
-| `implementer` | | `{provider?, model?}` |
-| `abortIfUnapproved` | | Default `true` |
-| `decisions` | | Your answers to the brief `{id: answer}` |
-| `resume` | | Taken from a previous result to continue without repeating the analysis |
-
-Example:
-
-```json
-{
-  "task": "Add rate limiting to /api/login: 5 attempts per minute per IP",
-  "repo": "/Users/tariq/Projects/my-app",
-  "reviewers": [
-    { "label": "review-claude", "provider": "anthropic", "model": "claude-opus-5-5" },
-    { "label": "review-other",  "provider": "deepseek",  "model": "deepseek-chat" }
-  ]
-}
-```
-
-> Use `list_subagent_models` to get the real provider/model names allowed in your settings.
+`run_recipe` receives the task and repository from the coordinator. It persists decision checkpoints and reads required answers only from verified `ask_user_question` results. The coordinator resumes with the returned `resumeId`; direct `decisions` arguments cannot authorize missing answers. Direct workflow hooks use internal `resume`/`decisions` fields for tests and integrations and do not replace the host's answer verification.
 
 ## Scoped analysis and the decision brief
 
@@ -70,11 +43,7 @@ It returns: the current state (with `file:line` evidence), what is missing, and 
 | `needs_user`: adds a feature, changes behavior, or touches a contract, deletion, security or scope | Stops and asks you |
 | `auto`: everything else, including rare edge cases nothing depends on | Decided for you and shown in `decidedForYou` so you can override it |
 
-**Continuing:** re-run with `resume` (from the previous result) plus your answers. Setup and the analysis are not repeated:
-
-```json
-{ "task": "...", "repo": "...", "resume": { ...from the result... }, "decisions": { "null-input": "return ''" } }
-```
+**Continuing:** answer the required question batch. The coordinator resumes the saved run; setup and scoped analysis are not repeated.
 
 **After the brief:**
 - `high_risk` (security, deletion, a contract other code depends on): always stops.
@@ -96,17 +65,19 @@ Every result includes `reviewTrail` (each review and its verdict), including `ab
 
 After the first implementation, an extra agent plants one subtle bug that violates an acceptance criterion while the tests still pass. Reviewers are not told. The result includes `injectedFault` so you can confirm the bug was caught and fixed. **Off by default; do not use it on real work.**
 
-## Speedups (0.3.0)
+## Speedups (0.3.1)
 
 | Argument | Default | Behavior |
 |---|---|---|
-| `fastPath` | `true` | One or two concrete scoped files (no directories, globs, `.` or `..`), no needs_user decisions (even answered ones), and no open/pending decisions: one medium `quick-spec` returns acceptance, verifyCommands and plan. Requirements/design-loop/plan agents are skipped. |
+| `fastPath` | `true` | One or two literal repository-relative scoped files (no absolute paths, traversal segments, backslashes, colon, control characters, directories or globs), no needs_user decisions (even answered ones), and no open/pending decisions: Scoped analysis also returns a compact specification with `impact: local`, exactly matching files, nonempty unique acceptance criteria, exact verify commands and an ordered plan. Missing or malformed specifications use the full path. No separate quick-spec child is launched. Requirements/design-loop/plan agents are skipped. |
 | `earlyValidate` | `true` | Validate in parallel with reviewers after each implementation; discard on rejection, reuse on approval. |
 | `useAggregator` | `false` | Merge reviewer findings deterministically without an aggregate agent. Optional aggregate cannot erase rejection/blocker evidence. |
 | `stepTimeoutMs` | Role defaults | Positive milliseconds or map by label/role. setup 3m, analysis 6m, quick-spec/requirements/plan 5m, design/designReview 6m, implementer 20m, reviewer 10m, validate 8m. |
 | `cachedSetup` | Internal | Validated `{stack,testCommands,lintCommands,conventions}`; skips setup with a cache-reuse log. |
 
-The fast path intentionally exempts design approval. Results include `fastPath:true` and `designReview: 'skipped (fast path)'`, never "approved". Code approval and exact validate acceptance coverage remain mandatory; the full path still requires design approval. `run_recipe` caches setup for seven days keyed by repository realpath, root manifest contents and recipe name; fresh setup is returned in result/resume. Corrupt/expired entries are ignored.
+Through run_recipe, setup, analysis, requirements, design, design review and planning carry authenticated read-only markers enforced by the host tool filter; these preparation roles inspect sources without executing commands. Implementation, reviews and final validation retain their execution tools. Direct workflow use without the private routing provider cannot enforce these filters.
+
+The fast path intentionally exempts design approval. Results include `fastPath:true` and `designReview: 'skipped (fast path)'`, never "approved". Code approval and exact validate acceptance coverage remain mandatory. Final validation reruns every planned verify command and must return one exact command receipt with exit code zero and concrete evidence; missing, duplicate, unknown, failed or vague receipts prevent completion. API, security, data and architecture impacts always use the full path; the full path still requires design approval. `run_recipe` caches setup for seven days keyed by repository realpath, root manifest contents and recipe name; fresh setup is returned in result/resume. Corrupt/expired entries are ignored.
 
 From iteration two, reviewers verify every prior finding against the changed-path delta and still flag new problems. The recipe itself never runs git commands; delta wording is guidance to independent reviewers.
 
@@ -120,7 +91,7 @@ The recipe does not commit, push or merge. It leaves the changes in the working 
 
 ## Graph
 
-The interactive version: `graph/feature-pipeline.html` (source: `graph/feature-pipeline.workflow.json`). These diagrams are historical references from before 0.3.0: they do not depict the quick-spec fast path, default deterministic review union, or concurrent validation. See `script.js` for the current execution order.
+The interactive version: `graph/feature-pipeline.html` (source: `graph/feature-pipeline.workflow.json`). These diagrams are historical references from before 0.3.0: they do not depict the compact analysis specification fast path, default deterministic review union, or concurrent validation. See `script.js` for the current execution order.
 
 ```mermaid
 flowchart TD

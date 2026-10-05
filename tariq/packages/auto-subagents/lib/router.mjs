@@ -159,7 +159,7 @@ export class AutoModelRouter {
       if (!route) throw new Error('Explicit child model is not allowed by the current saved Subagent settings.');
       // Tier (and `verifies`) are ignored for an explicit route; the effective tier is the
       // route's own. The child still counts against its route for load spreading.
-      const outcome = await this.attempt(route, tierOfRoute(route, this.settings.current().modelTiers), request.reasoning_effort, signal);
+      const outcome = await this.attempt(route, tierOfRoute(route, this.settings.current().modelTiers), request.reasoning_effort, signal, [], false);
       if (outcome) return outcome;
       throw new Error('The explicit child model stopped being allowed while its availability was checked; retry the delegation.');
     }
@@ -214,7 +214,7 @@ export class AutoModelRouter {
   // and continue escalation; any other error fails loudly, also releasing. The surviving
   // selection carries the reservation as a NON-ENUMERABLE `token` property, so session
   // events, logs and structural comparisons see only data.
-  async attempt(route, requestedTier, reasoningEffort, signal, failures = []) {
+  async attempt(route, requestedTier, reasoningEffort, signal, failures = [], enforceTier = true) {
     signal.throwIfAborted();
     const token = this.reserve(route);
     let keep = false;
@@ -226,7 +226,10 @@ export class AutoModelRouter {
         await this.llm.resolveCallConfig({ ...route, ...(effort === undefined ? {} : { reasoningEffort: effort }) }, signal);
         signal.throwIfAborted();
         if (!this.routes().some(current => routeKey(current) === routeKey(route))) return undefined;
-        const selection = { route: { ...route }, tier: tierOfRoute(route, this.settings.current().modelTiers), requestedTier, ...(effort === undefined ? {} : { reasoningEffort: effort }), failures };
+        const tier = tierOfRoute(route, this.settings.current().modelTiers);
+        // Automatic requests and recovery retain their minimum tier even if settings change during preflight.
+        if (enforceTier && MODEL_TIERS.indexOf(tier) < MODEL_TIERS.indexOf(requestedTier)) return undefined;
+        const selection = { route: { ...route }, tier, requestedTier, ...(effort === undefined ? {} : { reasoningEffort: effort }), failures };
         Object.defineProperty(selection, 'token', { value: token });
         keep = true;
         return selection;

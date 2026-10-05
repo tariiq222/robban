@@ -13,8 +13,10 @@
     "./client": "./lib/client.js",
     "./router": "./lib/router.mjs",
     "./runtime": "./lib/runtime.mjs",
+    "./llm-provider": "./lib/llm-provider.mjs",
     "./coordinator": "./lib/coordinator.mjs",
     "./recipes": "./lib/recipes.mjs",
+    "./task-memory": "./lib/task-memory.mjs",
     "./events": "./lib/events.mjs",
     "./dsh-paths": "./lib/dsh-paths.mjs",
     "./recipe-integrity": "./lib/recipe-integrity.mjs",
@@ -42,11 +44,11 @@
     "@deepseek-ai/dsh-session": "workspace:*",
     "@deepseek-ai/dsh-session-projection": "workspace:*",
     "@deepseek-ai/dsh-fs-local": "workspace:*",
+    "@deepseek-ai/dsh-goal": "workspace:*",
     "@deepseek-ai/dsh-subprocess-local": "workspace:*",
     "@deepseek-ai/dsh-sandbox-local": "workspace:*",
     "@deepseek-ai/dsh-ptc-runtime-node": "workspace:*",
     "@deepseek-ai/dsh-subagent": "workspace:*",
-    "js-yaml": "^4.1.0",
     "@deepseek-ai/dsh-web-app": "workspace:*"
   },
   "dsh": {
@@ -83,6 +85,7 @@
     "README.md",
     "CHANGELOG.md",
     "docs",
+    "skills",
     "preset.patch.yml"
   ],
   "peerDependencies": {
@@ -124,6 +127,7 @@
     "@deepseek-ai/dsh-tool-present": "workspace:*",
     "@deepseek-ai/dsh-plugin-manager": "workspace:*",
     "@deepseek-ai/dsh-time-context": "workspace:*",
-    "@deepseek-ai/dsh-tool-schedule": "workspace:*"
+    "@deepseek-ai/dsh-tool-schedule": "workspace:*",
+    "js-yaml": "^4.1.0"
   }
 }

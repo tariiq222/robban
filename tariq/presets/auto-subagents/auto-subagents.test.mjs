@@ -18,7 +18,7 @@ const auto = load(path.join(here, 'agent.cordis.yml'));
 const flatten = (rows) => rows.flatMap((row) => row.group ? [row, ...flatten(row.config)] : [row]);
 
 test('automatic preset retains Standard capabilities except its intentional routing extension', () => {
-  const normalized = structuredClone(auto).filter(row => !['auto-subagent-routing', 'auto-subagents-coordinator'].includes(row.id));
+  const normalized = structuredClone(auto).filter(row => !['auto-subagent-routing', 'auto-subagents-coordinator', 'auto-task-memory'].includes(row.id));
   // run_recipe is an intentional Auto-only extension inside the delegation group.
   for (const row of normalized) if (row.group) row.config = row.config.filter(child => child.id !== 'auto-subagents-recipes');
   for (const row of flatten(normalized)) {
@@ -65,5 +65,7 @@ test('recipes plugin is mounted inside the workflowEngine realm and the coordina
   assert.ok(delegation.config.some((row) => row.id === 'auto-subagents-recipes'));
   const { COORDINATOR_ALLOWED_TOOLS } = await import(coordinatorUrl);
   assert.ok(COORDINATOR_ALLOWED_TOOLS.includes('run_recipe'));
+  assert.ok(COORDINATOR_ALLOWED_TOOLS.includes('task_memory'));
+  assert.equal(auto.find(row => row.id === 'auto-task-memory')?.name, 'dsh-auto-subagents/task-memory');
   assert.ok(!COORDINATOR_ALLOWED_TOOLS.includes('workflow'), 'coordinator must not author arbitrary workflow scripts');
 });

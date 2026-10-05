@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { runtimeModuleUrl } from '../../lib/dsh-paths.mjs';
 import * as Routing from '../../lib/runtime.mjs';
+import AutoLlmRuntime from '../../lib/llm-provider.mjs';
 const { Context } = await import(runtimeModuleUrl('@deepseek-ai/cordis'));
-const { default: Llm, LlmAdapter, createUserMessage } = await import(runtimeModuleUrl('@deepseek-ai/dsh-llm'));
+const { LlmAdapter, createUserMessage } = await import(runtimeModuleUrl('@deepseek-ai/dsh-llm'));
 const services = await Promise.all(['session','session-projection','system-prompt','tools','agent','agent-loop'].map(async name => (await import(runtimeModuleUrl(`@deepseek-ai/dsh-${name}`))).default));
 for (const failure of [
   { code:'QUOTA', message:'quota exhausted' },
@@ -28,7 +29,7 @@ for (const failure of [
     }
   }
   try {
-    await ctx.plugin(Llm);
+    await ctx.plugin(AutoLlmRuntime);
     for (const service of services) await ctx.plugin(service, service === services.at(-1) ? {agents:[]} : undefined);
     ctx.llm.registerAdapter(['one','two'], new Adapter());
     ctx.provide('subagentModelSelection',{current:()=>({enabled:true,allowedModels:[{provider:'one',model:'a'},{provider:'two',model:'b'}]})});

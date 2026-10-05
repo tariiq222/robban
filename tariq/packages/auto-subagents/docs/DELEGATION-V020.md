@@ -13,6 +13,8 @@ Auto delegates through the public subagent service using live saved model author
 
 ## Composition
 
+The bundle mounts the Auto-owned LLM service provider before adapters. Routing rejects a base LLM provider without preparation recovery. [Upstream compatibility](UPSTREAM-COMPATIBILITY.md) owns this composition and the remaining Session append requirement.
+
 The Host entry `auto-model-selection` loads [model-selection.mjs](../lib/model-selection.mjs) and provides the singleton service `subagentModelSelection`. The isolated Auto profile must remove the stock `subagent-model-selection-settings` Host row before installing this service. Its volatile config fields are `enabled`, `allowedModels`, and `modelTiers`; the settings editor addresses the `auto-model-selection` entry.
 
 The Auto preset loads [delegation.mjs](../lib/delegation.mjs) twice: `provider: spawn`, `toolName: subagent`, `registerModelDiscovery: true`; and `provider: fork`, `toolName: subagent_fork`, `registerModelDiscovery: false`. Both use `backgroundMode: continuable`. Discovery has one owner. The stock consumers stay available in other presets.
@@ -32,6 +34,16 @@ The router reserves load before model preflight. Failed admission releases it. C
 [migrateLegacyModelSelection(section)](../lib/settings-migration.mjs) validates the legacy `subagent-model-selection` section and returns detached fields for the `auto-model-selection` entry. It preserves allowed-model order, provider/model identities, tier assignments, and disabled or empty authorization. Tier assignments outside the allowed list remain saved but authorize no route. Malformed fields, duplicate route pairs, and unsupported tiers reject conversion. The function performs no filesystem writes; the migration caller owns reading a copied source and applying the returned fields.
 
 The Host `current()` method uses the same validation and returns detached lists from volatile config. An enabled empty list remains empty and blocks delegation; reading or migration never invents an authorized route.
+
+## Copied-settings conversion
+
+From the repository root, convert an explicit copy of `settings.yaml` or `settings.yaml.imported` into a new overlay:
+
+```sh
+node tariq/packages/auto-subagents/scripts/migrate-settings.mjs COPIED_SETTINGS.yaml NEW_AUTO_PATCH.yml
+```
+
+The command validates the `subagent-model-selection` section and writes only its routing fields to an `auto-model-selection` Cordis row. The output is JSON-compatible YAML, uses owner-only permissions on POSIX, and refuses an existing output file or symlink. It leaves the input unchanged, excludes unrelated settings, rejects executable YAML tags, and does not activate the result. Review route identities and installed provider compatibility before applying the overlay to a copied non-preview profile; the offline preview accepts only validated Auto routing settings and refuses provider or executable overlays.
 
 ## Verification
 

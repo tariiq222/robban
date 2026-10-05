@@ -86,6 +86,37 @@ function models(f, entries) {
   f.setSettings({ enabled: true, allowedModels: entries.map(([model]) => ({ provider: 'p', model })), modelTiers: entries.map(([model, tier]) => ({ provider: 'p', model, tier })) });
 }
 
+test('assigned acceptance and historical notes stay in authenticated read-only replacement prompts', async t => {
+  const workContext = JSON.stringify({ id: 'repair', writePaths: ['src.js'], acceptance: ['Preserve exact inputs'], verifyCommands: ['node test.js'] });
+  const f = fixture({ recipeName: 'bug-fix', workContext, taskContext: 'Earlier observation remains unverified.' });
+  t.after(() => f.routing.dispose());
+  const marker = '__AUTO_RECIPE_ROLE__' + JSON.stringify({ token: f.routing.markerToken, role: 'analysis', label: 'analysis', readOnly: true });
+  const run = await f.start('analysis', { outputSchema: schema, prompt: [{ type: 'text', text: marker + '\nInspect the assigned work.' }] });
+  f.runs[0].done.resolve(missing);
+  await tick();
+  assert.equal(f.starts.length, 2);
+  for (const request of f.starts) {
+    const text = request.prompt.map(block => block.text ?? '').join('\n');
+    assert.equal(text.split(workContext).length, 2);
+    assert.match(text, /Phase permissions and output requirements prevail/);
+    assert.match(text, /Earlier observation remains unverified/);
+    assert.match(text, /behavior-evidence/);
+    assert.doesNotMatch(text, /__AUTO_RECIPE_ROLE__/);
+    assert.deepEqual(request.toolFilter, { allow: ['read', 'read_image', 'glob', 'grep'] });
+  }
+  f.runs[1].done.resolve({ stopReason: 'completed', structured: { ok: true } });
+  await run.result;
+});
+
+test('invalid assigned context is rejected before provider registration or route selection', async t => {
+  const f = fixture();
+  t.after(() => f.routing.dispose());
+  const count = f.providers.size;
+  for (const workContext of [null, {}, 'x'.repeat(32001)]) assert.throws(() => registerWorkflowRouting({ subagents: f.subagents, router: f.router, parent: f.parent, workContext }), /assigned work context/);
+  assert.equal(f.providers.size, count);
+  assert.equal(f.starts.length, 0);
+});
+
 test('schema output failure replaces a fresh same-tier child, updates implementer and emits telemetry', async () => {
   const changes = [], f = fixture({ onRouteChange: event => changes.push(event), retryImplementer: true }); models(f, [['A', 'strong'], ['B', 'strong'], ['C', 'strong']]);
   const run = await f.start('implementer', { outputSchema: schema, toolFilter: { allow: ['read'] } });

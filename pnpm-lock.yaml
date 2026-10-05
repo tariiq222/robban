@@ -14847,6 +14847,9 @@ importers:
       '@deepseek-ai/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
+      js-yaml:
+        specifier: ^4.1.0
+        version: 4.3.1
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:*
@@ -14857,6 +14860,9 @@ importers:
       '@deepseek-ai/dsh-fs-local':
         specifier: workspace:*
         version: link:../../../packages/fs/fs-local
+      '@deepseek-ai/dsh-goal':
+        specifier: workspace:*
+        version: link:../../../packages/goal/goal
       '@deepseek-ai/dsh-ptc-runtime-node':
         specifier: workspace:*
         version: link:../../../packages/ptc-runtime/ptc-runtime-node
@@ -14887,9 +14893,6 @@ importers:
       '@deepseek-ai/dsh-web-app':
         specifier: workspace:*
         version: link:../../../packages/bundle/web-app
-      js-yaml:
-        specifier: ^4.1.0
-        version: 4.3.1
       react:
         specifier: 18.3.1
         version: 18.3.1

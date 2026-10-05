@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/architecture.md
 /deepseek-harness-architecture:
-  en: 2125f3ec236bc7b2
-  zh: 23d8815579592ec4
+  en: ee8b121f8dae94e4
+  zh: f75cb434634d2431
 /deepseek-harness-architecture/cordis:
   en: da5060e577578ea7
   zh: 2e77d570e32d8938

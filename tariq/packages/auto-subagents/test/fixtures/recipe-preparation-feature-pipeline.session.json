@@ -1,0 +1,780 @@
+{
+  "header": {
+    "version": 4,
+    "id": "preparation-feature-pipeline",
+    "createdAt": 1791149509021,
+    "isSeeded": false
+  },
+  "events": [
+    {
+      "type": "agent/inbox/spliced",
+      "seq": 0,
+      "time": 1791149509022,
+      "data": {
+        "target": "next-turn",
+        "start": 0,
+        "inserted": [
+          {
+            "content": [
+              {
+                "type": "text",
+                "text": "__AUTO_RECIPE_ROLE__{\"token\":\"fixture-routing-token\",\"role\":\"analysis\",\"label\":\"analysis\",\"timeoutMs\":360000,\"readOnly\":true}\nRepository: /fixture/repository\nWork only inside this repository. Do not commit, push, merge, deploy or delete branches.\nNever fabricate evidence: if you did not run a command, say so.\nStack: JavaScript\nPreparation is source inspection only: do not execute commands or edit files.\nTest commands: node --test test.js\nLint/typecheck commands: (none found)\nConventions:\n- Preserve callers\n\nAnalyse ONLY the scope this request changes. Do not survey the rest of the repository.\nScope = the files/functions the request names or clearly implies, their DIRECT callers/importers\n(one hop), and the tests that cover them. Change no files.\n\nReport:\n- scope: exactly which files, symbols, direct dependents and tests you inspected.\n- currentState: what that code does today relative to the request (cite file:line).\n- gaps: what the request needs that does not exist yet.\n- outcome: \"proceed\"; \"already_satisfied\" if the code already does what is asked; or\n  \"not_recommended\" if the change would break something or has no benefit (explain in outcomeReason).\n- decisions: the decision brief.\n- compactSpec: ONLY for a simple decision-free change in one or two concrete files,\n  provide { files, impact, acceptance, verifyCommands, plan } in this same analysis. files must match\n  scope.files exactly; acceptance must contain nonempty unique testable criteria; verifyCommands\n  must be exact existing commands grounded in the repository; plan must describe ordered\n  changes limited to those files. Never use this for security, deletion or shared contracts.\n  impact must be local, api, security, data or architecture; only local qualifies.\n  Otherwise omit compactSpec; the full requirements/design/plan path will run.\n\nDecision brief rules. Classify every open choice:\n- \"needs_user\": the choice ADDS something new, CHANGES existing behavior/output, changes a contract\n  that other code depends on, deletes something, touches security/permissions, adds a dependency,\n  or widens/narrows scope.\n- \"auto\": everything else, INCLUDING rare edge cases that no existing code depends on. Decide it\n  yourself; it is still shown to the user, who may override it.\nFor each decision: a stable kebab-case id, the question, \"current\" (what the code does today, with\nfile:line evidence), options each with its concrete consequence, your recommendation and why.\nBe exhaustive in this ONE pass: walk every input class, option combination, ordering and boundary\nof the change now. The user answers once; anything you miss will be decided without them.\n\nRequest: Inspect the requested scoped arithmetic change"
+              }
+            ],
+            "source": {
+              "kind": "user"
+            },
+            "role": "user",
+            "id": "797c58d2-9a2d-4f43-a6aa-6d1ab64897d9"
+          }
+        ]
+      }
+    },
+    {
+      "type": "turn/start",
+      "seq": 1,
+      "time": 1791149509023,
+      "data": {
+        "turn": 1
+      }
+    },
+    {
+      "type": "agent/inbox/spliced",
+      "seq": 2,
+      "time": 1791149509024,
+      "data": {
+        "target": "next-turn",
+        "start": 0,
+        "removedCount": 1,
+        "inserted": []
+      }
+    },
+    {
+      "type": "step/start",
+      "seq": 3,
+      "time": 1791149509024,
+      "data": {
+        "turn": 1,
+        "step": 1
+      }
+    },
+    {
+      "type": "system/message",
+      "seq": 4,
+      "time": 1791149509025,
+      "data": {
+        "turn": 1,
+        "step": 1,
+        "message": {
+          "role": "system",
+          "content": [
+            {
+              "type": "text",
+              "text": "You are an AI agent powered by DeepSeek Harness."
+            }
+          ],
+          "source": {
+            "kind": "system-prompt"
+          },
+          "id": "5f6a95cb-6db3-4bb9-bcf4-6336c2fa97e2"
+        }
+      },
+      "surfaceOp": "append"
+    },
+    {
+      "type": "user/message",
+      "seq": 5,
+      "time": 1791149509025,
+      "data": {
+        "content": [
+          {
+            "type": "text",
+            "text": "__AUTO_RECIPE_ROLE__{\"token\":\"fixture-routing-token\",\"role\":\"analysis\",\"label\":\"analysis\",\"timeoutMs\":360000,\"readOnly\":true}\nRepository: /fixture/repository\nWork only inside this repository. Do not commit, push, merge, deploy or delete branches.\nNever fabricate evidence: if you did not run a command, say so.\nStack: JavaScript\nPreparation is source inspection only: do not execute commands or edit files.\nTest commands: node --test test.js\nLint/typecheck commands: (none found)\nConventions:\n- Preserve callers\n\nAnalyse ONLY the scope this request changes. Do not survey the rest of the repository.\nScope = the files/functions the request names or clearly implies, their DIRECT callers/importers\n(one hop), and the tests that cover them. Change no files.\n\nReport:\n- scope: exactly which files, symbols, direct dependents and tests you inspected.\n- currentState: what that code does today relative to the request (cite file:line).\n- gaps: what the request needs that does not exist yet.\n- outcome: \"proceed\"; \"already_satisfied\" if the code already does what is asked; or\n  \"not_recommended\" if the change would break something or has no benefit (explain in outcomeReason).\n- decisions: the decision brief.\n- compactSpec: ONLY for a simple decision-free change in one or two concrete files,\n  provide { files, impact, acceptance, verifyCommands, plan } in this same analysis. files must match\n  scope.files exactly; acceptance must contain nonempty unique testable criteria; verifyCommands\n  must be exact existing commands grounded in the repository; plan must describe ordered\n  changes limited to those files. Never use this for security, deletion or shared contracts.\n  impact must be local, api, security, data or architecture; only local qualifies.\n  Otherwise omit compactSpec; the full requirements/design/plan path will run.\n\nDecision brief rules. Classify every open choice:\n- \"needs_user\": the choice ADDS something new, CHANGES existing behavior/output, changes a contract\n  that other code depends on, deletes something, touches security/permissions, adds a dependency,\n  or widens/narrows scope.\n- \"auto\": everything else, INCLUDING rare edge cases that no existing code depends on. Decide it\n  yourself; it is still shown to the user, who may override it.\nFor each decision: a stable kebab-case id, the question, \"current\" (what the code does today, with\nfile:line evidence), options each with its concrete consequence, your recommendation and why.\nBe exhaustive in this ONE pass: walk every input class, option combination, ordering and boundary\nof the change now. The user answers once; anything you miss will be decided without them.\n\nRequest: Inspect the requested scoped arithmetic change"
+          }
+        ],
+        "source": {
+          "kind": "user"
+        },
+        "role": "user",
+        "id": "797c58d2-9a2d-4f43-a6aa-6d1ab64897d9"
+      },
+      "surfaceOp": "append"
+    },
+    {
+      "type": "request/header",
+      "seq": 6,
+      "time": 1791149509025,
+      "data": {
+        "header": {
+          "config": {
+            "provider": "fixture",
+            "model": "keyless"
+          },
+          "tools": [
+            {
+              "name": "read",
+              "description": "Read fixed fixture source only",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path"
+                ]
+              }
+            },
+            {
+              "name": "structured_output",
+              "description": "Return preparation fields",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "result": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "scope": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "files": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "symbols": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "dependents": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "tests": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "files",
+                          "symbols",
+                          "dependents",
+                          "tests"
+                        ]
+                      },
+                      "currentState": {
+                        "type": "string"
+                      },
+                      "gaps": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "outcome": {
+                        "type": "string",
+                        "enum": [
+                          "proceed",
+                          "already_satisfied",
+                          "not_recommended"
+                        ]
+                      },
+                      "outcomeReason": {
+                        "type": "string"
+                      },
+                      "decisions": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "needs_user",
+                                "auto"
+                              ]
+                            },
+                            "question": {
+                              "type": "string"
+                            },
+                            "current": {
+                              "type": "string"
+                            },
+                            "options": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "consequence": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "label",
+                                  "consequence"
+                                ]
+                              }
+                            },
+                            "recommendation": {
+                              "type": "string"
+                            },
+                            "why": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "kind",
+                            "question",
+                            "current",
+                            "options",
+                            "recommendation",
+                            "why"
+                          ]
+                        }
+                      },
+                      "compactSpec": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "files": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "impact": {
+                            "type": "string",
+                            "enum": [
+                              "local",
+                              "api",
+                              "security",
+                              "data",
+                              "architecture"
+                            ]
+                          },
+                          "acceptance": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "verifyCommands": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "plan": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "files",
+                          "impact",
+                          "acceptance",
+                          "verifyCommands",
+                          "plan"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "scope",
+                      "currentState",
+                      "gaps",
+                      "outcome",
+                      "outcomeReason",
+                      "decisions"
+                    ]
+                  }
+                },
+                "required": [
+                  "result"
+                ]
+              }
+            }
+          ]
+        },
+        "reason": "initial"
+      }
+    },
+    {
+      "type": "request/context",
+      "seq": 7,
+      "time": 1791149509025,
+      "data": {
+        "provider": "fixture",
+        "model": "keyless"
+      }
+    },
+    {
+      "type": "assistant/message",
+      "seq": 8,
+      "time": 1791149509026,
+      "data": {
+        "turn": 1,
+        "step": 1,
+        "message": {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "tool-call",
+              "id": "preparation-feature-pipeline-call-1",
+              "name": "read",
+              "arguments": "{\"path\":\"src.js\"}"
+            }
+          ],
+          "source": {
+            "kind": "model",
+            "provider": "fixture",
+            "model": "keyless"
+          },
+          "id": "4b5c7e8f-f10f-4012-b6df-38ab994b1158"
+        },
+        "stream": [
+          {
+            "type": "chunk",
+            "time": 1791149509025,
+            "chunk": {
+              "type": "block-start",
+              "index": 0,
+              "blockType": "tool-call"
+            }
+          },
+          {
+            "type": "chunk",
+            "time": 1791149509025,
+            "chunk": {
+              "type": "block-end",
+              "index": 0,
+              "block": {
+                "type": "tool-call",
+                "id": "preparation-feature-pipeline-call-1",
+                "name": "read",
+                "arguments": "{\"path\":\"src.js\"}"
+              }
+            }
+          },
+          {
+            "type": "chunk",
+            "time": 1791149509025,
+            "chunk": {
+              "type": "finish",
+              "reason": {
+                "kind": "tool-calls"
+              }
+            }
+          }
+        ]
+      },
+      "surfaceOp": "append"
+    },
+    {
+      "type": "tool/call",
+      "seq": 9,
+      "time": 1791149509026,
+      "data": {
+        "turn": 1,
+        "step": 1,
+        "callId": "preparation-feature-pipeline-call-1",
+        "name": "read",
+        "arguments": "{\"path\":\"src.js\"}"
+      }
+    },
+    {
+      "type": "tool/result",
+      "seq": 10,
+      "time": 1791149509028,
+      "data": {
+        "turn": 1,
+        "step": 1,
+        "message": {
+          "role": "tool",
+          "source": {
+            "kind": "tool",
+            "callId": "preparation-feature-pipeline-call-1"
+          },
+          "toolCallId": "preparation-feature-pipeline-call-1",
+          "content": [
+            {
+              "type": "text",
+              "text": "export const sum = (a, b) => a - b;\n"
+            }
+          ],
+          "isError": false,
+          "id": "90d4c517-bdb9-447f-8706-07a068049386"
+        }
+      },
+      "sourceEventSeqs": [
+        9
+      ],
+      "surfaceOp": "append"
+    },
+    {
+      "type": "step/end",
+      "seq": 11,
+      "time": 1791149509029,
+      "data": {
+        "turn": 1,
+        "step": 1
+      }
+    },
+    {
+      "type": "step/start",
+      "seq": 12,
+      "time": 1791149509029,
+      "data": {
+        "turn": 1,
+        "step": 2
+      }
+    },
+    {
+      "type": "assistant/message",
+      "seq": 13,
+      "time": 1791149509030,
+      "data": {
+        "turn": 1,
+        "step": 2,
+        "message": {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "tool-call",
+              "id": "preparation-feature-pipeline-call-2",
+              "name": "structured_output",
+              "arguments": "{\"result\":{\"scope\":{\"files\":[\"src.js\",\"test.js\"],\"tests\":[\"test.js\"],\"symbols\":[\"sum\"],\"dependents\":[]},\"currentState\":\"src.js:1 only adds\",\"gaps\":[\"Need requested optional behavior\"],\"outcome\":\"proceed\",\"outcomeReason\":\"Small scoped extension\",\"decisions\":[],\"compactSpec\":{\"files\":[\"src.js\",\"test.js\"],\"impact\":\"local\",\"acceptance\":[\"Requested optional behavior covered\"],\"verifyCommands\":[\"node --test test.js\"],\"plan\":\"Update src.js; extend test.js; run existing local test\"}}}"
+            }
+          ],
+          "source": {
+            "kind": "model",
+            "provider": "fixture",
+            "model": "keyless"
+          },
+          "id": "e0c3c157-8951-44f0-a426-2b8026c265ef"
+        },
+        "stream": [
+          {
+            "type": "chunk",
+            "time": 1791149509030,
+            "chunk": {
+              "type": "block-start",
+              "index": 0,
+              "blockType": "tool-call"
+            }
+          },
+          {
+            "type": "chunk",
+            "time": 1791149509030,
+            "chunk": {
+              "type": "block-end",
+              "index": 0,
+              "block": {
+                "type": "tool-call",
+                "id": "preparation-feature-pipeline-call-2",
+                "name": "structured_output",
+                "arguments": "{\"result\":{\"scope\":{\"files\":[\"src.js\",\"test.js\"],\"tests\":[\"test.js\"],\"symbols\":[\"sum\"],\"dependents\":[]},\"currentState\":\"src.js:1 only adds\",\"gaps\":[\"Need requested optional behavior\"],\"outcome\":\"proceed\",\"outcomeReason\":\"Small scoped extension\",\"decisions\":[],\"compactSpec\":{\"files\":[\"src.js\",\"test.js\"],\"impact\":\"local\",\"acceptance\":[\"Requested optional behavior covered\"],\"verifyCommands\":[\"node --test test.js\"],\"plan\":\"Update src.js; extend test.js; run existing local test\"}}}"
+              }
+            }
+          },
+          {
+            "type": "chunk",
+            "time": 1791149509030,
+            "chunk": {
+              "type": "finish",
+              "reason": {
+                "kind": "tool-calls"
+              }
+            }
+          }
+        ]
+      },
+      "surfaceOp": "append"
+    },
+    {
+      "type": "tool/call",
+      "seq": 14,
+      "time": 1791149509030,
+      "data": {
+        "turn": 1,
+        "step": 2,
+        "callId": "preparation-feature-pipeline-call-2",
+        "name": "structured_output",
+        "arguments": "{\"result\":{\"scope\":{\"files\":[\"src.js\",\"test.js\"],\"tests\":[\"test.js\"],\"symbols\":[\"sum\"],\"dependents\":[]},\"currentState\":\"src.js:1 only adds\",\"gaps\":[\"Need requested optional behavior\"],\"outcome\":\"proceed\",\"outcomeReason\":\"Small scoped extension\",\"decisions\":[],\"compactSpec\":{\"files\":[\"src.js\",\"test.js\"],\"impact\":\"local\",\"acceptance\":[\"Requested optional behavior covered\"],\"verifyCommands\":[\"node --test test.js\"],\"plan\":\"Update src.js; extend test.js; run existing local test\"}}}"
+      }
+    },
+    {
+      "type": "tool/result",
+      "seq": 15,
+      "time": 1791149509031,
+      "data": {
+        "turn": 1,
+        "step": 2,
+        "message": {
+          "role": "tool",
+          "source": {
+            "kind": "tool",
+            "callId": "preparation-feature-pipeline-call-2"
+          },
+          "toolCallId": "preparation-feature-pipeline-call-2",
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"scope\":{\"files\":[\"src.js\",\"test.js\"],\"tests\":[\"test.js\"],\"symbols\":[\"sum\"],\"dependents\":[]},\"currentState\":\"src.js:1 only adds\",\"gaps\":[\"Need requested optional behavior\"],\"outcome\":\"proceed\",\"outcomeReason\":\"Small scoped extension\",\"decisions\":[],\"compactSpec\":{\"files\":[\"src.js\",\"test.js\"],\"impact\":\"local\",\"acceptance\":[\"Requested optional behavior covered\"],\"verifyCommands\":[\"node --test test.js\"],\"plan\":\"Update src.js; extend test.js; run existing local test\"}}"
+            }
+          ],
+          "isError": false,
+          "id": "d412fcaa-cc05-44d1-a582-fc6fb0af88db"
+        }
+      },
+      "sourceEventSeqs": [
+        14
+      ],
+      "surfaceOp": "append"
+    },
+    {
+      "type": "step/end",
+      "seq": 16,
+      "time": 1791149509031,
+      "data": {
+        "turn": 1,
+        "step": 2
+      }
+    },
+    {
+      "type": "step/start",
+      "seq": 17,
+      "time": 1791149509032,
+      "data": {
+        "turn": 1,
+        "step": 3
+      }
+    },
+    {
+      "type": "assistant/message",
+      "seq": 18,
+      "time": 1791149509033,
+      "data": {
+        "turn": 1,
+        "step": 3,
+        "message": {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "text",
+              "text": "Preparation complete; repository unchanged."
+            }
+          ],
+          "source": {
+            "kind": "model",
+            "provider": "fixture",
+            "model": "keyless"
+          },
+          "id": "f9ae5aac-0401-4947-8487-30872295f562"
+        },
+        "stream": [
+          {
+            "type": "chunk",
+            "time": 1791149509033,
+            "chunk": {
+              "type": "block-start",
+              "index": 0,
+              "blockType": "text"
+            }
+          },
+          {
+            "type": "text-chunks",
+            "time0": 1791149509033,
+            "index": 0,
+            "dt": [],
+            "texts": [
+              "Preparation complete; repository unchanged."
+            ]
+          },
+          {
+            "type": "chunk",
+            "time": 1791149509033,
+            "chunk": {
+              "type": "block-end",
+              "index": 0,
+              "block": {
+                "type": "text",
+                "text": "Preparation complete; repository unchanged."
+              }
+            }
+          },
+          {
+            "type": "chunk",
+            "time": 1791149509033,
+            "chunk": {
+              "type": "finish",
+              "reason": {
+                "kind": "stop"
+              }
+            }
+          }
+        ]
+      },
+      "surfaceOp": "append"
+    },
+    {
+      "type": "step/end",
+      "seq": 19,
+      "time": 1791149509033,
+      "data": {
+        "turn": 1,
+        "step": 3
+      }
+    },
+    {
+      "type": "turn/end",
+      "seq": 20,
+      "time": 1791149509033,
+      "data": {
+        "turn": 1,
+        "reason": {
+          "kind": "completed"
+        }
+      }
+    }
+  ],
+  "requests": [
+    [
+      {
+        "role": "system",
+        "content": [
+          {
+            "type": "text",
+            "text": "You are an AI agent powered by DeepSeek Harness."
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "text",
+            "text": "__AUTO_RECIPE_ROLE__{\"token\":\"fixture-routing-token\",\"role\":\"analysis\",\"label\":\"analysis\",\"timeoutMs\":360000,\"readOnly\":true}\nRepository: /fixture/repository\nWork only inside this repository. Do not commit, push, merge, deploy or delete branches.\nNever fabricate evidence: if you did not run a command, say so.\nStack: JavaScript\nPreparation is source inspection only: do not execute commands or edit files.\nTest commands: node --test test.js\nLint/typecheck commands: (none found)\nConventions:\n- Preserve callers\n\nAnalyse ONLY the scope this request changes. Do not survey the rest of the repository.\nScope = the files/functions the request names or clearly implies, their DIRECT callers/importers\n(one hop), and the tests that cover them. Change no files.\n\nReport:\n- scope: exactly which files, symbols, direct dependents and tests you inspected.\n- currentState: what that code does today relative to the request (cite file:line).\n- gaps: what the request needs that does not exist yet.\n- outcome: \"proceed\"; \"already_satisfied\" if the code already does what is asked; or\n  \"not_recommended\" if the change would break something or has no benefit (explain in outcomeReason).\n- decisions: the decision brief.\n- compactSpec: ONLY for a simple decision-free change in one or two concrete files,\n  provide { files, impact, acceptance, verifyCommands, plan } in this same analysis. files must match\n  scope.files exactly; acceptance must contain nonempty unique testable criteria; verifyCommands\n  must be exact existing commands grounded in the repository; plan must describe ordered\n  changes limited to those files. Never use this for security, deletion or shared contracts.\n  impact must be local, api, security, data or architecture; only local qualifies.\n  Otherwise omit compactSpec; the full requirements/design/plan path will run.\n\nDecision brief rules. Classify every open choice:\n- \"needs_user\": the choice ADDS something new, CHANGES existing behavior/output, changes a contract\n  that other code depends on, deletes something, touches security/permissions, adds a dependency,\n  or widens/narrows scope.\n- \"auto\": everything else, INCLUDING rare edge cases that no existing code depends on. Decide it\n  yourself; it is still shown to the user, who may override it.\nFor each decision: a stable kebab-case id, the question, \"current\" (what the code does today, with\nfile:line evidence), options each with its concrete consequence, your recommendation and why.\nBe exhaustive in this ONE pass: walk every input class, option combination, ordering and boundary\nof the change now. The user answers once; anything you miss will be decided without them.\n\nRequest: Inspect the requested scoped arithmetic change"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": [
+          {
+            "type": "text",
+            "text": "You are an AI agent powered by DeepSeek Harness."
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "text",
+            "text": "__AUTO_RECIPE_ROLE__{\"token\":\"fixture-routing-token\",\"role\":\"analysis\",\"label\":\"analysis\",\"timeoutMs\":360000,\"readOnly\":true}\nRepository: /fixture/repository\nWork only inside this repository. Do not commit, push, merge, deploy or delete branches.\nNever fabricate evidence: if you did not run a command, say so.\nStack: JavaScript\nPreparation is source inspection only: do not execute commands or edit files.\nTest commands: node --test test.js\nLint/typecheck commands: (none found)\nConventions:\n- Preserve callers\n\nAnalyse ONLY the scope this request changes. Do not survey the rest of the repository.\nScope = the files/functions the request names or clearly implies, their DIRECT callers/importers\n(one hop), and the tests that cover them. Change no files.\n\nReport:\n- scope: exactly which files, symbols, direct dependents and tests you inspected.\n- currentState: what that code does today relative to the request (cite file:line).\n- gaps: what the request needs that does not exist yet.\n- outcome: \"proceed\"; \"already_satisfied\" if the code already does what is asked; or\n  \"not_recommended\" if the change would break something or has no benefit (explain in outcomeReason).\n- decisions: the decision brief.\n- compactSpec: ONLY for a simple decision-free change in one or two concrete files,\n  provide { files, impact, acceptance, verifyCommands, plan } in this same analysis. files must match\n  scope.files exactly; acceptance must contain nonempty unique testable criteria; verifyCommands\n  must be exact existing commands grounded in the repository; plan must describe ordered\n  changes limited to those files. Never use this for security, deletion or shared contracts.\n  impact must be local, api, security, data or architecture; only local qualifies.\n  Otherwise omit compactSpec; the full requirements/design/plan path will run.\n\nDecision brief rules. Classify every open choice:\n- \"needs_user\": the choice ADDS something new, CHANGES existing behavior/output, changes a contract\n  that other code depends on, deletes something, touches security/permissions, adds a dependency,\n  or widens/narrows scope.\n- \"auto\": everything else, INCLUDING rare edge cases that no existing code depends on. Decide it\n  yourself; it is still shown to the user, who may override it.\nFor each decision: a stable kebab-case id, the question, \"current\" (what the code does today, with\nfile:line evidence), options each with its concrete consequence, your recommendation and why.\nBe exhaustive in this ONE pass: walk every input class, option combination, ordering and boundary\nof the change now. The user answers once; anything you miss will be decided without them.\n\nRequest: Inspect the requested scoped arithmetic change"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "tool-call",
+            "id": "preparation-feature-pipeline-call-1",
+            "name": "read",
+            "arguments": "{\"path\":\"src.js\"}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "content": [
+          {
+            "type": "text",
+            "text": "export const sum = (a, b) => a - b;\n"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": [
+          {
+            "type": "text",
+            "text": "You are an AI agent powered by DeepSeek Harness."
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "text",
+            "text": "__AUTO_RECIPE_ROLE__{\"token\":\"fixture-routing-token\",\"role\":\"analysis\",\"label\":\"analysis\",\"timeoutMs\":360000,\"readOnly\":true}\nRepository: /fixture/repository\nWork only inside this repository. Do not commit, push, merge, deploy or delete branches.\nNever fabricate evidence: if you did not run a command, say so.\nStack: JavaScript\nPreparation is source inspection only: do not execute commands or edit files.\nTest commands: node --test test.js\nLint/typecheck commands: (none found)\nConventions:\n- Preserve callers\n\nAnalyse ONLY the scope this request changes. Do not survey the rest of the repository.\nScope = the files/functions the request names or clearly implies, their DIRECT callers/importers\n(one hop), and the tests that cover them. Change no files.\n\nReport:\n- scope: exactly which files, symbols, direct dependents and tests you inspected.\n- currentState: what that code does today relative to the request (cite file:line).\n- gaps: what the request needs that does not exist yet.\n- outcome: \"proceed\"; \"already_satisfied\" if the code already does what is asked; or\n  \"not_recommended\" if the change would break something or has no benefit (explain in outcomeReason).\n- decisions: the decision brief.\n- compactSpec: ONLY for a simple decision-free change in one or two concrete files,\n  provide { files, impact, acceptance, verifyCommands, plan } in this same analysis. files must match\n  scope.files exactly; acceptance must contain nonempty unique testable criteria; verifyCommands\n  must be exact existing commands grounded in the repository; plan must describe ordered\n  changes limited to those files. Never use this for security, deletion or shared contracts.\n  impact must be local, api, security, data or architecture; only local qualifies.\n  Otherwise omit compactSpec; the full requirements/design/plan path will run.\n\nDecision brief rules. Classify every open choice:\n- \"needs_user\": the choice ADDS something new, CHANGES existing behavior/output, changes a contract\n  that other code depends on, deletes something, touches security/permissions, adds a dependency,\n  or widens/narrows scope.\n- \"auto\": everything else, INCLUDING rare edge cases that no existing code depends on. Decide it\n  yourself; it is still shown to the user, who may override it.\nFor each decision: a stable kebab-case id, the question, \"current\" (what the code does today, with\nfile:line evidence), options each with its concrete consequence, your recommendation and why.\nBe exhaustive in this ONE pass: walk every input class, option combination, ordering and boundary\nof the change now. The user answers once; anything you miss will be decided without them.\n\nRequest: Inspect the requested scoped arithmetic change"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "tool-call",
+            "id": "preparation-feature-pipeline-call-1",
+            "name": "read",
+            "arguments": "{\"path\":\"src.js\"}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "content": [
+          {
+            "type": "text",
+            "text": "export const sum = (a, b) => a - b;\n"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "tool-call",
+            "id": "preparation-feature-pipeline-call-2",
+            "name": "structured_output",
+            "arguments": "{\"result\":{\"scope\":{\"files\":[\"src.js\",\"test.js\"],\"tests\":[\"test.js\"],\"symbols\":[\"sum\"],\"dependents\":[]},\"currentState\":\"src.js:1 only adds\",\"gaps\":[\"Need requested optional behavior\"],\"outcome\":\"proceed\",\"outcomeReason\":\"Small scoped extension\",\"decisions\":[],\"compactSpec\":{\"files\":[\"src.js\",\"test.js\"],\"impact\":\"local\",\"acceptance\":[\"Requested optional behavior covered\"],\"verifyCommands\":[\"node --test test.js\"],\"plan\":\"Update src.js; extend test.js; run existing local test\"}}}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"scope\":{\"files\":[\"src.js\",\"test.js\"],\"tests\":[\"test.js\"],\"symbols\":[\"sum\"],\"dependents\":[]},\"currentState\":\"src.js:1 only adds\",\"gaps\":[\"Need requested optional behavior\"],\"outcome\":\"proceed\",\"outcomeReason\":\"Small scoped extension\",\"decisions\":[],\"compactSpec\":{\"files\":[\"src.js\",\"test.js\"],\"impact\":\"local\",\"acceptance\":[\"Requested optional behavior covered\"],\"verifyCommands\":[\"node --test test.js\"],\"plan\":\"Update src.js; extend test.js; run existing local test\"}}"
+          }
+        ]
+      }
+    ]
+  ]
+}

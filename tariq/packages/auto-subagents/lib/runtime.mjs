@@ -2,15 +2,22 @@ import { automaticRouter, isAvailabilityFailure, routeConfig, routeKey } from '.
 import { AUTO_PRESET, presetOf } from './coordinator.mjs';
 import { runtimeModuleUrl } from './dsh-paths.mjs';
 // Same file URL as the host's dsh-llm → same ESM instance (LlmError identity preserved).
-const { boundContextSummary, createUserMessage, LlmError } = await import(runtimeModuleUrl('@deepseek-ai/dsh-llm'));
+const { boundContextSummary, createUserMessage } = await import(runtimeModuleUrl('@deepseek-ai/dsh-llm'));
 
 // Model routing and provider fallback for Auto subagents. Role policy lives in coordinator.mjs.
 export const name = 'auto-subagent-routing';
 export const inject = ['agents', 'llm', 'subagentModelSelection'];
 
 export function apply(ctx) {
+  if (typeof ctx.llm.bindAutoPreparation !== 'function') throw new Error('Auto routing requires the auto-subagents LLM service provider; replace the base llm entry with dsh-auto-subagents/llm-provider');
   const router = automaticRouter(ctx.subagentModelSelection, ctx.llm);
   const managed = new WeakMap();
+  let routingActive = true;
+  ctx.effect?.(() => () => { routingActive = false; });
+  const assertRoutingActive = () => {
+    if (!routingActive) throw new Error('Auto routing was disposed during preparation');
+    ctx.fiber?.assertActive();
+  };
   ctx.on('agent/created', ({ agent, source }) => {
     if (source !== 'startup' || agent.session.header.origin !== 'subagent') return;
     if (presetOf(agent) !== AUTO_PRESET) return;
@@ -37,8 +44,10 @@ export function apply(ctx) {
   }
   async function recover(agent, state, failure, turn, step, signal, streamFailure = false) {
     signal.throwIfAborted();
+    assertRoutingActive();
     stepState(state, turn, step);
     const route = await router.fallback(state.route, state.attempts, signal, state.limit);
+    assertRoutingActive();
     if (!route) {
       agent.session.append('auto-subagent/exhausted', { route: state.route, reason: failure.code, turn, step }, { ignorable: true });
       ctx.logger.warn(`Auto Subagents ${agent.id}: routes exhausted (${failure.code}); no inherited parent fallback.`);
@@ -67,6 +76,13 @@ export function apply(ctx) {
       try {
         await ctx.llm.resolveCallConfig(proposed, signal);
         signal.throwIfAborted();
+        ctx.llm.bindAutoPreparation(proposed, async (error, failedConfig) => {
+          signal.throwIfAborted();
+          assertRoutingActive();
+          if (!isAvailabilityFailure(error)) return undefined;
+          if (!await recover(agent, state, error.failure ?? error, turn, step, signal)) return undefined;
+          return routeConfig(failedConfig, state.route, state.effort);
+        });
         return proposed;
       } catch (error) {
         signal.throwIfAborted();
@@ -74,13 +90,6 @@ export function apply(ctx) {
         if (!await recover(agent, state, error.failure ?? error, turn, step, signal)) throw error;
       }
     }
-  }, { prepend: true });
-  ctx.on('agent/request-prepare-error', async ({ agent, turn, step, failure, signal }, next) => {
-    const state = managed.get(agent);
-    if (!state) return next();
-    if (signal.aborted || !isAvailabilityFailure(failure)) return undefined;
-    if (await recover(agent, state, failure, turn, step, signal)) return { kind: 'retry' };
-    throw new LlmError(failure.message ?? 'Auto Subagents routes exhausted during preparation', failure.code, failure);
   }, { prepend: true });
   ctx.on('agent/request-error', async ({ agent, turn, step, failure, signal }, next) => {
     const state = managed.get(agent);

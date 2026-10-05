@@ -68,7 +68,7 @@ test('deterministic report ranks verified findings by severity and retains high 
   assert.equal(result.status, 'completed'); assert.deepEqual(result.findings.map(f => f.severity), ['blocker', 'low']);
   assert.ok(result.findings.every(f => f.verified === true && f.confidence === 0.9));
 });
-test('duplicate local ids do not erase different findings; exact duplicates merge provenance safely', async () => {
+test('duplicate local ids do not erase different findings; exact duplicates merge source evidence safely', async () => {
   const a = finding('same'), b = { ...finding('same', 'medium', 'src/b.js', 3), title: 'Different bug' };
   const { result } = await run({ 'scan-security': scan([a]), 'scan-correctness': scan([{ ...a, severity: 'low' }, b]), verify: verify([resolution('F1'), resolution('F2')]) });
   assert.equal(result.findings.length, 2); assert.equal(result.findings[0].severity, 'high'); assert.equal(result.findings[0].sources.length, 2);

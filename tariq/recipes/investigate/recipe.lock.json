@@ -3,8 +3,8 @@
   "name": "investigate",
   "sha256": {
     "meta": "54f999116180a6684be0b84f4d1d2e0db8589063fadc0d134b877fda87638dce",
-    "script": "bf48fbbc7035ad2268caf2d0848b26fd601e8165469255ad6a29e04a409cf69d"
+    "script": "5676ab3a97437b54ee6f01e807039aa921427b5f34110a376c66cb8f03d90f12"
   },
-  "approvedAt": "2026-10-03T17:30:44.371Z",
-  "approvedBy": "independently-reviewed-investigate"
+  "approvedAt": "2026-10-04T21:28:33.972Z",
+  "approvedBy": "user-authorized-recipe-simplification"
 }
