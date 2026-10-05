@@ -3,8 +3,8 @@
   "name": "refactor",
   "sha256": {
     "meta": "a16c19186a5965064d8b5c4ee9e399cd3967c8f9c406a1374d1d7df166787dde",
-    "script": "acbdbcea2bf622cc38076a86df79b5b8b03e29e124401e66de18b86f25b363f2"
+    "script": "541a97fb2c8cc25509897419b0bfba8c1bfe92f1e059df90f156927c725ebb20"
   },
-  "approvedAt": "2026-10-04T21:25:52.493Z",
-  "approvedBy": "user-authorized-recipe-simplification"
+  "approvedAt": "2026-10-05T12:27:02.931Z",
+  "approvedBy": "claude (merge auto/recipes-canvas into master; pending owner review)"
 }

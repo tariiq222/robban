@@ -3,8 +3,8 @@
   "name": "feature-pipeline",
   "sha256": {
     "meta": "3709372f4dab7f9d6569e00d3d819a44b41b285fabdeb79fbf16b2140033bf61",
-    "script": "48de66a7c16682115f97b493a56c8f5c7fe6d1432f571155d6f52b07588c692b"
+    "script": "814ba239bf185eb9885ded2ac2fb4b5715edb4c55e5f6a11bd8770e46663eedb"
   },
-  "approvedAt": "2026-10-04T21:31:15.464Z",
-  "approvedBy": "user-authorized-recipe-simplification"
+  "approvedAt": "2026-10-05T12:28:56.930Z",
+  "approvedBy": "claude (merge auto/recipes-canvas into master; pending owner review)"
 }

@@ -196,3 +196,19 @@ test('sameModelAsExecutor warns through the logger when no alternative route is 
   assert.deepEqual(same, childOptions(a)); // only one allowed route: never fail the verification delegation
   assert.ok(f.warnings.some(value => /executor's own route/.test(value)));
 });
+test('recipeOverrides() returns a detached saved copy and defaults to empty', async () => {
+  const settingsModule = await import('../../lib/model-selection.mjs');
+  const { Context } = await import(runtimeModuleUrl('@deepseek-ai/cordis'));
+  const root = new Context();
+  root.plugin(settingsModule.AutoModelSelection, { enabled: false, allowedModels: [a], modelTiers: [], recipeOverrides: { 'bug-fix': { disabled: true, roles: { setup: { tier: 'medium', timeoutMinutes: 4 } } } } });
+  await new Promise(resolve => setTimeout(resolve, 20));
+  const settings = root.get('subagentModelSelection');
+  const first = settings.recipeOverrides();
+  assert.deepEqual(first['bug-fix'], { disabled: true, roles: { setup: { tier: 'medium', timeoutMinutes: 4 } }, args: {} });
+  first['bug-fix'].disabled = false;
+  assert.equal(settings.recipeOverrides()['bug-fix'].disabled, true);
+  const empty = new Context();
+  empty.plugin(settingsModule.AutoModelSelection, { enabled: false, allowedModels: [], modelTiers: [] });
+  await new Promise(resolve => setTimeout(resolve, 20));
+  assert.deepEqual(empty.get('subagentModelSelection').recipeOverrides(), {});
+});

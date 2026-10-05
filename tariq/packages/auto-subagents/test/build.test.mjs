@@ -21,7 +21,7 @@ test('built preset preserves the canonical plugins and multiline model instructi
       mkdir(path.join(fixture, 'src'), { recursive: true }),
       mkdir(presetDirectory, { recursive: true }),
     ]);
-    const inputs = ['build.mjs', 'package.json', 'lib/card-model.mjs', 'lib/decision-model.mjs', 'src/card.css', 'src/client.src.js', 'src/settings.src.js'];
+    const inputs = ['build.mjs', 'package.json', 'lib/card-model.mjs', 'lib/decision-model.mjs', 'lib/dsh-paths.mjs', 'lib/recipe-catalog.mjs', 'lib/recipe-contract.mjs', 'lib/recipe-flows.mjs', 'lib/recipe-integrity.mjs', 'src/card.css', 'src/client.src.js', 'src/settings.src.js'];
     await Promise.all(inputs.map(relative => copyFile(path.join(packageRoot, relative), path.join(fixture, relative))));
     const canonical = await readFile(path.resolve(packageRoot, '../../presets/auto-subagents/agent.cordis.yml'), 'utf8');
     await copyFile(path.resolve(packageRoot, '../../presets/auto-subagents/agent.cordis.yml'), path.join(presetDirectory, 'agent.cordis.yml'));

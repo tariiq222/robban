@@ -3,6 +3,14 @@ export const ROLE_NAME_PATTERN = /^[a-z][a-z0-9-]{0,31}$/;
 export const RESERVED_ROLE_NAMES = Object.freeze(['__proto__', 'constructor', 'prototype']);
 export const TIERS = Object.freeze(['light', 'medium', 'strong']);
 export const LIMITS = Object.freeze({ maxWhenToUse: 500, maxRoles: 32 });
+/** Default tier per built-in workflow role. */
+export const WORKFLOW_ROLE_TIERS = Object.freeze({
+  setup: 'light', analysis: 'medium', requirements: 'medium', design: 'medium',
+  designReview: 'strong', plan: 'medium', implementer: 'strong', reviewer: 'strong',
+  aggregate: 'medium', validate: 'strong',
+});
+// Roles whose retry is safe: they do not edit the repository. `implementer` is opt-in.
+export const READ_ONLY_RETRY_ROLES = new Set(['setup', 'analysis', 'requirements', 'design', 'designReview', 'plan', 'reviewer', 'aggregate', 'validate']);
 export const STRICT_BUILTIN_ROLES = Object.freeze(['reviewer', 'implementer']);
 const STRONG_BUILTIN_ROLES = Object.freeze(['implementer', 'reviewer', 'validate']);
 const plain = value => value !== null && typeof value === 'object' && !Array.isArray(value)

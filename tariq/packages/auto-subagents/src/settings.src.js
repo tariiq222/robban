@@ -1,6 +1,130 @@
 // Staged Auto settings use the Host's revision-fenced config form.
 var SETTINGS_NS = 'auto-subagents.settings';
-var settingsEn = { title:'Auto Subagents', direction:'ltr', description:'Choose allowed models and routing tiers for Auto delegation.', enabled:'Enable automatic routing', provider:'Provider', model:'Model', tier:'Tier', strong:'Strong', medium:'Medium', light:'Light', add:'Add model', remove:'Remove', save:'Save changes', discard:'Discard changes', models:'Allowed models', routingHint:'Auto selects from these models for each task.', saved:'Changes apply after saving.', conflict:'Settings changed elsewhere. Discard this draft and try again.', failed:'Could not save settings.', unavailable:'Model catalog unavailable. Saved routes are still editable.', refresh:'Refresh models', empty:'Add at least one model to enable routing.' };
+var settingsEn = { title:'Auto Subagents', direction:'ltr', description:'Choose allowed models and routing tiers for Auto delegation.', enabled:'Enable automatic routing', provider:'Provider', model:'Model', tier:'Tier', strong:'Strong', medium:'Medium', light:'Light', add:'Add model', remove:'Remove', save:'Save changes', discard:'Discard changes', models:'Allowed models', routingHint:'Auto selects from these models for each task.', saved:'Changes apply after saving.', conflict:'Settings changed elsewhere. Discard this draft and try again.', failed:'Could not save settings.', unavailable:'Model catalog unavailable. Saved routes are still editable.', refresh:'Refresh models', empty:'Add at least one model to enable routing.', recipes:'Recipes', recipesHint:'Approved recipes stay unchanged. These settings are applied when a recipe runs.', recipeEnabled:'Use this recipe', recipeEnabledHint:'When off, the coordinator cannot start this recipe.', options:'Options', flow:'Flow', loopBadge:'Repeats until approved', parallelBadge:'Parallel', stepRole:'Step role', roleHint:'Select a role in the flow to tune it. A role used in several stages changes everywhere.', tierLocked:'Fixed to Strong by the recipe contract.', timeout:'Step timeout (minutes)', recipeDefault:'Recipe default', minutes:'{n} min', reset:'Reset', customized:'Customized', timeoutInvalid:'Step timeouts must be whole minutes from 1 to 240.' };
+/*@@RECIPE_CATALOG@@*/
+var RECIPE_CATALOG = typeof RECIPE_CATALOG_DATA === 'undefined' ? [] : RECIPE_CATALOG_DATA;
+
+// Recipe overrides are a sparse map: an override that matches the recipe default is removed.
+function compactEntry(entry) {
+  var next = {};
+  if (entry.disabled === true) next.disabled = true;
+  var roles = {};
+  Object.keys(entry.roles || {}).forEach(function (role) {
+    var r = entry.roles[role], out = {};
+    if (r && r.tier !== undefined) out.tier = r.tier;
+    if (r && r.timeoutMinutes !== undefined) out.timeoutMinutes = r.timeoutMinutes;
+    if (Object.keys(out).length) roles[role] = out;
+  });
+  if (Object.keys(roles).length) next.roles = roles;
+  var args = {};
+  Object.keys(entry.args || {}).forEach(function (key) { if (typeof entry.args[key] === 'boolean') args[key] = entry.args[key]; });
+  if (Object.keys(args).length) next.args = args;
+  return next;
+}
+function setRecipeEntry(overrides, name, entry) {
+  var next = Object.assign({}, overrides), compact = compactEntry(entry);
+  if (Object.keys(compact).length) next[name] = compact; else delete next[name];
+  return next;
+}
+function setRoleOverride(overrides, name, role, patch) {
+  var entry = overrides[name] || {}, roles = Object.assign({}, entry.roles);
+  roles[role] = Object.assign({}, roles[role], patch);
+  return setRecipeEntry(overrides, name, Object.assign({}, entry, { roles: roles }));
+}
+function recipeOverridesInvalid(overrides) {
+  return Object.keys(overrides || {}).some(function (name) {
+    var roles = (overrides[name] && overrides[name].roles) || {};
+    return Object.keys(roles).some(function (role) {
+      var m = roles[role].timeoutMinutes;
+      return m !== undefined && !(Number.isInteger(m) && m >= 1 && m <= 240);
+    });
+  });
+}
+
+function RecipeCanvas(props) {
+  var t = props.t, recipes = props.recipes, overrides = props.overrides || {};
+  var namePair = useState(recipes.length ? recipes[0].name : null), selectedName = namePair[0], selectName = namePair[1];
+  var rolePair = useState(null), selectedRole = rolePair[0], selectRole = rolePair[1];
+  if (!recipes.length) return null;
+  var recipe = recipes.find(function (r) { return r.name === selectedName; }) || recipes[0];
+  var entry = overrides[recipe.name] || {};
+  var roleOverride = function (role) { return (entry.roles && entry.roles[role]) || {}; };
+  var tierOf = function (info) { return roleOverride(info.role).tier || info.tier; };
+  var customized = function (role) { var o = roleOverride(role); return o.tier !== undefined || o.timeoutMinutes !== undefined; };
+  var roleInfo = recipe.roles.find(function (r) { return r.role === selectedRole; });
+  var update = function (next) { props.onChange(next); };
+  var chooseRecipe = function (name) { selectName(name); selectRole(null); };
+  var tabKey = function (event) {
+    var index = recipes.indexOf(recipe), delta = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+    if (!delta) return;
+    if (props.dir === 'rtl') delta = -delta;
+    event.preventDefault();
+    chooseRecipe(recipes[(index + delta + recipes.length) % recipes.length].name);
+  };
+  var nodes = [];
+  recipe.stages.forEach(function (stage, index) {
+    if (index) nodes.push(h('li', { key: 'c' + index, className: 'ars-canvas-link', 'aria-hidden': 'true' }));
+    nodes.push(h('li', { key: stage.id, className: 'ars-canvas-node', 'data-stage': stage.id },
+      h('div', { className: 'ars-canvas-node-head' }, h('span', { className: 'ars-canvas-step' }, String(index + 1)), h('strong', { dir: 'ltr' }, stage.id)),
+      stage.loop || stage.parallel ? h('div', { className: 'ars-canvas-badges' },
+        stage.loop ? h('span', { className: 'ars-canvas-badge' }, '\u21bb ', t('loopBadge')) : null,
+        stage.parallel ? h('span', { className: 'ars-canvas-badge' }, '\u21c9 ', t('parallelBadge')) : null) : null,
+      stage.detail ? h('p', { className: 'ars-canvas-detail' }, stage.detail) : null,
+      h('div', { className: 'ars-canvas-roles' }, stage.roles.map(function (role) {
+        var info = recipe.roles.find(function (r) { return r.role === role; });
+        var o = roleOverride(role);
+        return h('button', { key: role, type: 'button', className: 'ars-canvas-role', 'data-role': role, 'data-tier': tierOf(info), 'data-custom': customized(role) ? 'true' : undefined,
+          'aria-pressed': selectedRole === role, onClick: function () { selectRole(selectedRole === role ? null : role); } },
+          h('span', { dir: 'ltr' }, role),
+          h('small', null, t(tierOf(info)), o.timeoutMinutes !== undefined ? ' · ' + t('minutes', { n: o.timeoutMinutes }) : ''));
+      }))));
+  });
+  var inspector = roleInfo ? h('div', { className: 'ars-canvas-inspector', role: 'group', 'aria-label': t('stepRole') + ' ' + roleInfo.role },
+    h('div', { className: 'ars-canvas-inspector-head' }, h('strong', { dir: 'ltr' }, roleInfo.role),
+      customized(roleInfo.role) ? h('button', { type: 'button', className: 'ars-settings-remove', onClick: function () { update(setRoleOverride(overrides, recipe.name, roleInfo.role, { tier: undefined, timeoutMinutes: undefined })); } }, t('reset')) : null),
+    h('div', { className: 'ars-canvas-fields' },
+      h('label', null, h('span', null, t('tier')),
+        h('select', { 'aria-label': t('tier') + ' ' + roleInfo.role, value: tierOf(roleInfo), disabled: roleInfo.locked, onChange: function (event) {
+          var tier = event.target.value;
+          update(setRoleOverride(overrides, recipe.name, roleInfo.role, { tier: tier === roleInfo.tier ? undefined : tier }));
+        } }, ['strong', 'medium', 'light'].map(function (tier) { return h('option', { key: tier, value: tier }, t(tier)); }))),
+      h('label', null, h('span', null, t('timeout')),
+        h('input', { 'aria-label': t('timeout') + ' ' + roleInfo.role, type: 'number', min: 1, max: 240, step: 1, inputMode: 'numeric', placeholder: t('recipeDefault'),
+          value: roleOverride(roleInfo.role).timeoutMinutes === undefined ? '' : String(roleOverride(roleInfo.role).timeoutMinutes),
+          onChange: function (event) {
+            var raw = event.target.value;
+            update(setRoleOverride(overrides, recipe.name, roleInfo.role, { timeoutMinutes: raw === '' ? undefined : Number(raw) }));
+          } }))),
+    roleInfo.locked ? h('small', { className: 'ars-canvas-note' }, t('tierLocked')) : null)
+    : h('p', { className: 'ars-canvas-note' }, t('roleHint'));
+  return h('div', { className: 'ars-recipes' },
+    h('div', { className: 'ars-settings-section-title' }, h('h2', null, t('recipes')), h('span', { className: 'ars-settings-count' }, recipes.length)),
+    h('p', { className: 'ars-canvas-note' }, t('recipesHint')),
+    h('div', { className: 'ars-recipe-tabs', role: 'tablist', 'aria-label': t('recipes'), onKeyDown: tabKey }, recipes.map(function (r) {
+      var e = overrides[r.name] || {};
+      return h('button', { key: r.name, type: 'button', role: 'tab', id: 'ars-recipe-tab-' + r.name, 'aria-selected': r.name === recipe.name, tabIndex: r.name === recipe.name ? 0 : -1,
+        'aria-controls': 'ars-recipe-panel', 'data-off': e.disabled === true ? 'true' : undefined, onClick: function () { chooseRecipe(r.name); } },
+        h('span', { dir: 'ltr' }, r.name), Object.keys(e).length ? h('i', { className: 'ars-recipe-dot', title: t('customized') }) : null);
+    })),
+    h('div', { className: 'ars-recipe-panel', role: 'tabpanel', id: 'ars-recipe-panel', 'aria-labelledby': 'ars-recipe-tab-' + recipe.name },
+      recipe.description ? h('p', { className: 'ars-recipe-description' }, recipe.description) : null,
+      h('label', { className: 'ars-recipe-switch' }, h('span', null, h('strong', null, t('recipeEnabled')), h('small', null, t('recipeEnabledHint'))),
+        h('input', { type: 'checkbox', role: 'switch', 'aria-label': t('recipeEnabled') + ' ' + recipe.name, checked: entry.disabled !== true,
+          onChange: function (event) { update(setRecipeEntry(overrides, recipe.name, Object.assign({}, entry, { disabled: !event.target.checked }))); } })),
+      recipe.options.length ? h('div', { className: 'ars-recipe-options' }, h('h3', null, t('options')), recipe.options.map(function (option) {
+        var current = entry.args && typeof entry.args[option.key] === 'boolean' ? entry.args[option.key] : option.default;
+        return h('label', { key: option.key, className: 'ars-recipe-switch' }, h('span', null, h('strong', { dir: 'ltr' }, option.key), h('small', null, option.detail.replace(/^boolean,\s*(default (true|false);?\s*)?/, ''))),
+          h('input', { type: 'checkbox', role: 'switch', 'aria-label': option.key, checked: current, onChange: function (event) {
+            var args = Object.assign({}, entry.args);
+            if (event.target.checked === option.default) delete args[option.key]; else args[option.key] = event.target.checked;
+            update(setRecipeEntry(overrides, recipe.name, Object.assign({}, entry, { args: args })));
+          } }));
+      })) : null,
+      h('h3', null, t('flow')),
+      h('div', { className: 'ars-canvas' }, h('ol', { className: 'ars-canvas-track', dir: 'ltr' }, nodes)),
+      inspector));
+}
+
 function AutoSettings(props) {
   var snapshot = props.useAutoSettings(function (value) { return value; });
   var pair = useState(null), draft = pair[0], setDraft = pair[1];
@@ -24,6 +148,8 @@ function AutoSettings(props) {
   var t = props.t;
   var conflicted = draft && draft.revision !== snapshot.revision;
   var invalid = value.enabled && value.allowedModels.length === 0;
+  var recipeOverrides = value.recipeOverrides || {};
+  var timeoutsInvalid = recipeOverridesInvalid(recipeOverrides);
   function change(next) { setError(null); setDraft({revision:draft ? draft.revision : snapshot.revision,value:next}); }
   function remove(index) {
     var route = value.allowedModels[index];
@@ -33,7 +159,7 @@ function AutoSettings(props) {
     change(Object.assign({},value,{modelTiers:value.modelTiers.filter(function (item) {return item.provider!==route.provider || item.model!==route.model;}).concat([Object.assign({},route,{tier:tier})])}));
   }
   async function save() {
-    if (!draft || conflicted || invalid || busy || !snapshot.writable) return;
+    if (!draft || conflicted || invalid || timeoutsInvalid || busy || !snapshot.writable) return;
     setBusy(true); setError(null);
     try { if (await props.save(draft.value,draft.revision)) setDraft(null); else setError('failed'); }
     catch (_) { setError('failed'); }
@@ -61,12 +187,14 @@ function AutoSettings(props) {
       invalid ? h('p',{role:'alert'},t('empty')) : null,
       conflicted ? h('p',{role:'alert'},t('conflict')) : null,
       error ? h('p',{role:'alert'},t(error)) : null,
-      h('footer',{className:'ars-settings-actions'},h('span',null,t('saved')),h('div',null,h('button',{type:'button',className:'ars-settings-save',disabled:!draft||conflicted||invalid,onClick:save},t('save')),
+      h(RecipeCanvas,{t:t,dir:t('direction'),recipes:props.recipes || [],overrides:recipeOverrides,onChange:function (next) {change(Object.assign({},value,{recipeOverrides:next}));}}),
+      timeoutsInvalid ? h('p',{role:'alert'},t('timeoutInvalid')) : null,
+      h('footer',{className:'ars-settings-actions'},h('span',null,t('saved')),h('div',null,h('button',{type:'button',className:'ars-settings-save',disabled:!draft||conflicted||invalid||timeoutsInvalid,onClick:save},t('save')),
       h('button',{type:'button',disabled:!draft,onClick:function () {setDraft(null);setError(null);}},t('discard'))))));
 }
 function registerAutoSettings(ctx) {
   ctx.effect(function () { return ctx.locale.register(SETTINGS_NS,{en:settingsEn,ar:settingsEn,zh:settingsEn}); }, 'auto-subagents: settings locale');
   var form=ctx.configForms.get('auto-model-selection');
-  var face={hooks:{autoSettings:form},catalog:function () {return ctx.remote.session.modelCatalog();},save:function (value,revision) {return form.mutate(['enabled','allowedModels','modelTiers'].map(function (field) {return {op:'set',path:[field],value:value[field]};}),revision);}};
+  var face={hooks:{autoSettings:form},recipes:RECIPE_CATALOG,catalog:function () {return ctx.remote.session.modelCatalog();},save:function (value,revision) {return form.mutate(['enabled','allowedModels','modelTiers','recipeOverrides'].map(function (field) {return {op:'set',path:[field],value:field==='recipeOverrides' ? (value[field] || {}) : value[field]};}),revision);}};
   ctx.effect(function () {return ctx.configForms.whileServed(['auto-model-selection'],function () {return ctx.slots.inject('plugins.bundle.config',function () {return ctx.slots.register({name:'plugins.bundle.config',key:'dsh-auto-subagents',locale:SETTINGS_NS,inject:function () {return face;}},AutoSettings);});});},'auto-subagents: settings page');
 }

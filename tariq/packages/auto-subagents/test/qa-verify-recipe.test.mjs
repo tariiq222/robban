@@ -1,7 +1,7 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';import path from 'node:path';import {RECIPES_DIR,runtimeModuleUrl} from '../lib/dsh-paths.mjs';
 const {assertObjectJsonSchema,validateJsonSchemaValue}=await import(runtimeModuleUrl('@deepseek-ai/dsh-tools'));
 const AsyncFunction=Object.getPrototypeOf(async function(){}).constructor,dir=path.join(RECIPES_DIR,'qa-verify');
-const criterion=()=>({id:'C1',criterion:'Input rejected',basis:'task requirement and requirements.md:2',files:['src.js'],proof:'runtime',commands:['node --test test.js']});
+const criterion=()=>({id:'C1',criterion:'Input rejected',basis:'task requirement and requirements.md:2',files:['src.js'],proof:'runtime',commands:['node --test test.js'],limitedBy:[]});
 const analysis=()=>({files:['src.js','test.js','requirements.md'],criteria:[criterion()],commands:[{command:'node --test test.js',definition:'package.json test script',safe:true}],complete:true,limitations:[]});
 const cmd=()=>({command:'node --test test.js',status:'passed',exitCode:0,evidence:'1 assertion passed'});
 const row=()=>({id:'C1',status:'passed',proof:'runtime',evidence:'Input-rejection regression assertion passed',files:['src.js'],commands:['node --test test.js']});
@@ -41,3 +41,14 @@ for(const verifierStatus of ['failed','blocked','passed'])for(const [failure,che
  assert.equal(r.criterion,criterion().criterion);assert.equal(r.basis,criterion().basis);
  if(verifierStatus!=='passed'){assert.equal(r.evidence,evidence);assert.deepEqual(r.files,row().files);assert.deepEqual(r.commands,row().commands);}
 });
+// Analysis limitations are reported but only block the criteria they directly affect; verification still runs.
+const lim='Log configuration file unreadable';
+const c2=()=>({id:'C2',criterion:'Output logged',basis:'task requirement',files:['src.js'],proof:'source',commands:[],limitedBy:[lim]});
+const row2=()=>({id:'C2',status:'passed',proof:'source',evidence:'logger call inspected',files:['src.js'],commands:[]});
+test('unattributed analysis limitation is reported while verification still runs and PASS stays PASS',async()=>{const {result,calls}=await run({analysis:{...analysis(),limitations:[lim]}});assert.deepEqual(calls.map(c=>c.label),['analysis','verify','check']);assert.equal(result.status,'completed_with_failures');assert.equal(result.results[0].status,'passed');assert.ok(result.limitations.includes(lim));assert.ok(result.commands.length>=2);});
+test('only the criterion directly affected by a limitation is blocked',async()=>{const {result,calls}=await run({analysis:{...analysis(),criteria:[criterion(),c2()],limitations:[lim]},verify:{...verification(),results:[row(),row2()]},check:{...checked(),results:[{...row(),reason:'rerun ok'},{...row2(),reason:'source ok'}]}});for(const c of calls)assert.deepEqual(c.violations??[],[]);assert.equal(calls.length,3);const byId=Object.fromEntries(result.results.map(r=>[r.id,r]));assert.equal(byId.C1.status,'passed');assert.equal(byId.C2.status,'blocked');assert.match(byId.C2.evidence,/Log configuration file unreadable/);assert.equal(result.status,'completed_with_failures');});
+test('limited criterion keeps observed failure',async()=>{const {result}=await run({analysis:{...analysis(),criteria:[criterion(),c2()],limitations:[lim]},verify:{...verification(),results:[row(),{...row2(),status:'failed',evidence:'no logger call'}]},check:{...checked(),results:[{...row(),reason:'ok'},{...row2(),status:'failed',evidence:'no logger call',reason:'missing'}]}});assert.equal(result.results.find(r=>r.id==='C2').status,'failed');});
+test('incomplete analysis is reported but verification still runs',async()=>{const {result,calls}=await run({analysis:{...analysis(),complete:false}});assert.equal(calls.length,3);assert.equal(result.status,'completed_with_failures');assert.equal(result.results[0].status,'passed');});
+test('an earlier unrelated note does not turn PASS into blocked',async()=>{const {result}=await run({verify:{...verification(),limitations:['Could not inspect unrelated docs']}});assert.equal(result.status,'completed_with_failures');assert.equal(result.results[0].status,'passed');});
+for(const limitedBy of [['Unknown limitation'],[lim,lim]])test('limitedBy must cite reported analysis limitations '+JSON.stringify(limitedBy),async()=>{const {result,calls}=await run({analysis:{...analysis(),criteria:[{...criterion(),limitedBy}],limitations:[lim]}});assert.equal(result.status,'completed_with_failures');assert.equal(calls.length,1);});
+test('limitations never authorize repairs',async()=>{const {calls}=await run({analysis:{...analysis(),limitations:[lim]}});for(const c of calls)assert.match(c.prompt,/Never implement, repair/);});

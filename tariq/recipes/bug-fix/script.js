@@ -43,7 +43,8 @@ const stop = (status,reason,extra={}) => ({status,reason,...base(),...extra});
 const resume = args.resume;
 if (resume && (resume.task!==task || resume.repo!==repo || !resume.setup || !resume.analysis || !Number.isInteger(resume.round) || resume.round<1)) throw new Error('resume does not match task/repo or saved state');
 const answers = {...(resume?.confirmedDecisions||{}),...(args.decisions||{})};
-const answered = d => Object.hasOwn(answers,d.id) && text(answers[d.id]) && d.options.some(o=>o.label===answers[d.id]);
+// Any nonblank answer counts: an option label, free text, or a '; '-joined multi-select (same rule as feature-pipeline).
+const answered = d => Object.hasOwn(answers,d.id) && text(answers[d.id]);
 let setup = resume?.setup;
 let analysis = resume?.analysis;
 if (!analysis) {
@@ -70,10 +71,23 @@ if (changedPaths.some(p=>!concrete(p)||!scope.has(p))) throw new Error('resume c
 const acceptance = analysis.acceptance;
 const contract = `Diagnosis and binding decisions: ${JSON.stringify(analysis)}\nConfirmed answers: ${JSON.stringify(answers)}\nAllowed changed paths EXACTLY: ${JSON.stringify([...scope])}\nRun every verification command: ${JSON.stringify(setup.verifyCommands)}`;
 if (firstRegression && !regressionValid(firstRegression)) throw new Error('resume regression evidence invalid');
+const resumeApproved = resume?.approved===true;
+if (resumeApproved && !firstRegression) throw new Error('resume approval lacks regression evidence');
 // Durable checkpoint for run_recipe: a later error/timeout/cancel can resume from the last finished state.
-const savedState = (attempts=attemptCount) => ({task,repo,round:(resume?.round||0)+1,setup,analysis,confirmedDecisions:{...answers},changedPaths:[...changedPaths],commands:[...commands],regression:firstRegression,attemptCount:attempts,reviewTrail:[...reviewTrail],lastFindings:[...findings]});
-const checkpoint = (attempts=attemptCount) => log('@@auto-recipe '+JSON.stringify({kind:'checkpoint',state:savedState(attempts)}));
-checkpoint();
+const savedState = (attempts=attemptCount,approved=false) => ({task,repo,round:(resume?.round||0)+1,setup,analysis,confirmedDecisions:{...answers},changedPaths:[...changedPaths],commands:[...commands],regression:firstRegression,attemptCount:attempts,reviewTrail:[...reviewTrail],lastFindings:[...findings],...(approved?{approved:true}:{})});
+const checkpoint = (attempts=attemptCount,approved=false) => log('@@auto-recipe '+JSON.stringify({kind:'checkpoint',state:savedState(attempts,approved)}));
+checkpoint(attemptCount,resumeApproved);
+// An approved checkpoint resumes straight at final validation; the approval is not re-earned.
+const finalValidate = async regression => {
+ phase('validate');
+ validation=await invoke('validate','validate',`${contract}\nFresh final validation AFTER the approved iteration. No edits. Rerun regression ${regression.green.command} and ALL verification commands. Report exactly one result for EACH acceptance string unchanged, no duplicates, extra or omitted criteria. Verify cumulative scope and current repository state; no reused earlier validation.`,validationSchema);
+ if (validation) commands.push(...validation.commands);
+ const results=validation?.results;
+ const exact=Array.isArray(results) && results.length===acceptance.length && new Set(results.map(r=>r.criterion)).size===acceptance.length && results.every(r=>acceptance.includes(r.criterion)&&r.status==='passed'&&text(r.evidence));
+ const fresh=validation && verify(validation.commands,[...new Set([...setup.verifyCommands,regression.green.command])]);
+ return stop(exact&&fresh?'completed':'completed_with_failures',exact&&fresh?'Regression repaired and independently validated':'Final acceptance or fresh verification failed',{regression:firstRegression,passed:`${results?.filter(r=>r.status==='passed').length||0}/${acceptance.length}`});
+};
+if (resumeApproved) return finalValidate(firstRegression);
 phase('code-loop');
 for (let iteration=attemptCount+1;iteration<=3;iteration++) {
  attemptCount=iteration;
@@ -103,14 +117,8 @@ for (let iteration=attemptCount+1;iteration<=3;iteration++) {
  const approved=reviews.length===2 && reviews.every(r=>r && r.verdict==='APPROVED') && !findings.some(f=>['high','blocker'].includes(f.severity));
  reviewTrail.push({iteration,verdict:approved?'APPROVED':'NEEDS_REVISION',reviews,findings:[...findings]});
  log('@@auto-recipe '+JSON.stringify({label:`aggregate #${iteration}`,verdict:approved?'APPROVED':'NEEDS_REVISION',findings}));
- checkpoint(iteration);
+ checkpoint(iteration,approved);
  if (!approved) { if(iteration===3)return stop('aborted','Repair limit reached without both independent approvals; changes remain uncommitted. Continue only if the user agrees: resume gives a fresh repair budget.',{resume:savedState(0)}); continue; }
- phase('validate');
- validation=await invoke('validate','validate',`${contract}\nFresh final validation AFTER the approved iteration. No edits. Rerun regression ${regression.green.command} and ALL verification commands. Report exactly one result for EACH acceptance string unchanged, no duplicates, extra or omitted criteria. Verify cumulative scope and current repository state; no reused earlier validation.`,validationSchema);
- if (validation) commands.push(...validation.commands);
- const results=validation?.results;
- const exact=Array.isArray(results) && results.length===acceptance.length && new Set(results.map(r=>r.criterion)).size===acceptance.length && results.every(r=>acceptance.includes(r.criterion)&&r.status==='passed'&&text(r.evidence));
- const fresh=validation && verify(validation.commands,[...new Set([...setup.verifyCommands,regression.green.command])]);
- return stop(exact&&fresh?'completed':'completed_with_failures',exact&&fresh?'Regression repaired and independently validated':'Final acceptance or fresh verification failed',{regression:firstRegression,passed:`${results?.filter(r=>r.status==='passed').length||0}/${acceptance.length}`});
+ return finalValidate(regression);
 }
-return stop('aborted','Repair limit exhausted');
+return stop('aborted','Repair limit exhausted; changes remain uncommitted. Continue only if the user agrees: resume gives a fresh repair budget.',{resume:savedState(0)});
