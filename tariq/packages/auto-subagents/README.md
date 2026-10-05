@@ -24,7 +24,7 @@ The package resolves declared dependencies through Node's public package exports
 - `lib/task-work-store.mjs`: persistent subgoals and work items, dependency readiness and repository-scoped execution reservations. See [persistent work plans](docs/TASK-WORK.md).
 - `lib/stage-skills.mjs`, `skills/`: trusted method instructions selected for authenticated recipe stages and included in their logged prompts.
 - `src/client.src.js`, `src/settings.src.js`: current chat card and Auto settings page, assembled into `lib/client.js` by `build.mjs`.
-- `cordis.patch.yml`, generated `preset.patch.yml`: host service and declarative preset bundle; canonical agent rows live in `tariq/presets/auto-subagents/agent.cordis.yml`.
+- `cordis.patch.yml`, generated `preset.patch.yml`: host service, default xKiro provider route (18 models, key supplied separately as `XKIRO_API_KEY`) and declarative preset bundle; canonical agent rows live in `tariq/presets/auto-subagents/agent.cordis.yml`.
 - `core-patches/`: historical 0.1.5 reference evidence, not installation instructions for 0.2.0. Never apply those compiled patches to this branch.
 
 ## Verification
