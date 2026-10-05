@@ -35,7 +35,7 @@ node tariq/packages/auto-subagents/build.mjs
 node tariq/scripts/auto-preview.mjs
 ```
 
-The launcher stores preview data under `.artifacts/auto-home`, defaults to port 3181, strips provider environment variables and refuses local dotenv or credential files. It uses the seven approved repository recipes. Auto routing starts disabled; browser verification saved one tier in this disposable profile without making a model request.
+The launcher stores preview data under `.artifacts/auto-home`, defaults to port 3181, strips provider environment variables and refuses local dotenv files and provider credential records. It uses the seven approved repository recipes. Auto routing starts disabled; browser verification saved one tier in this disposable profile without making a model request.
 
 ## Remaining acceptance
 
@@ -50,7 +50,7 @@ The launcher stores preview data under `.artifacts/auto-home`, defaults to port 
 - Automatic selection, verifier fallback and recovery recheck the requested minimum model tier after asynchronous preflight. Explicit authorized routes retain their existing override behavior.
 - Human decision receipts accept answers only to questions in the matching tool call and ignore malformed answer collections.
 - Preset generation preserves canonical multiline prompt paragraphs and all plugin configuration. An internal variable in the investigate recipe uses the required concrete terminology; its result fields and logic stay unchanged, and its lock was renewed for the user-authorized repair.
-- The offline preview validates plugin links, saved Auto-only routing overlays and launch arguments, disables telemetry using the supported switch, and forwards termination to descendant processes. `--instance <safe-name>` selects a new `.artifacts/auto-home-<name>` without accessing an existing credential store. A profile that acquires a credential file cannot be reused by this credential-free launcher, even if the file is empty; choose a fresh instance.
+- The offline preview validates plugin links, saved Auto routing and scalar Web interface settings and launch arguments, disables telemetry using the supported switch, and forwards termination to descendant processes. `--instance <safe-name>` selects a new `.artifacts/auto-home-<name>` without accessing an existing credential store. The launcher accepts a credential store containing only its own browser-session grant; provider records and malformed stores require a fresh instance.
 - `scripts/migrate-settings.mjs` validates a copied legacy Auto settings section and creates a private, unapplied overlay without overwriting files or exporting unrelated settings. See [copied-settings conversion](../packages/auto-subagents/docs/DELEGATION-V020.md#copied-settings-conversion).
 - The combined Auto, preset, build, settings-migration and preview suite passes 791 tests with no skips outside the command sandbox. The same environment's sandbox blocks child-process IPC, so its earlier 14 failures were not product failures.
 - A fresh offline preview instance serves authenticated HTML with HTTP 200 on localhost and stops through process-group termination; no provider request was submitted. Engine recovery/cancellation/Session metadata tests pass 137 cases; historical migration/publication tests pass 34 cases. Read-only migration preserves source bytes and write migration publishes a successor. No personal Session migration or provider-backed request was performed.

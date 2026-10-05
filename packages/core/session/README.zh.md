@@ -49,7 +49,7 @@ session.deriveMessages()         // the derived model history
 
 表层事件（`system/message`、`developer/message`、`user/message`、`assistant/message`、`tool/result`）在类型化事件与追加输入中都必须带有 `surfaceOp`。替换操作仅接受 `{ op: 'replace', startSeq, endSeq }`，端点为包含边界的 `SessionSeq`，按当前 surface 顺序解释。assistant 消息会嵌入精确、紧凑的提供方流，并禁止 `sourceEventSeqs`。已知仅日志事件禁止这两个元数据字段，且从不产生消息。
 
-`Session.append()` 在仅日志事件的可选元数据中接受 `ignorable: true`，消息事件则将其与必需的 surface 放置元数据一起传入。不可变事件在持久化和重新加载时保留该标志；其他提供值在追加前失败。该标志允许不认识此类型的读取方保留信息事件而不解释它，不会放宽已知事件校验或改变 Session 格式。
+`Session.append()` 在仅日志事件的可选元数据中接受 `ignorable: true`，消息事件则将其与必需的 surface 放置元数据一起传入。不可变事件在持久化和重新加载时保留其类型化载荷与该标志；省略或值为 `undefined` 的标志不会添加信封字段；其他提供值在追加前失败。该标志允许不认识此类型的读取方保留信息事件而不解释它，不会放宽已知事件校验或改变 Session 格式。
 
 `developer/message` 存储工具添加名称，以及指向更早 `request/header` 的 `headerSeq` 引用。仅在存在添加块时必须携带该引用，每个名称必须在所引用的请求头中恰好对应一个完整模式。移除块仅记录工具名称，不携带请求头引用。重启、fork 和 surface 替换保留历史请求头；较早添加的定义不由当前注册表或最新请求头决定。`sourceEventSeqs` 继续描述派生来源及被替换节点。
 

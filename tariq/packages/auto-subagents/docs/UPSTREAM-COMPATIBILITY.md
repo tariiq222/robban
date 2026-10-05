@@ -10,6 +10,12 @@ Auto routing binds recovery to the exact request configuration returned by its `
 
 The provider does not replace foreign adapter registrations, mutate the base service, use a virtual provider identity or wrap the prepared stream. A plugin mounted separately from the bundle must install this service provider before adapters; the routing plugin rejects the base provider rather than omitting preparation recovery.
 
+## Context overflow recovery
+
+For newly created Auto children, `CONTEXT_WINDOW_EXCEEDED` delegates to native recovery only when the prepared request has no retry policy, or a `normal` policy whose `retryableCodes` exclude that error. Native `compaction-basic` then owns the durable surface reduction and `maxOverflowRetries` limit. It declines retry when there is no safe reduction or the limit is exhausted. The default normal retry codes exclude context overflow. This recovery retains the child's route and does not consume availability alternatives.
+
+An `always` policy, or a normal policy that includes context overflow, cannot safely delegate through the current waterfall: generic retry may continue after native compaction declines. Auto stops those overflow failures without changing the configured policy. Availability failures continue to use Auto's bounded alternative routes; task failures and cancellation do not enter generic retry. Custom downstream recovery listeners must preserve these native bounded semantics.
+
 ## Remaining Session requirement
 
 Auto's run, child and route records are informational custom events. Original DSH readers already accept their stored `ignorable` envelope marker, but the original public append method does not write it. Removing the option creates a live log that the persistence reader refuses to restore. Auto's host activation checks a detached temporary Session, including append and restore, before accepting that runtime. The probe does not modify user sessions or persist data.

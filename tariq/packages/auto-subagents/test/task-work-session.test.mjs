@@ -1,7 +1,7 @@
 /** Native keyless Session recordings of real durable work tools; no recipe execution is simulated as proof. */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
+import { realpath, mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import * as TaskMemory from 'dsh-auto-subagents/task-memory';
@@ -99,7 +99,7 @@ function verifyPair(first, second) {
 }
 
 test('native durable work tools preserve explicit goal and blocked dependencies across fresh Sessions', { timeout: 30000 }, async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'task-work-native-'));
+  const root = await realpath(await mkdtemp(path.join(os.tmpdir(), 'task-work-native-')));
   try {
     const repo = path.join(root, 'repository'), memoryDir = path.join(root, 'memory');
     await mkdir(repo);

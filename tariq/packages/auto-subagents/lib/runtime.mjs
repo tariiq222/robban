@@ -2,7 +2,7 @@ import { automaticRouter, isAvailabilityFailure, routeConfig, routeKey } from '.
 import { AUTO_PRESET, presetOf } from './coordinator.mjs';
 import { runtimeModuleUrl } from './dsh-paths.mjs';
 // Same file URL as the host's dsh-llm → same ESM instance (LlmError identity preserved).
-const { boundContextSummary, createUserMessage } = await import(runtimeModuleUrl('@deepseek-ai/dsh-llm'));
+const { boundContextSummary, createUserMessage, CONTEXT_WINDOW_EXCEEDED_CODE } = await import(runtimeModuleUrl('@deepseek-ai/dsh-llm'));
 
 // Model routing and provider fallback for Auto subagents. Role policy lives in coordinator.mjs.
 export const name = 'auto-subagent-routing';
@@ -91,11 +91,17 @@ export function apply(ctx) {
       }
     }
   }, { prepend: true });
-  ctx.on('agent/request-error', async ({ agent, turn, step, failure, signal }, next) => {
+  ctx.on('agent/request-error', async ({ agent, turn, step, failure, retryPolicy, signal }, next) => {
     const state = managed.get(agent);
     if (!state) return next();
-    // Do not delegate managed failures to an unlimited same-provider retry loop.
-    if (signal.aborted || !isAvailabilityFailure(failure)) return undefined;
+    if (signal.aborted) return undefined;
+    // Native compaction owns overflow progress and retry bounds. Generic policies that
+    // retry overflow cannot safely delegate after compaction declines or exhausts.
+    if (failure.code === CONTEXT_WINDOW_EXCEEDED_CODE) {
+      if (retryPolicy === undefined || (retryPolicy.mode === 'normal' && !retryPolicy.retryableCodes.includes(failure.code))) return next();
+      return undefined;
+    }
+    if (!isAvailabilityFailure(failure)) return undefined;
     return await recover(agent, state, failure, turn, step, signal, true) ? { kind: 'retry' } : undefined;
   }, { prepend: true });
   // Load-spreading release points. The delegation tool adopts every Auto child into the

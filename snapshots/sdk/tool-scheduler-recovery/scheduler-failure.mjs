@@ -1,19 +1,21 @@
-/** Reject one scheduler preparation to exercise the terminal internal-failure path. */
-export const inject = ['tools', 'agents']
+/** Recover one unavailable LLM preparation per turn, then reject one tool scheduler preparation. */
+export const inject = ['tools', 'agents', 'llm']
 
 /** @param {import('@deepseek-ai/cordis').Context} ctx - Scenario-owned runtime. */
 export function apply(ctx) {
   const recoveredTurns = new WeakMap()
-  ctx.on('agent/request', async ({ agent, turn }, next) => {
+  ctx.on('agent/request', async ({ agent, turn, step, signal }, next) => {
     const config = await next()
-    return recoveredTurns.get(agent) === turn ? config : { ...config, provider: 'snapshot-unavailable-route' }
-  })
-  ctx.on('agent/request-prepare-error', async ({ agent, turn, step, provider, failure }, next) => {
-    if (provider !== 'snapshot-unavailable-route') return next()
-    if (recoveredTurns.get(agent) === turn) throw new Error('Preparation recovery repeated the same failed route')
-    recoveredTurns.set(agent, turn)
-    agent.session.append('snapshot/request-prepare-recovered', { turn, step, code: failure.code }, { ignorable: true })
-    return { kind: 'retry' }
+    if (recoveredTurns.get(agent) === turn) return config
+    try {
+      await ctx.llm.prepareCall({ ...config, provider: 'snapshot-unavailable-route' }, signal)
+    } catch (error) {
+      if (error.code !== 'NO_ADAPTER') throw error
+      recoveredTurns.set(agent, turn)
+      agent.session.append('snapshot/request-prepare-recovered', { turn, step, code: error.code }, { ignorable: true })
+      return config
+    }
+    throw new Error('Preparation recovery requires an unavailable provider route')
   })
   // Inspect the active instance's key so the fixture cannot introduce a second tools module.
   const key = Object.getOwnPropertySymbols(ctx.tools)

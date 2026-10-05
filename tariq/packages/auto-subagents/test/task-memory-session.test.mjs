@@ -1,7 +1,7 @@
 /** Native Session fixtures for actual durable task tools; model choices are scripted and keyless. */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
+import { realpath, mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { runtimeModuleUrl } from '../lib/dsh-paths.mjs';
@@ -97,7 +97,7 @@ function verifyPair(first, second) {
 }
 
 test('native task_memory plugin persists explicit task across disposed and remounted contexts', { timeout: 30000 }, async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'task-memory-native-'));
+  const root = await realpath(await mkdtemp(path.join(os.tmpdir(), 'task-memory-native-')));
   try {
     const repo = path.join(root, 'repository'), memoryDir = path.join(root, 'memory');
     await mkdir(repo);

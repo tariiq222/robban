@@ -8,6 +8,14 @@ import { load, JSON_SCHEMA } from 'js-yaml';
 import { migrateLegacyModelSelection } from '../packages/auto-subagents/lib/settings-migration.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
+/** Credential record the Web host creates for its own browser session. */
+const BROWSER_SESSION_RECORD = 'client-connection/browser-session';
+/** Settings rows the Web interface saves, keyed by entry id with the only plugin each may name. */
+const INTERFACE_SETTINGS = new Map([
+  ['ui-settings-general', '@deepseek-ai/dsh-client-ui-settings-general'],
+  ['agent-preset-registry', '@deepseek-ai/dsh-agent-preset-registry'],
+]);
+const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const args = [];
 let instance;
 const requestedArgs = process.argv.slice(2);
@@ -56,11 +64,25 @@ env.DSH_HOME = home;
 env.DSH_AUTO_RECIPES_DIR = path.join(root, 'tariq', 'recipes');
 env.DSH_TELEMETRY_DISABLED = '1';
 // Neither CLI dotenv layer may introduce credentials into this offline preview.
-for (const file of [path.join(root, '.env'), path.join(home, '.env'), path.join(home, '.credentials.yaml'), path.join(home, 'cordis.patch.yml')]) {
+for (const file of [path.join(root, '.env'), path.join(home, '.env'), path.join(home, 'cordis.patch.yml')]) {
   try { await lstat(file); } catch (error) { if (error.code === 'ENOENT') continue; throw error; }
   throw new Error(`Offline preview refuses a credential source at ${file}`);
 }
-// Saved tier preferences may persist; provider plugins and executable overlays may not.
+// The Web host saves its browser-session grant here on first launch; any other record may be a provider credential.
+const credentialsPath = path.join(home, '.credentials.yaml');
+let credentialsText;
+try { credentialsText = await readFile(credentialsPath, 'utf8'); }
+catch (error) { if (error.code !== 'ENOENT') throw error; }
+if (credentialsText !== undefined) {
+  let saved;
+  try { saved = load(credentialsText, { schema: JSON_SCHEMA }); }
+  catch (_error) { /* Invalid YAML leaves `saved` undefined, which the refusal below reports. */ }
+  if (!isRecord(saved) || Object.keys(saved).some(key => !['version', 'records'].includes(key))
+    || !isRecord(saved.records) || Object.keys(saved.records).some(key => key !== BROWSER_SESSION_RECORD)) {
+    throw new Error(`Offline preview refuses a credential source at ${credentialsPath}`);
+  }
+}
+// Saved tier preferences and Web interface settings may persist; provider plugins and executable overlays may not.
 const savedPatch = path.join(profile, 'cordis.patch.yml');
 let savedPatchText;
 try { savedPatchText = await readFile(savedPatch, 'utf8'); }
@@ -69,19 +91,30 @@ if (savedPatchText !== undefined) {
   let rows;
   try { rows = load(savedPatchText, { schema: JSON_SCHEMA }); }
   catch (_error) { throw new Error('Offline preview settings must be valid YAML without executable tags'); }
-  if (!Array.isArray(rows) || rows.length !== 1 || rows[0]?.id !== 'auto-model-selection'
-    || !isDeepStrictEqual(Object.keys(rows[0]).sort(), ['config', 'id'])) {
-    throw new Error('Offline preview permits only the auto-model-selection settings patch');
+  if (!Array.isArray(rows) || rows.length === 0 || new Set(rows.map(row => row?.id)).size !== rows.length) {
+    throw new Error('Offline preview permits only Auto model selection and Web interface settings rows');
   }
-  const config = rows[0].config;
-  if (config === null || typeof config !== 'object' || Array.isArray(config)
-    || Object.keys(config).some(key => !['enabled', 'allowedModels', 'modelTiers'].includes(key))) {
-    throw new Error('Offline preview settings permit only enabled, allowedModels and modelTiers');
-  }
-  const validated = migrateLegacyModelSelection(config);
-  if (!isDeepStrictEqual(validated.allowedModels, config.allowedModels)
-    || (config.modelTiers !== undefined && !isDeepStrictEqual(validated.modelTiers, config.modelTiers))) {
-    throw new Error('Offline preview model entries permit only provider, model and tier fields');
+  for (const row of rows) {
+    const keys = isRecord(row) ? Object.keys(row).sort() : [];
+    if (INTERFACE_SETTINGS.has(row?.id)) {
+      if (!isDeepStrictEqual(keys, ['config', 'id', 'name']) || row.name !== INTERFACE_SETTINGS.get(row.id)
+        || !isRecord(row.config) || Object.values(row.config).some(value => value !== null && typeof value === 'object')) {
+        throw new Error(`Offline preview permits only scalar ${row.id} settings for its own plugin`);
+      }
+      continue;
+    }
+    if (row?.id !== 'auto-model-selection' || !isDeepStrictEqual(keys, ['config', 'id'])) {
+      throw new Error('Offline preview permits only Auto model selection and Web interface settings rows');
+    }
+    const config = row.config;
+    if (!isRecord(config) || Object.keys(config).some(key => !['enabled', 'allowedModels', 'modelTiers'].includes(key))) {
+      throw new Error('Offline preview settings permit only enabled, allowedModels and modelTiers');
+    }
+    const validated = migrateLegacyModelSelection(config);
+    if (!isDeepStrictEqual(validated.allowedModels, config.allowedModels)
+      || (config.modelTiers !== undefined && !isDeepStrictEqual(validated.modelTiers, config.modelTiers))) {
+      throw new Error('Offline preview model entries permit only provider, model and tier fields');
+    }
   }
 }
 const grouped = process.platform !== 'win32';

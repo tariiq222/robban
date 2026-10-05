@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, rm } from 'node:fs/promises';
+import { realpath, mkdtemp, mkdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { apply, getTaskMemoryStore } from '../lib/task-memory.mjs';
@@ -9,7 +9,7 @@ const { bindScopeParent } = await import(runtimeModuleUrl('@deepseek-ai/dsh-scop
 const { assertObjectJsonSchema, validateJsonSchemaValue } = await import(runtimeModuleUrl('@deepseek-ai/dsh-tools'));
 
 async function fixture(t) {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'task-memory-tool-'));
+  const root = await realpath(await mkdtemp(path.join(os.tmpdir(), 'task-memory-tool-')));
   t.after(() => rm(root, { recursive: true, force: true }));
   const repo = path.join(root, 'repo'), memoryDir = path.join(root, 'memory');
   await mkdir(repo);

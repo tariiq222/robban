@@ -435,7 +435,10 @@ describe('web e2e: queue row actions', () => {
     ] satisfies ReplayEntry[]))
 
     const sessionEvents: SessionEvent[] = []
-    scaffold = await launchWebScaffold({ replayFixture: FIXTURE, replayOverride: overridePath, compareReplaySession: false })
+    // Throughput requires a positive decode interval; an unpaced replay can finish in one clock tick.
+    scaffold = await launchWebScaffold({
+      replayFixture: FIXTURE, replayOverride: overridePath, compareReplaySession: false, paceMs: 1,
+    })
     scaffold.ctx.on('session/event', (_session, event: SessionEvent) => { sessionEvents.push(event) })
     browser = await chromium.launch()
     page = await newEnglishPage(browser)

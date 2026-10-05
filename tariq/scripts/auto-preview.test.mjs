@@ -1,14 +1,14 @@
 /** Provider-free subprocess checks for the isolated preview launcher. */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, copyFile, writeFile, readFile, rm, symlink, unlink } from 'node:fs/promises';
+import { mkdtemp, mkdir, copyFile, writeFile, readFile, rm, symlink, unlink, realpath } from 'node:fs/promises';
 import { spawnSync, spawn } from 'node:child_process';
 import { once } from 'node:events';
 import path from 'node:path';
 import os from 'node:os';
 
 async function fixture(t) {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'auto-preview-test-'));
+  const root = await realpath(await mkdtemp(path.join(os.tmpdir(), 'auto-preview-test-')));
   t.after(() => rm(root, { recursive: true, force: true }));
   const script = path.join(root, 'tariq/scripts/auto-preview.mjs');
   const plugin = path.join(root, 'tariq/packages/auto-subagents');
@@ -97,8 +97,38 @@ test('preserves saved Auto tier preferences across repeated preview launches', a
   assert.equal(await readFile(file, 'utf8'), patch);
 });
 
+test('admits the browser-session grant and interface settings the Web host saves', async t => {
+  const f = await fixture(t);
+  await mkdir(f.profile, { recursive: true });
+  await writeFile(path.join(f.home, '.credentials.yaml'), 'version: 1\nrecords:\n  client-connection/browser-session:\n    kind: grant\n    payload:\n      version: 1\n      secret: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n');
+  const patch = '- id: ui-settings-general\n  name: "@deepseek-ai/dsh-client-ui-settings-general"\n  config:\n    welcomeNoticeVersion: 2026-09-28.1\n- id: agent-preset-registry\n  name: "@deepseek-ai/dsh-agent-preset-registry"\n  config:\n    default: standard\n    selectedDefault: auto-subagents\n- id: auto-model-selection\n  config:\n    enabled: true\n    allowedModels: []\n';
+  const file = path.join(f.profile, 'cordis.patch.yml');
+  await writeFile(file, patch);
+  const result = f.run();
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(await readFile(file, 'utf8'), patch);
+});
+
+for (const records of [
+  { 'llm/provider': { kind: 'secret' } },
+  { 'client-connection/browser-session': { kind: 'grant' }, 'llm/provider': { kind: 'secret' } },
+]) {
+  test(`refuses saved credential records ${Object.keys(records).join(', ')}`, async t => {
+    const f = await fixture(t);
+    await mkdir(f.home, { recursive: true });
+    await writeFile(path.join(f.home, '.credentials.yaml'), JSON.stringify({ version: 1, records }));
+    const result = f.run();
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /Offline preview refuses/);
+  });
+}
+
 for (const patch of [
   [{ id: 'provider', config: { apiKey: 'fixture' } }],
+  [{ id: 'ui-settings-general', name: 'provider', config: {} }],
+  [{ id: 'ui-settings-general', name: '@deepseek-ai/dsh-client-ui-settings-general', config: { nested: { apiKey: 'fixture' } } }],
+  [{ id: 'agent-preset-registry', name: '@deepseek-ai/dsh-agent-preset-registry', disabled: false, config: {} }],
+  [{ id: 'ui-settings-general', name: '@deepseek-ai/dsh-client-ui-settings-general', config: {} }, { id: 'ui-settings-general', name: '@deepseek-ai/dsh-client-ui-settings-general', config: {} }],
   [{ id: 'auto-model-selection', name: 'provider', config: { enabled: true, allowedModels: [] } }],
   [{ id: 'auto-model-selection', disabled: false, config: { enabled: true, allowedModels: [] } }],
   [{ id: 'auto-model-selection', insert: {}, config: { enabled: true, allowedModels: [] } }],

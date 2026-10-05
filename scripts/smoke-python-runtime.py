@@ -1680,7 +1680,7 @@ def smoke_sdk_restart_snapshot(base_url: str, executable: Path, update_snapshots
 
 
 def smoke_sdk_scheduler_recovery(base_url: str, executable: Path, update_snapshots: bool) -> None:
-    """Keep a failed tool turn usable through the real Messages serializer and SDK."""
+    """Recover one unavailable preparation per turn and resume after a terminal scheduler failure."""
     from deepseek_harness import DeepSeekHarness
 
     first_request = len(MockModelHandler.requests)
@@ -1715,6 +1715,9 @@ def smoke_sdk_scheduler_recovery(base_url: str, executable: Path, update_snapsho
             failed = harness.run(RECOVERY_PROMPT, session_id=RECOVERY_SESSION_ID)
             continued = harness.run(RECOVERY_CONTINUE_PROMPT, session_id=RECOVERY_SESSION_ID)
         results = [failed, continued]
+        if any(sum(event.get("type") == "snapshot/request-prepare-recovered" for event in result.events) != 1
+               for result in results):
+            raise AssertionError("each SDK turn must expose exactly one preparation recovery")
         if [result.finish_reason for result in results] != ["error", "completed"]:
             outcomes = [
                 event["data"]["reason"] for result in results

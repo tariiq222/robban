@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { mkdtemp, mkdir, writeFile, readFile, readdir, rm } from 'node:fs/promises';
+import { realpath, mkdtemp, mkdir, writeFile, readFile, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -10,7 +10,7 @@ import { approveRecipe } from '../lib/recipe-integrity.mjs';
 import { createPtcFixture } from './helpers/ptc-runtime.mjs';
 
 async function fixture(t) {
-  const root = await mkdtemp(path.join(tmpdir(), 'task-memory-recipes-'));
+  const root = await realpath(await mkdtemp(path.join(tmpdir(), 'task-memory-recipes-')));
   let runtime;
   t.after(async () => { try { await runtime?.dispose(); } finally { await rm(root, { recursive: true, force: true }); } });
   const repo = path.join(root, 'repo'), other = path.join(root, 'other');

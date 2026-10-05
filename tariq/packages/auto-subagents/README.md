@@ -6,7 +6,7 @@ Ongoing tasks use persistent memory across turns and sessions, and recipe childr
 
 ## Use
 
-From the repository root, install dependencies with `pnpm install`, build DSH with `pnpm run build`, then run `node tariq/packages/auto-subagents/build.mjs`. Start the isolated browser profile with `node tariq/scripts/auto-preview.mjs`; its default port is 3181. The launcher uses `.artifacts/auto-home`, excludes provider credentials from the inherited environment and disables telemetry. Use `--instance <safe-name>` for a separate preview home when an existing preview has acquired a credential store. It does not copy personal settings, credentials or Sessions.
+From the repository root, install dependencies with `pnpm install`, build DSH with `pnpm run build`, then run `node tariq/packages/auto-subagents/build.mjs`. Start the isolated browser profile with `node tariq/scripts/auto-preview.mjs`; its default port is 3181. The launcher uses `.artifacts/auto-home`, excludes provider credentials from the inherited environment and disables telemetry. The launcher permits its own browser-session grant and saved scalar Web interface settings; it refuses provider credential records, dotenv files and executable overlays. Use `--instance <safe-name>` for a separate preview home. It does not copy personal settings, credentials or Sessions.
 
 Select Auto Subagents as the session preset. The Auto settings page groups the routing switch, model/provider rows and save actions in a responsive English layout inside the installed bundle page. Full application localization is deferred. It owns the live enabled switch, exact allowed routes and strong/medium/light tiers. Disabled or empty settings refuse delegation. Saved routes remain editable if their provider disappears. Saving all routing fields uses one revision-fenced mutation; a stale draft requires discard and reload. Legacy routing settings can be converted from an explicit copy to an unapplied overlay; see [copied-settings conversion](docs/DELEGATION-V020.md#copied-settings-conversion).
 
@@ -15,7 +15,7 @@ The package resolves declared dependencies through Node's public package exports
 ## Components
 
 - `lib/delegation.mjs`, `lib/model-selection.mjs`: Auto-owned spawn/fork consumers and volatile routing settings. See [delegation](docs/DELEGATION-V020.md).
-- `lib/router.mjs`, `lib/runtime.mjs`: live authorization, least-loaded routing, verifier separation and bounded upward recovery within the same child.
+- `lib/router.mjs`, `lib/runtime.mjs`: live authorization, least-loaded routing, verifier separation and bounded upward recovery within the same child. See [native context overflow recovery](docs/UPSTREAM-COMPATIBILITY.md#context-overflow-recovery).
 - `lib/llm-provider.mjs`, `lib/compatibility.mjs`: native LLM service replacement and an activation check for safe custom-event append and restore.
 - `lib/coordinator.mjs`: read-only coordinator tool admission and child report policy.
 - `lib/recipes.mjs`, `lib/workflow-routing.mjs`: approved recipes, private workflow routing, cancellation and resume. See [PTC execution](docs/WORKFLOW-V020.md).

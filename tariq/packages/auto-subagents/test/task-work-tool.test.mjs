@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, rm } from 'node:fs/promises';
+import { realpath, mkdtemp, mkdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { apply, getTaskWorkStore } from '../lib/task-memory.mjs';
@@ -9,7 +9,7 @@ import * as TaskMemory from '../lib/task-memory.mjs';
 import { runtimeModuleUrl } from '../lib/dsh-paths.mjs';
 
 async function fixture(t) {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'task-work-tool-'));
+  const root = await realpath(await mkdtemp(path.join(os.tmpdir(), 'task-work-tool-')));
   t.after(() => rm(root, { recursive: true, force: true }));
   const repo = path.join(root, 'repo'), memoryDir = path.join(root, 'memory');
   await mkdir(repo);
@@ -119,7 +119,7 @@ test('real registry ownership denies a live child with root-looking header and p
   const { default: Llm, LlmAdapter } = await import(runtimeModuleUrl('@deepseek-ai/dsh-llm'));
   const { bindScopeParent, scopeParentOf } = await import(runtimeModuleUrl('@deepseek-ai/dsh-scope'));
   const services = await Promise.all(['session', 'session-projection', 'system-prompt', 'tools', 'agent', 'agent-loop'].map(async name => (await import(runtimeModuleUrl(`@deepseek-ai/dsh-${name}`))).default));
-  const root = await mkdtemp(path.join(os.tmpdir(), 'task-work-real-ownership-'));
+  const root = await realpath(await mkdtemp(path.join(os.tmpdir(), 'task-work-real-ownership-')));
   const repo = path.join(root, 'repo'), memoryDir = path.join(root, 'memory');
   await mkdir(repo);
   const ctx = new Context();

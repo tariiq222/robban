@@ -1,7 +1,7 @@
 /** Native coordinator bridge: persistent work, same-session goals and turn-local todo mirrors. */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
+import { realpath, mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { runtimeModuleUrl } from '../lib/dsh-paths.mjs';
@@ -121,7 +121,7 @@ function verify(record) {
 }
 
 test('native coordinator reuses DSH goals and turn-local todos without transferring session authority', { timeout: 30000 }, async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'task-work-goal-bridge-'));
+  const root = await realpath(await mkdtemp(path.join(os.tmpdir(), 'task-work-goal-bridge-')));
   try {
     const repo = path.join(root, 'repository'); await mkdir(repo);
     const live = await recordLive(repo, path.join(root, 'memory'));

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { mkdtemp, mkdir, writeFile, readFile, readdir, rm } from 'node:fs/promises';
+import { realpath, mkdtemp, mkdir, writeFile, readFile, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { apply, saveResume } from '../lib/recipes.mjs';
@@ -13,7 +13,7 @@ const { Context } = await import(runtimeModuleUrl('@deepseek-ai/cordis'));
 const { createScope, scopeParentOf, bindScopeParent } = await import(runtimeModuleUrl('@deepseek-ai/dsh-scope'));
 
 async function fixture(t, { recipe = 'feature-pipeline', result = { status: 'completed', changedPaths: ['src.js'] } } = {}) {
-  const root = await mkdtemp(path.join(tmpdir(), 'task-work-recipes-'));
+  const root = await realpath(await mkdtemp(path.join(tmpdir(), 'task-work-recipes-')));
   let runtime;
   t.after(async () => { try { await runtime?.dispose(); } finally { await rm(root, { recursive: true, force: true }); } });
   const repo = path.join(root, 'repo'); await mkdir(repo);
@@ -98,6 +98,8 @@ test('independent explicitly disjoint packages admit both real PTC children befo
   } finally { clearTimeout(timer); h.release(); }
   const completed = await results;
   assert.deepEqual(completed.map(value => value.result.taskWorkState), ['completed', 'completed']);
+  assert.deepEqual(completed.map(value => [value.result.taskWorkSaved, value.result.taskMemorySaved]), [[true, true], [true, true]]);
+  assert.equal((await h.memory.get({ repo: h.repo, taskId: h.task.taskId })).revision, 2);
   assert.deepEqual((await h.plan()).items.map(item => item.status), ['completed', 'completed']);
   assert.equal(h.calls.disposed, 2);
 });
@@ -197,3 +199,15 @@ test('native cancellation blocks the owning item and a fresh session may reopen 
   assert.equal((await h.execute(h.second)).result.taskWorkState, 'completed');
   assert.equal(h.requests.at(-1).parent.session.id, h.second.session.id);
 });
+
+
+for (const [changedPath, status] of [['src/a.js', 'completed'], ['src-other/a.js', 'completed_with_failures'], ['src/../outside', 'completed_with_failures'], ['src', 'completed']]) {
+  test(`literal directory scope settles ${changedPath} as ${status}`, async t => {
+    const h = await fixture(t, { result: { status: 'completed', changedPaths: [changedPath] } });
+    await h.define([h.item('one', { writePaths: ['src'], readPaths: [] })]);
+    const result = await h.execute();
+    assert.equal(result.result.status, status);
+    assert.equal(result.result.taskWorkSaved, true);
+    assert.equal((await h.plan()).items[0].status, status === 'completed' ? 'completed' : 'blocked');
+  });
+}

@@ -95,9 +95,10 @@ test('removed current model does not consume the sole newly allowed alternative 
   await f.request(f.agent, 2); assert.deepEqual(await f.error('QUOTA', f.agent, 2), { kind: 'retry' });
   assert.equal((await f.request(f.agent, 2)).model, 'b');
 });
-test('context overflow cannot enter an always-retry chain or trigger alternate models', async () => {
+test('context overflow delegates without switching routes when provider retry policy is absent', async () => {
   const f = fixture(); f.created(f.agent); await f.request();
-  assert.equal(await f.error('CONTEXT_WINDOW_EXCEEDED'), undefined);
+  assert.equal(await f.error('CONTEXT_WINDOW_EXCEEDED', f.agent, 1, async () => undefined), undefined);
+  assert.equal(f.logs.some(event => event.type === 'auto-subagent/route'), false);
 });
 test('a failing step stays bounded even if settings continuously add routes', async () => {
   const f = fixture(); f.setPref({ enabled: true, allowedModels: [a] }); f.created(f.agent); await f.request();

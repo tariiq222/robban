@@ -45,6 +45,17 @@ interface WorkspaceApplyContext {
   get(name: 'uiWorkspace'): { startSession: NonNullable<DraftApiObservation['startSession']> } | undefined
 }
 
+/** Select native document and line navigation from the browser's keyboard platform. */
+async function navigationKeys(page: Page) {
+  const mac = await page.evaluate(() => /Mac/.test(navigator.platform))
+  return {
+    documentStart: mac ? 'Meta+ArrowUp' : 'Control+Home',
+    documentEnd: mac ? 'Meta+ArrowDown' : 'Control+End',
+    lineEnd: mac ? 'Meta+ArrowRight' : 'End',
+    selectLineEnd: mac ? 'Meta+Shift+ArrowRight' : 'Shift+End',
+  }
+}
+
 async function observeDraftApi(page: Page): Promise<void> {
   // Observe one shipped module's apply, using the page-owned loader interception from default-product-isolation.e2e.ts.
   await page.addInitScript(() => {
@@ -391,7 +402,7 @@ it('restores repeated file, folder and Session capsules across edits, Workspace 
       await openWorkspaceSession(page, item.workspace, item.id)
       await assertDraft(page, item.id, item.draft)
       await composer(page).click()
-      await page.keyboard.press('ControlOrMeta+End')
+      await page.keyboard.press((await navigationKeys(page)).documentEnd)
       const suffix = ` · 编辑${round} 🧪`
       await page.keyboard.insertText(suffix)
       item.draft = { ...item.draft, text: item.draft.text + suffix }
@@ -435,7 +446,7 @@ it('reads a legacy string from the existing conversation key and saves ordinary 
     [...element.children].map(paragraph => paragraph.textContent).join('\n')), SETTLE).toBe(legacy)
   expect(await composer(page).locator('[data-composer-chip]').count()).toBe(0)
   await composer(page).click()
-  await page.keyboard.press('ControlOrMeta+End')
+  await page.keyboard.press((await navigationKeys(page)).documentEnd)
   await page.keyboard.insertText('，继续编辑')
   await assertDraft(page, firstId, { text: `${legacy}，继续编辑`, references: [] })
   await assertUnsubmitted(scaffold, [firstId])
@@ -496,8 +507,8 @@ it('rematches the current draft after a delayed real skills catalog without repl
   await assertDraft(page, firstId, initial)
   expect(await composer(page).locator('[data-composer-text-ref]').count()).toBe(0)
   await composer(page).click()
-  await page.keyboard.press('ControlOrMeta+Home')
-  await page.keyboard.press('End')
+  await page.keyboard.press((await navigationKeys(page)).documentStart)
+  await page.keyboard.press((await navigationKeys(page)).lineEnd)
   await expect.poll(() => captured?.request ?? '', SETTLE).toContain(firstId)
   expect(captured?.status).toBe(200)
   expect(captured?.body).toContain('draft-late-original')
@@ -506,15 +517,15 @@ it('rematches the current draft after a delayed real skills catalog without repl
   const chip = await composer(page).locator('[data-composer-chip]').elementHandle()
   if (chip === null) throw new Error('The initialized file capsule is missing')
   await composer(page).click()
-  await page.keyboard.press('ControlOrMeta+Home')
-  await page.keyboard.press('Shift+End')
+  await page.keyboard.press((await navigationKeys(page)).documentStart)
+  await page.keyboard.press((await navigationKeys(page)).selectLineEnd)
   await page.keyboard.insertText(currentPrefix.trimEnd())
   const edited: DraftSnapshot = {
     text: `${currentPrefix}${file} abcdef`,
     references: [{ ...initial.references[0]!, offset: currentPrefix.length }],
   }
   await assertDraft(page, firstId, edited)
-  await page.keyboard.press('ControlOrMeta+End')
+  await page.keyboard.press((await navigationKeys(page)).documentEnd)
   await page.keyboard.press('ArrowLeft')
   await page.keyboard.press('ArrowLeft')
   await page.keyboard.press('Shift+ArrowLeft')

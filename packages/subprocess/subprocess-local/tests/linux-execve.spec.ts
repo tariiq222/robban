@@ -5,7 +5,9 @@ afterEach(() => {
   vi.resetModules()
 })
 
-describe.skipIf(process.platform !== 'linux')('Linux libc execve binding', () => {
+// Injected libc exercises descriptor handling on POSIX hosts; Node translates
+// POSIX errno values differently on Windows.
+describe.skipIf(process.platform === 'win32')('Linux libc execve binding', () => {
   it.each([undefined, 'pipe'] as const)('preserves inherited stdio with control %s and reports execve errno', async (control) => {
     const nativeExecve = vi.fn(() => -1)
     const nativeFcntl = vi.fn((fd: number, command: number) => {

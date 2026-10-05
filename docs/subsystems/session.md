@@ -591,7 +591,8 @@ declare class Session {
    *   `assistant/attempt`. Assistant messages embed their exact provider
    *   stream and cannot cite top-level source events. Any event may carry
    *   `ignorable: true`, allowing readers that do not know its type to retain it
-   *   without interpreting it; false and other supplied values are rejected.
+   *   without interpreting it; omitted or undefined flags add no envelope field,
+   *   and false and other supplied values are rejected.
    * @returns the logged event — its assigned `seq`/`time` plus the SNAPSHOT of
    *   `data` that entered the log, so reading `event.data` back sees the logged
    *   value, never the caller's still-mutable input.

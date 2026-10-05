@@ -1,4 +1,4 @@
-/** Private, revision-checked task memory shared by sessions; busy writers fail without reclaiming locks. */
+/** Private, revision-checked task memory shared by sessions; local writers wait and foreign writers fail without reclaiming locks. */
 import { constants } from 'node:fs';
 import { mkdir, lstat, realpath, open, rename, unlink, opendir } from 'node:fs/promises';
 import path from 'node:path';
@@ -11,6 +11,20 @@ export const TASK_MEMORY_DIR = path.join(process.env.DSH_HOME ? path.resolve(pro
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const KINDS = new Set(['progress', 'evidence', 'decision', 'blocker', 'next_step', 'run']);
 const MAX_BYTES = 2 * 1024 * 1024;
+const WRITERS = Symbol.for('dsh-auto-subagents.task-memory-writers');
+const writers = globalThis[WRITERS] ??= new Map();
+
+async function serializeWriter(lock, operation) {
+  const previous = writers.get(lock) ?? Promise.resolve();
+  const { promise, resolve } = Promise.withResolvers();
+  writers.set(lock, promise);
+  await previous;
+  try { return await operation(); } finally {
+    resolve();
+    if (writers.get(lock) === promise) writers.delete(lock);
+  }
+}
+
 const fail = (code, message) => { throw Object.assign(new Error(message), { code: `TASK_MEMORY_${code}` }); };
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 function string(value, name, max) {
@@ -112,9 +126,13 @@ export class TaskMemoryStore {
   }
   async locked(taskId, repo, operation) {
     await this.directory(repo);
-    const lock = path.join(this.namespace(repo), `${id(taskId)}.lock`); let handle;
-    try { handle = await open(lock, 'wx', 0o600); } catch (error) { if (error.code === 'EEXIST') fail('BUSY', 'Task memory has an active or unreconciled writer lock; retry or inspect the lock'); throw error; }
-    try { return await operation(); } finally { await handle.close(); await unlink(lock); }
+    const lock = path.join(this.namespace(repo), `${id(taskId)}.lock`);
+    // Each durable lock has its own local queue, including nested repository admission locks.
+    return serializeWriter(lock, async () => {
+      let handle;
+      try { handle = await open(lock, 'wx', 0o600); } catch (error) { if (error.code === 'EEXIST') fail('BUSY', 'Task memory has an active or unreconciled writer lock; retry or inspect the lock'); throw error; }
+      try { return await operation(); } finally { await handle.close(); await unlink(lock); }
+    });
   }
   async write(record) {
     this.validate(record);

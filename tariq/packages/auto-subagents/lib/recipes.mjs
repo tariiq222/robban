@@ -25,7 +25,7 @@ export { listApprovedRecipesSync, loadVerifiedRecipeSync, renderCatalogForTool, 
 import { EVENT, compactQuestions, compactDecided } from './events.mjs';
 import { setupCacheKey, setupCacheDir, loadSetupCache, saveSetupCache } from './setup-cache.mjs';
 import { getTaskMemoryStore, getTaskWorkStore } from './task-memory.mjs';
-import { releaseTaskAttempt } from './task-work-store.mjs';
+import { releaseTaskAttempt, taskWorkPathContains } from './task-work-store.mjs';
 import { isDelegatedAgent } from './agent-ownership.mjs';
 // Same file URL as the host's dsh-tools → same ESM instance.
 const { defineTool } = await import(runtimeModuleUrl('@deepseek-ai/dsh-tools'));
@@ -643,7 +643,7 @@ export function apply(ctx, config = {}) {
           throw new Error(`recipe "${args.recipe}" finished but its result could not be saved (${String(saveError?.message ?? saveError)}); the resumeId was consumed — start a fresh run`, { cause: saveError });
         }
         let plain = value && typeof value === 'object' && !Array.isArray(value) ? value : { status: 'completed' };
-        if (assignedItem && plain.status === 'completed' && (plain.changedPaths !== undefined && (!Array.isArray(plain.changedPaths) || plain.changedPaths.some(file => !assignedItem.writePaths.includes(file))))) {
+        if (assignedItem && plain.status === 'completed' && (plain.changedPaths !== undefined && (!Array.isArray(plain.changedPaths) || plain.changedPaths.some(file => !assignedItem.writePaths.some(scope => taskWorkPathContains(scope, file)))))) {
           plain = { ...plain, status: 'completed_with_failures', passed: false, taskWorkWarning: 'Reported changed paths escaped the assigned package write scope; the work item cannot be completed.' };
         }
         workOutcome = reportedWorkOutcome(plain.status, plain.status === 'completed' && plain.passed !== false);

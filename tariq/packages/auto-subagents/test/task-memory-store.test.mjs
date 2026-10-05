@@ -1,12 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, rm, symlink, stat, readFile, writeFile, readdir, chmod } from 'node:fs/promises';
+import { realpath, mkdtemp, mkdir, rm, symlink, stat, readFile, writeFile, readdir, chmod } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { TaskMemoryStore, TASK_MEMORY_DIR } from '../lib/task-memory-store.mjs';
 
 async function fixture(t, options = {}) {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'task-memory-'));
+  const root = await realpath(await mkdtemp(path.join(os.tmpdir(), 'task-memory-')));
   t.after(() => rm(root, { recursive: true, force: true }));
   const repo = path.join(root, 'repo'), other = path.join(root, 'other'), dir = path.join(root, 'memory');
   await mkdir(repo); await mkdir(other);

@@ -14,20 +14,6 @@ const ACTIVE = Symbol.for('dsh-auto-subagents.task-work-active-attempts');
 const active = globalThis[ACTIVE] ??= new Set();
 const PROCESS_TOKEN = Symbol.for('dsh-auto-subagents.task-work-process-token');
 const processToken = globalThis[PROCESS_TOKEN] ??= randomUUID();
-const MUTATIONS = Symbol.for('dsh-auto-subagents.task-work-mutations');
-const mutations = globalThis[MUTATIONS] ??= new Map();
-
-async function serializeMutation(namespace, operation) {
-  const previous = mutations.get(namespace) ?? Promise.resolve();
-  let release;
-  const ready = new Promise(resolve => { release = resolve; });
-  mutations.set(namespace, ready);
-  await previous;
-  try { return await operation(); } finally {
-    release();
-    if (mutations.get(namespace) === ready) mutations.delete(namespace);
-  }
-}
 const fail = (code, message) => { throw Object.assign(new Error(message), { code: `TASK_WORK_${code}` }); };
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 function fields(value, allowed, required = allowed) {
@@ -44,11 +30,26 @@ function strings(values, name, { min = 0, max = 20, length = 2000, ids = false }
   if (!Array.isArray(values) || values.length < min || values.length > max || new Set(values).size !== values.length) fail('INVALID', `${name} must be a unique array of ${min}..${max} entries`);
   for (const value of values) { text(value, name, length); if (ids) identifier(value, name); }
 }
-function scope(value) {
-  text(value, 'scope path', 512);
-  if (value.startsWith('/') || /[\\:*?\[\]{}\x00-\x1f]/.test(value) || value.split('/').some(part => !part || part === '.' || part === '..')) fail('INVALID', 'Scopes must name canonical relative literal paths');
+function canonicalScope(value) {
+  return typeof value === 'string' && value.length > 0 && value.length <= 512 && value.trim().length > 0
+    && !value.startsWith('/') && !/[\\:*?\[\]{}\x00-\x1f]/.test(value)
+    && value.split('/').every(part => part && part !== '.' && part !== '..');
 }
-const overlaps = (a, b) => { if (process.platform === 'win32') { a = a.toLowerCase(); b = b.toLowerCase(); } return a === b || a.startsWith(`${b}/`) || b.startsWith(`${a}/`); };
+function scope(value) {
+  if (!canonicalScope(value)) fail('INVALID', 'Scopes must name canonical relative literal paths');
+}
+/**
+ * Match a literal file or directory and its descendants, rejecting noncanonical paths.
+ * @param declared - Saved relative write or read scope.
+ * @param candidate - Reported or competing relative path.
+ * @returns Whether the candidate is the scope itself or a segment descendant.
+ */
+export function taskWorkPathContains(declared, candidate) {
+  if (!canonicalScope(declared) || !canonicalScope(candidate)) return false;
+  if (process.platform === 'win32') { declared = declared.toLowerCase(); candidate = candidate.toLowerCase(); }
+  return candidate === declared || candidate.startsWith(`${declared}/`);
+}
+const overlaps = (a, b) => taskWorkPathContains(a, b) || taskWorkPathContains(b, a);
 /** True when declared scopes need serialization; readers may share paths with other readers. */
 export function taskWorkScopesConflict(a, b, { includeUnknownReads = true } = {}) {
   if (includeUnknownReads && ((a.readPaths === undefined && b.writePaths.length > 0) || (b.readPaths === undefined && a.writePaths.length > 0))) return true;
@@ -159,13 +160,12 @@ export class TaskWorkStore extends TaskMemoryStore {
   async get({ repo, taskId }) { const canonical = await this.root(repo, taskId); return this.existing(canonical, taskId); }
   async mutate({ repo, taskId }, operation) {
     const canonical = await this.root(repo, taskId);
-    // Queue only local graph mutations; the durable exclusive lock still rejects foreign writers.
-    return serializeMutation(this.namespace(canonical), () => this.locked(ADMISSION_LOCK, canonical, () => this.locked(taskId, canonical, async () => {
+    return this.locked(ADMISSION_LOCK, canonical, () => this.locked(taskId, canonical, async () => {
       // Recheck the root under the common lock before publishing linked work.
       await this.memory.get({ repo: canonical, taskId });
       const plan = await this.existing(canonical, taskId), result = await operation(plan, canonical);
       const value = result.plan ?? result; value.updatedAt = new Date().toISOString(); await this.write(value); return result;
-    })));
+    }));
   }
   checkRevision(plan, expectedRevision) { revision(expectedRevision); if ((plan?.revision ?? 0) !== expectedRevision) fail('CONFLICT', `Work revision changed: expected ${expectedRevision}, current ${plan?.revision ?? 0}; reload first`); }
   item(plan, itemId) { identifier(itemId, 'itemId'); if (!plan) fail('NOT_FOUND', 'No work plan is defined for this task'); const item = plan.items.find(value => value.id === itemId); if (!item) fail('NOT_FOUND', 'Work item does not exist'); return item; }

@@ -884,6 +884,9 @@ describe('TypeScript SDK snapshots over the jsonrpc runtime', () => {
       }
       if (scenario.name === 'tool-scheduler-recovery') {
         expect(results).toHaveLength(2)
+        for (const result of results) {
+          expect(result.events.filter(event => event.type === 'snapshot/request-prepare-recovered')).toHaveLength(1)
+        }
         const events = results.flatMap(result => result.events)
         expect(events.filter(event => event.type === 'snapshot/request-prepare-recovered'))
           .toMatchObject([

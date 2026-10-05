@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, expectTypeOf, it } from 'vitest'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import { Session, SessionId, SessionLogOffset, snapshotSessionEvent } from '@deepseek-ai/dsh-session'
+import { Session, SessionId, SessionLogOffset, snapshotSessionEvent, type SessionEvent } from '@deepseek-ai/dsh-session'
 
 const id = SessionId('append-ignorable')
 
@@ -10,7 +10,11 @@ describe('append ignorable metadata', () => {
     const options: { ignorable?: true } = { ignorable: true }
     const event = session.append('turn/start', { turn: 1 }, options)
     delete options.ignorable
-    expect(event.ignorable).toBe(true)
+    expectTypeOf(event).toEqualTypeOf<SessionEvent<'turn/start'>>()
+    expect(event).toEqual({
+      type: 'turn/start', seq: 0, time: event.time, data: { turn: 1 }, ignorable: true,
+    })
+    expect(Number.isFinite(event.time)).toBe(true)
     expect(Object.isFrozen(event)).toBe(true)
     const restored = Session.fromRestore(id, [snapshotSessionEvent(event)], session.header, SessionLogOffset(0), 'detached')
     expect(restored.eventAt(event.seq)).toEqual(event)
@@ -21,7 +25,8 @@ describe('append ignorable metadata', () => {
     const session = Session.create(id)
     const message = createUserMessage({ content: [], source: { kind: 'user' } })
     const event = session.append('user/message', message, { surfaceOp: 'append', ignorable: true })
-    expect(event.ignorable).toBe(true)
+    expectTypeOf(event).toEqualTypeOf<SessionEvent<'user/message'>>()
+    expect(event).toMatchObject({ type: 'user/message', data: message, surfaceOp: 'append', ignorable: true })
     expect(session.deriveMessages()).toEqual([message])
     if (false) {
       // @ts-expect-error Surface placement remains mandatory with ignorable metadata.

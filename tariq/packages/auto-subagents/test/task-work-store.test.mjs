@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, rm, readFile, writeFile, symlink } from 'node:fs/promises';
+import { realpath, mkdtemp, mkdir, rm, readFile, writeFile, symlink } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { execFile } from 'node:child_process';
@@ -14,7 +14,7 @@ const item = (id, extra = {}) => ({ id, title: `Repair ${id}`, description: 'Pre
 const report = (status = 'completed', passed = true, extra = {}) => ({ kind: 'reported_recipe_result', status, summary: 'Reported recipe result', verification: { passed, summary: 'Recipe reported exact acceptance checks passing' }, ...extra });
 const code = value => ({ code: `TASK_WORK_${value}` });
 async function fixture(t) {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'task-work-')); t.after(() => rm(root, { recursive: true, force: true }));
+  const root = await realpath(await mkdtemp(path.join(os.tmpdir(), 'task-work-'))); t.after(() => rm(root, { recursive: true, force: true }));
   const repo = path.join(root, 'repo'), other = path.join(root, 'other'), dir = path.join(root, 'memory'); await mkdir(repo); await mkdir(other);
   const memory = new TaskMemoryStore({ dir }), store = new TaskWorkStore({ dir });
   const task = await memory.create({ repo, title: 'Task', goal: 'Original task goal', sessionId: 'session-a' });
@@ -215,4 +215,42 @@ test('overlapping local claim rejection does not poison the queued independent f
   assert.equal(results.find(result => result.status === 'rejected').reason.code, 'TASK_WORK_SCOPE');
   await remember(t, f.claim('fourth'));
   assert.deepEqual((await f.store.get({ repo: f.repo, taskId: f.taskId })).items.filter(value => value.status === 'in_progress').map(value => value.id), ['first', 'third', 'fourth']);
+});
+
+
+test('settlement waits for an in-process note writer and preserves both durable revisions', async t => {
+  const f = await fixture(t); await f.define([item('first')]);
+  const claimed = await remember(t, f.claim('first'));
+  const entered = Promise.withResolvers(), release = Promise.withResolvers();
+  const write = f.memory.write.bind(f.memory);
+  f.memory.write = async record => { entered.resolve(); await release.promise; return write(record); };
+  const append = f.memory.append({ repo: f.repo, taskId: f.taskId, sessionId: 'note-owner', expectedRevision: 0, entry: { kind: 'progress', text: 'Independent recipe outcome' } });
+  const pending = [append];
+  append.catch(() => {});
+  let note, work;
+  try {
+    await entered.promise;
+    // The second directory check belongs to the task lock nested inside admission.
+    const directory = f.store.directory.bind(f.store);
+    const attempted = Promise.withResolvers(); let checks = 0;
+    f.store.directory = async repo => { await directory(repo); if (++checks === 2) attempted.resolve(); };
+    const settlement = f.settle('first', claimed.attempt); pending.push(settlement);
+    settlement.catch(() => {});
+    await attempted.promise;
+    await f.memory.get({ repo: f.repo, taskId: f.taskId });
+    release.resolve();
+    [note, work] = await Promise.all(pending);
+  } finally { release.resolve(); await Promise.allSettled(pending); }
+  assert.equal(note.revision, 1); assert.equal(work.revision, 3);
+  assert.equal((await f.store.get({ repo: f.repo, taskId: f.taskId })).items[0].status, 'completed');
+  assert.equal((await f.memory.get({ repo: f.repo, taskId: f.taskId })).entries[0].text, 'Independent recipe outcome');
+});
+
+test('same-process note and work-plan writers of one task queue instead of reporting a busy lock', async t => {
+  const f = await fixture(t); await f.define([item('first'), item('second')]);
+  const first = await remember(t, f.claim('first')), second = await remember(t, f.claim('second'));
+  const note = index => f.memory.append({ repo: f.repo, taskId: f.taskId, sessionId: 'session-a', expectedRevision: index, entry: { kind: 'run', text: `outcome ${index}` } });
+  await Promise.all([note(0), f.settle('first', first.attempt), f.settle('second', second.attempt), note(0).catch(error => { assert.equal(error.code, 'TASK_MEMORY_CONFLICT'); return note(1); })]);
+  assert.deepEqual((await f.store.get({ repo: f.repo, taskId: f.taskId })).items.map(value => value.status), ['completed', 'completed']);
+  assert.equal((await f.memory.get({ repo: f.repo, taskId: f.taskId })).entries.length, 2);
 });
