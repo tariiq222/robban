@@ -2,9 +2,9 @@
   "version": 1,
   "name": "code-audit",
   "sha256": {
-    "meta": "e3ff56ab6460630f79acff71c7de7d9f4e9cf386798ef9037e63b4ce723b14b8",
-    "script": "f516c17f97092a734163e544956a3858804d2140953700f833c3622aadface62"
+    "meta": "dd08b687657753de2ab0bcd587ebd2789fc6e22983c4b37d6e412ca4d2700947",
+    "script": "2d30b2524ab408febd6b515d6d346b5f308279df95e60f38d9387b4cdd9562e8"
   },
-  "approvedAt": "2026-10-03T17:02:25.580Z",
-  "approvedBy": "independent-reviewed-code-audit"
+  "approvedAt": "2026-10-06T12:02:43.695Z",
+  "approvedBy": "tariq-approved-tier-split"
 }

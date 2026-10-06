@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Settings label tiers by job: Build & Review (`strong`), Analyze & Plan (`medium`) and Read & Search (`light`). Saved values, recipe metadata and the delegation `tier` enum keep the `strong`/`medium`/`light` ids. Each model row and recipe role shows its tier description.
+- Model rows have Move up/Move down buttons; `allowedModels` order is the priority among equally loaded routes of one tier. A hint explains that reviews prefer a different model than the writer.
+- Enabled settings warn when no model is Build & Review, when only one is (reviews reuse the writer's model), and when no model is Analyze & Plan (analysis escalates to Build & Review).
+- Scope-only steps run on new medium roles: `audit-scope` (code-audit), `investigation-scope` (investigate) and `plan-evidence` (plan-to-packages). Scanning, gathering, packaging and checking stay strong. The three recipes need re-approval.
+
 ## 0.3.0
 
 - Engine-boundary compatibility fix: approved recipe metadata may retain plugin documentation fields (`version`, `args`), but `run_recipe` passes only `name`, `description`, `whenToUse` and `phases` to DSH's strict WorkflowMeta contract. Supported field values remain unchanged and subject to engine validation. Four regression tests use the installed validator and a real worker-thread engine; full suite now 315/315. The recipe files and approval lock were not altered by this fix.

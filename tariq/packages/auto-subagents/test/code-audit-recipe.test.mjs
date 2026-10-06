@@ -33,10 +33,10 @@ async function run(overrides = {}, args = {}) {
   return { result: await execute(agent, parallel, p => phases.push(p), () => {}, { task: 'Audit source', repo: '/repo', ...args }), calls, phases, launches };
 }
 
-test('saved code-audit metadata uses custom strong roles and three declared phases', async () => {
+test('saved code-audit metadata uses a medium scope role, strong scan/check roles and three declared phases', async () => {
   const meta = JSON.parse(await readFile(path.join(recipeDir, 'meta.json'), 'utf8'));
   assert.equal(meta.name, 'code-audit');
-  assert.deepEqual(meta.roles, { 'audit-scanner': { tier: 'strong', readOnlyRetry: true }, 'audit-checker': { tier: 'strong', readOnlyRetry: true } });
+  assert.deepEqual(meta.roles, { 'audit-scope': { tier: 'medium', readOnlyRetry: true }, 'audit-scanner': { tier: 'strong', readOnlyRetry: true }, 'audit-checker': { tier: 'strong', readOnlyRetry: true } });
   assert.equal(meta.phases.length, 3);
 });
 test('actual recipe returns source-only empty report, never certifies code clean', async () => {
@@ -51,7 +51,7 @@ test('private marker enforces readonly custom roles without unsupported options 
     const first = call.prompt.split('\n')[0]; assert.ok(first.startsWith('__AUTO_RECIPE_ROLE__'));
     const marker = JSON.parse(first.slice('__AUTO_RECIPE_ROLE__'.length));
     assert.equal(marker.token, 'private-token'); assert.equal(marker.readOnly, true);
-    assert.equal(marker.role, call.label === 'verify' ? 'audit-checker' : 'audit-scanner');
+    assert.equal(marker.role, call.label === 'verify' ? 'audit-checker' : call.label === 'scope' ? 'audit-scope' : 'audit-scanner');
     assert.ok(Number.isSafeInteger(marker.timeoutMs) && marker.timeoutMs > 0);
   }
 });

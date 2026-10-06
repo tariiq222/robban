@@ -13,7 +13,7 @@ const stages = {
   investigate: { 'investigator:gather': [evidence], 'investigation-checker:check': [evidence, review] },
   'code-audit': { 'audit-scanner:scan-security': [review], 'audit-scanner:scan-correctness': [review], 'audit-checker:verify': [evidence, review] },
   'qa-verify': { 'qa-verifier:analysis': [evidence], 'qa-verifier:verify': [evidence], 'qa-checker:check': [evidence, review] },
-  'plan-to-packages': { 'planner:evidence': [evidence], 'planner:packages': [design], 'package-checker:check': [design, review] },
+  'plan-to-packages': { 'plan-evidence:evidence': [evidence], 'planner:packages': [design], 'package-checker:check': [design, review] },
 };
 
 function readBundledSkill(name) {

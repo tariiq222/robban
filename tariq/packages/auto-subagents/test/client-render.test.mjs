@@ -239,3 +239,43 @@ test('recipe settings helpers drop empty overrides and validate timeouts', () =>
   assert.equal(recipeOverridesInvalid({ a: { roles: { s: { timeoutMinutes: 0 } } } }), true);
   assert.equal(recipeOverridesInvalid({ a: { roles: { s: { timeoutMinutes: 240 } } } }), false);
 });
+
+const routesWith = (routes, enabled = true) => ({ t, catalog: async () => ({ ok: true, value: { groups: [], failures: [] } }), save: async () => true,
+  useAutoSettings: select => select({ status: 'ready', writable: true, revision: 1, value: { enabled,
+    allowedModels: routes.map(([model]) => ({ provider: 'p', model })),
+    modelTiers: routes.filter(([, tier]) => tier).map(([model, tier]) => ({ provider: 'p', model, tier })) } }) });
+
+test('model rows show the selected tier description, priority hint and bounded reorder buttons', () => {
+  const html = renderToStaticMarkup(React.createElement(mod.__test.AutoSettings, routesWith([['a', 'strong'], ['b', 'medium']])));
+  assert.match(html, /<small>strongHint<\/small>/);
+  assert.match(html, /<small>mediumHint<\/small>/);
+  assert.match(html, /orderHint/);
+  assert.match(html, /disabled=""[^>]*aria-label="moveUp a"/);
+  assert.match(html, /disabled=""[^>]*aria-label="moveDown b"/);
+  assert.doesNotMatch(html, /disabled=""[^>]*aria-label="moveDown a"/);
+  const single = renderToStaticMarkup(React.createElement(mod.__test.AutoSettings, routesWith([['a', 'strong']])));
+  assert.doesNotMatch(single, /orderHint|moveUp/);
+});
+
+test('tier warnings name missing or single Build & Review routes and a missing Analyze & Plan route', () => {
+  const { tierWarnings } = mod.__test;
+  const value = (routes, enabled = true) => ({ enabled, allowedModels: routes.map(([model]) => ({ provider: 'p', model })),
+    modelTiers: routes.filter(([, tier]) => tier).map(([model, tier]) => ({ provider: 'p', model, tier })) });
+  assert.deepEqual([...tierWarnings(value([['a', 'strong'], ['b', 'strong'], ['c', 'medium']]))], []);
+  assert.deepEqual([...tierWarnings(value([['a', 'strong'], ['b', 'light']]))], ['oneStrong', 'noMedium']);
+  assert.deepEqual([...tierWarnings(value([['a', 'light'], ['b']]))], ['noStrong']);
+  assert.deepEqual([...tierWarnings(value([['a', 'light']], false))], []);
+  assert.deepEqual([...tierWarnings(value([]))], []);
+  const html = renderToStaticMarkup(React.createElement(mod.__test.AutoSettings, routesWith([['a', 'strong'], ['b', 'light']])));
+  assert.match(html, /data-warning="oneStrong"/);
+  assert.match(html, /data-warning="noMedium"/);
+});
+
+test('moveRoute swaps neighbours and ignores moves past either end', () => {
+  const { moveRoute } = mod.__test;
+  const list = ['a', 'b', 'c'];
+  assert.deepEqual([...moveRoute(list, 1, -1)], ['b', 'a', 'c']);
+  assert.deepEqual([...moveRoute(list, 1, 1)], ['a', 'c', 'b']);
+  assert.equal(moveRoute(list, 0, -1), list);
+  assert.equal(moveRoute(list, 2, 1), list);
+});

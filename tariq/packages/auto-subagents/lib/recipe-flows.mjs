@@ -28,17 +28,17 @@ export const RECIPE_FLOWS = Object.freeze({
     stage('validate', ['validate']),
   ]),
   'code-audit': Object.freeze([
-    stage('scope', ['audit-scanner']),
+    stage('scope', ['audit-scope']),
     stage('scans', ['audit-scanner'], { parallel: true }),
     stage('verify', ['audit-checker']),
   ]),
   investigate: Object.freeze([
-    stage('scope', ['investigator']),
+    stage('scope', ['investigation-scope']),
     stage('gather', ['investigator']),
     stage('check', ['investigation-checker']),
   ]),
   'plan-to-packages': Object.freeze([
-    stage('evidence', ['planner']),
+    stage('evidence', ['plan-evidence']),
     stage('packages', ['planner']),
     stage('check', ['package-checker']),
   ]),

@@ -2,9 +2,9 @@
   "version": 1,
   "name": "plan-to-packages",
   "sha256": {
-    "meta": "169357ee7b33b2fb5405d0feb45e81a7af197cbaac1d3877d975dbd411f1efa6",
-    "script": "f82b9ae51da04405072a6c1aecddd89cec9ca55264a97a23bdcfbc393df14985"
+    "meta": "d26005a48f58ee5ff65d6f2e4598d220988ee717b6e78ca5a3d57ed762074987",
+    "script": "70431ff796d4243faa9953b78ed515c65f42dd39b7fd9ccd5be685125c2b61a3"
   },
-  "approvedAt": "2026-10-05T12:27:02.874Z",
-  "approvedBy": "claude (merge auto/recipes-canvas into master; pending owner review)"
+  "approvedAt": "2026-10-06T12:02:43.773Z",
+  "approvedBy": "tariq-approved-tier-split"
 }
