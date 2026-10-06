@@ -1,6 +1,6 @@
 # investigate — source-only cause investigation
 
-Three bounded steps: scope (at most 40 concrete files), gather competing hypotheses (at most 12), independent checker resolving exactly every global hypothesis id. Custom strong roles `investigator` / `investigation-checker` avoid the canonical reviewer prerequisite. Every authenticated private marker uses `readOnly:true`; updated host tools restrict to read/read_image/glob/grep/structured_output. No fixes, commands, tests, network, browser or delegation.
+Three bounded steps: scope (at most 40 concrete files), gather competing hypotheses (at most 12), independent checker resolving exactly every global hypothesis id. Custom role `investigation-scope` routes the scope step at medium tier; strong roles `investigator` / `investigation-checker` handle gathering and checking and avoid the canonical reviewer prerequisite. Every authenticated private marker uses `readOnly:true`; updated host tools restrict to read/read_image/glob/grep/structured_output. No fixes, commands, tests, network, browser or delegation.
 
 Inputs: nonblank task and canonical absolute POSIX repo. No decision/resume loop: unresolved context stays inconclusive with next_actions. Direct AsyncFunction execution without host routing token is for offline hooks only; caller owns tool policy.
 

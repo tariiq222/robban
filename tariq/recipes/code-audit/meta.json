@@ -1,9 +1,10 @@
 {
   "name": "code-audit",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Source-only audit: bound scope, parallel security/correctness scans, independent evidence verification and deterministic severity-ranked report. Does not modify code or certify it clean.",
   "whenToUse": "Review a repository or bounded change for evidence-backed correctness and security findings without editing files or running commands.",
   "roles": {
+    "audit-scope": { "tier": "medium", "readOnlyRetry": true },
     "audit-scanner": { "tier": "strong", "readOnlyRetry": true },
     "audit-checker": { "tier": "strong", "readOnlyRetry": true }
   },

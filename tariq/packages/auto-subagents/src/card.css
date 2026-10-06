@@ -276,6 +276,12 @@ button.ars-chip { cursor: pointer; }
 .ars-settings-identity strong { display: block; font-size: 14px; font-weight: 600; }
 .ars-settings-identity span { display: block; color: var(--as-muted); font-size: 12px; margin-top: 2px; }
 .ars-settings-route label { color: var(--as-muted); font-size: 12px; }
+.ars-settings-tier { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; max-width: 280px; }
+.ars-settings-tier small { color: var(--as-muted); font-size: 12px; text-align: end; }
+.ars-settings-order { display: flex; flex-direction: column; gap: 4px; }
+.ars-settings .ars-settings-order button { min-height: 28px; padding: 2px 8px; line-height: 1; }
+.ars-settings-hint { color: var(--as-muted); font-size: 13px; margin: 0 0 12px; }
+.ars-settings [data-warning] { margin: 0 0 10px; }
 .ars-settings button, .ars-settings select { font: inherit; font-size: 13px; line-height: 1.5; color: var(--as-text); padding: 9px 13px; min-height: 40px; border: 1px solid var(--as-line); border-radius: 8px; background: var(--as-surface); }
 .ars-settings select { max-width: 100%; cursor: pointer; }
 .ars-settings button { cursor: pointer; white-space: nowrap; font-weight: 550; }
@@ -296,7 +302,9 @@ button.ars-chip { cursor: pointer; }
 @media (max-width: 640px) {
   .ars-settings-route { flex-wrap: wrap; gap: 12px; padding: 16px; }
   .ars-settings-identity { flex-basis: 100%; }
-  .ars-settings-route label { flex: 1; }
+  .ars-settings-tier { flex: 1; align-items: stretch; max-width: none; }
+  .ars-settings-tier small { text-align: start; }
+  .ars-settings-order { flex-direction: row; order: 3; }
   .ars-settings .ars-settings-toggle { padding: 18px; }
   .ars-settings-add { flex-wrap: wrap; }
   .ars-settings-add label { flex-basis: 100%; }

@@ -2,9 +2,9 @@
   "version": 1,
   "name": "investigate",
   "sha256": {
-    "meta": "54f999116180a6684be0b84f4d1d2e0db8589063fadc0d134b877fda87638dce",
-    "script": "5676ab3a97437b54ee6f01e807039aa921427b5f34110a376c66cb8f03d90f12"
+    "meta": "50be724756d1f2be9286d145050bfb003906284f6cc17d63dd12fb6c6d90b909",
+    "script": "653b9ff70c72aff0c151b9e29f3f31ec75d0d24c2504d399bb159320de36e159"
   },
-  "approvedAt": "2026-10-04T21:28:33.972Z",
-  "approvedBy": "user-authorized-recipe-simplification"
+  "approvedAt": "2026-10-06T12:02:43.738Z",
+  "approvedBy": "tariq-approved-tier-split"
 }

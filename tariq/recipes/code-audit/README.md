@@ -12,7 +12,7 @@ Use it for bounded correctness/security reviews or a named change area. Required
 2. **scans** — launch two independent bounded scans in parallel: security/input/permission/data flows, and correctness/contracts/edge cases/test gaps. Each reads selected source and reports findings plus actual claimed file coverage.
 3. **verify** — a separate evidence-checking child reads the source and resolves every union finding exactly once as `verified`, `dismissed` or `unknown`.
 
-Custom roles `audit-scanner` and `audit-checker` both require strong-tier routing and allow bounded read-only retries. They do not use the canonical `reviewer` role, which requires a published implementer. The script emits authenticated role markers with `readOnly:true`; the host must enforce the agreed read/glob/grep/structured_output allowlist. Without the updated host policy, prompt text alone does not enforce read-only. A missing routing token is supported only for direct/offline hook execution, whose caller owns tool restrictions.
+Custom role `audit-scope` routes the scope step at medium tier; `audit-scanner` and `audit-checker` require strong-tier routing. All three allow bounded read-only retries. They do not use the canonical `reviewer` role, which requires a published implementer. The script emits authenticated role markers with `readOnly:true`; the host must enforce the agreed read/glob/grep/structured_output allowlist. Without the updated host policy, prompt text alone does not enforce read-only. A missing routing token is supported only for direct/offline hook execution, whose caller owns tool restrictions.
 
 ## Deterministic output and gates
 

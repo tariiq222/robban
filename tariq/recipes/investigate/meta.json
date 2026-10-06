@@ -1,9 +1,10 @@
 {
   "name": "investigate",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Source-only scope, bounded hypotheses/evidence gathering, independent accounting and explicit confirmed/rejected/inconclusive cause with next actions. Never repairs or claims runtime reproduction.",
   "whenToUse": "Investigate a specific problem whose cause is unclear before deciding whether to run bug-fix; source inspection only.",
   "roles": {
+    "investigation-scope": { "tier": "medium", "readOnlyRetry": true },
     "investigator": { "tier": "strong", "readOnlyRetry": true },
     "investigation-checker": { "tier": "strong", "readOnlyRetry": true }
   },

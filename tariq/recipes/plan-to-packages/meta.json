@@ -1,9 +1,13 @@
 {
   "name": "plan-to-packages",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Source-grounded packages selecting feature, repair, refactor, investigation, audit or QA with deterministic DAG/scope validation and exact goal accounting; planning only, no dispatch.",
   "whenToUse": "Turn a broad plan into reviewable packages, dependencies and safe parallel frontiers without implementing it.",
   "roles": {
+    "plan-evidence": {
+      "tier": "medium",
+      "readOnlyRetry": true
+    },
     "planner": {
       "tier": "strong",
       "readOnlyRetry": true

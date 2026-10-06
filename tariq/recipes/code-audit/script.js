@@ -39,7 +39,7 @@ const finish = () => ({
   dismissed, changedPaths: [], coverage: { requested: files, scans: unique(scanCoverage), verification: unique(verifyCoverage), complete }, limitations: unique(limitations), reviewTrail,
 });
 phase('scope');
-const scope = await invoke('scope', 'scope', 'audit-scanner', scopeSchema, 'Inspect repository source and bound this request to at most 40 concrete repository-relative source files plus direct callers/tests. Report exactly the files selected, scope summary, complete=false when requested area cannot be covered, and all limitations. Do not silently turn a whole-repository request into a complete narrow audit. Exclude dependencies, generated artifacts, credentials and unrelated files.');
+const scope = await invoke('scope', 'scope', 'audit-scope', scopeSchema, 'Inspect repository source and bound this request to at most 40 concrete repository-relative source files plus direct callers/tests. Report exactly the files selected, scope summary, complete=false when requested area cannot be covered, and all limitations. Do not silently turn a whole-repository request into a complete narrow audit. Exclude dependencies, generated artifacts, credentials and unrelated files.');
 if (!exact(scope, scopeSchema.required) || !strings(scope.files) || !scope.files.length || scope.files.length > 40 || scope.files.some(p => !fileRef(p)) || unique(scope.files).length !== scope.files.length || !text(scope.summary) || typeof scope.complete !== 'boolean' || !strings(scope.limitations)) {
   note('scope: missing or malformed bounded source scope.'); reviewTrail.push({ stage: 'scope', status: 'failed' }); return finish();
 }
