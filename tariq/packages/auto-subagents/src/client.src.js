@@ -509,4 +509,4 @@ var name = "dsh-auto-subagents";
 exports.apply = apply;
 exports.inject = inject;
 exports.name = name;
-exports.__test = { definition: definition, RecipeRunPanel: RecipeRunPanel, layoutGraph: layoutGraph, FlowGraph: FlowGraph, AutoSettings: AutoSettings, optionKey: optionKey, RecipeCanvas: RecipeCanvas, setRecipeEntry: setRecipeEntry, setRoleOverride: setRoleOverride, recipeOverridesInvalid: recipeOverridesInvalid, tierWarnings: tierWarnings, moveRoute: moveRoute };
+exports.__test = { definition: definition, RecipeRunPanel: RecipeRunPanel, layoutGraph: layoutGraph, FlowGraph: FlowGraph, AutoSettings: AutoSettings, optionKey: optionKey, RecipeCanvas: RecipeCanvas, setRecipeEntry: setRecipeEntry, setRoleOverride: setRoleOverride, recipeOverridesInvalid: recipeOverridesInvalid, tierWarnings: tierWarnings, moveRoute: moveRoute, groupRoutes: groupRoutes, routesFromGroups: routesFromGroups };

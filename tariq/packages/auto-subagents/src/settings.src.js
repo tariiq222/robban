@@ -1,6 +1,6 @@
 // Staged Auto settings use the Host's revision-fenced config form.
 var SETTINGS_NS = 'auto-subagents.settings';
-var settingsEn = { title:'Auto Subagents', direction:'ltr', description:'Choose allowed models and routing tiers for Auto delegation.', enabled:'Enable automatic routing', provider:'Provider', model:'Model', tier:'Tier', strong:'Build & Review', medium:'Analyze & Plan', light:'Read & Search', strongHint:'Writes code, fixes, reviews and verifies.', mediumHint:'Analysis, planning, requirements and scoping.', lightHint:'File lookup, search, reading and summaries.', moveUp:'Move up', moveDown:'Move down', orderHint:'Order matters: when models are equally busy, the higher one is used first. Reviews prefer a different model than the one that wrote the code.', noStrong:'No Build & Review model: implementation and review recipes cannot run.', oneStrong:'Only one Build & Review model: reviews will run on the same model that wrote the code. Add a second model for independent review.', noMedium:'No Analyze & Plan model: analysis tasks will use your Build & Review models, which may cost more.', add:'Add model', remove:'Remove', save:'Save changes', discard:'Discard changes', models:'Allowed models', routingHint:'Auto selects from these models for each task.', saved:'Changes apply after saving.', conflict:'Settings changed elsewhere. Discard this draft and try again.', failed:'Could not save settings.', unavailable:'Model catalog unavailable. Saved routes are still editable.', refresh:'Refresh models', empty:'Add at least one model to enable routing.', recipes:'Recipes', recipesHint:'Approved recipes stay unchanged. These settings are applied when a recipe runs.', recipeEnabled:'Use this recipe', recipeEnabledHint:'When off, the coordinator cannot start this recipe.', options:'Options', flow:'Flow', loopBadge:'Repeats until approved', parallelBadge:'Parallel', stepRole:'Step role', roleHint:'Select a role in the flow to tune it. A role used in several stages changes everywhere.', tierLocked:'Fixed to Build & Review by the recipe contract.', timeout:'Step timeout (minutes)', recipeDefault:'Recipe default', minutes:'{n} min', reset:'Reset', customized:'Customized', timeoutInvalid:'Step timeouts must be whole minutes from 1 to 240.' };
+var settingsEn = { title:'Auto Subagents', direction:'ltr', description:'Choose allowed models and routing tiers for Auto delegation.', enabled:'Enable automatic routing', provider:'Provider', model:'Model', tier:'Tier', strong:'Build & Review', medium:'Analyze & Plan', light:'Read & Search', strongHint:'Writes code, fixes, reviews and verifies.', mediumHint:'Analysis, planning, requirements and scoping.', lightHint:'File lookup, search, reading and summaries.', moveUp:'Move up', moveDown:'Move down', priority:'Priority {n}', strongAbout:'Your most capable models. They write and fix code, review it, and run final verification and security audits. Implementation, review and validation steps always run here.', mediumAbout:'Capable, cheaper models for thinking work: research, analysis, requirements, design, planning and scoping. With no model here, these tasks move up to Build & Review.', lightAbout:'Your fastest, cheapest models for simple work: finding files, searching, reading and summarizing known files. With no model here, these tasks move up to Analyze & Plan.', tiersNote:'Tasks move up to a stronger tier only when needed, never down.', orderHint:'Within each tier, the model with the lower number is used first when models are equally busy. Reviews prefer a different model than the one that wrote the code.', addTo:'Add a model to {tier}', emptyTier:'No models in this tier yet.', noStrong:'No Build & Review model: implementation and review recipes cannot run.', oneStrong:'Only one Build & Review model: reviews will run on the same model that wrote the code. Add a second model for independent review.', noMedium:'No Analyze & Plan model: analysis tasks will use your Build & Review models, which may cost more.', add:'Add model', remove:'Remove', save:'Save changes', discard:'Discard changes', models:'Allowed models', routingHint:'Auto selects from these models for each task.', saved:'Changes apply after saving.', conflict:'Settings changed elsewhere. Discard this draft and try again.', failed:'Could not save settings.', unavailable:'Model catalog unavailable. Saved routes are still editable.', refresh:'Refresh models', empty:'Add at least one model to enable routing.', recipes:'Recipes', recipesHint:'Approved recipes stay unchanged. These settings are applied when a recipe runs.', recipeEnabled:'Use this recipe', recipeEnabledHint:'When off, the coordinator cannot start this recipe.', options:'Options', flow:'Flow', loopBadge:'Repeats until approved', parallelBadge:'Parallel', stepRole:'Step role', roleHint:'Select a role in the flow to tune it. A role used in several stages changes everywhere.', tierLocked:'Fixed to Build & Review by the recipe contract.', timeout:'Step timeout (minutes)', recipeDefault:'Recipe default', minutes:'{n} min', reset:'Reset', customized:'Customized', timeoutInvalid:'Step timeouts must be whole minutes from 1 to 240.' };
 /*@@RECIPE_CATALOG@@*/
 var RECIPE_CATALOG = typeof RECIPE_CATALOG_DATA === 'undefined' ? [] : RECIPE_CATALOG_DATA;
 
@@ -54,7 +54,37 @@ function tierWarnings(value) {
   if (counts.medium === 0) warnings.push('noMedium');
   return warnings;
 }
-// allowedModels order is the routing priority among equally loaded routes of one tier.
+// 16px stroke icons for the model cards; buttons carry the accessible label.
+var SETTINGS_ICON_PATHS = {
+  up: 'M8 13V3M3.5 7.5 8 3l4.5 4.5',
+  down: 'M8 3v10M3.5 8.5 8 13l4.5-4.5',
+  trash: 'M2.5 4h11M6.5 4V2.5h3V4M4 4l.7 9.5h6.6L12 4M6.75 6.5v4.5M9.25 6.5v4.5',
+};
+function settingsIcon(name) {
+  return h('svg',{width:16,height:16,viewBox:'0 0 16 16',fill:'none',stroke:'currentColor',strokeWidth:1.5,strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':'true',focusable:'false'},h('path',{d:SETTINGS_ICON_PATHS[name]}));
+}
+// The router compares only routes of one tier, so the editor groups routes by tier and saves
+// allowedModels as strong, then medium, then light routes; order within a group is its priority.
+var TIER_ORDER = ['strong', 'medium', 'light'];
+function routeTier(value, route) {
+  var entry = value.modelTiers.find(function (item) { return item.provider === route.provider && item.model === route.model; });
+  return entry ? entry.tier : 'medium';
+}
+function groupRoutes(value) {
+  var groups = { strong: [], medium: [], light: [] };
+  value.allowedModels.forEach(function (route) { groups[routeTier(value, route)].push(route); });
+  return groups;
+}
+function routesFromGroups(value, groups) {
+  var allowedModels = [], modelTiers = [];
+  TIER_ORDER.forEach(function (tier) {
+    groups[tier].forEach(function (route) {
+      allowedModels.push({ provider: route.provider, model: route.model });
+      modelTiers.push({ provider: route.provider, model: route.model, tier: tier });
+    });
+  });
+  return Object.assign({}, value, { allowedModels: allowedModels, modelTiers: modelTiers });
+}
 function moveRoute(list, index, delta) {
   var target = index + delta;
   if (target < 0 || target >= list.length) return list;
@@ -173,15 +203,20 @@ function AutoSettings(props) {
   var recipeOverrides = value.recipeOverrides || {};
   var timeoutsInvalid = recipeOverridesInvalid(recipeOverrides);
   function change(next) { setError(null); setDraft({revision:draft ? draft.revision : snapshot.revision,value:next}); }
-  function remove(index) {
-    var route = value.allowedModels[index];
-    change(Object.assign({}, value, {allowedModels:value.allowedModels.filter(function (_,i) {return i!==index;}),modelTiers:value.modelTiers.filter(function (tier) {return tier.provider!==route.provider || tier.model!==route.model;})}));
+  var groups = groupRoutes(value);
+  function edit(tier, list) {
+    var next = Object.assign({}, groups); next[tier] = list;
+    change(routesFromGroups(value, next));
   }
-  function move(index, delta) {
-    change(Object.assign({}, value, {allowedModels:moveRoute(value.allowedModels,index,delta)}));
-  }
-  function setTier(route, tier) {
-    change(Object.assign({},value,{modelTiers:value.modelTiers.filter(function (item) {return item.provider!==route.provider || item.model!==route.model;}).concat([Object.assign({},route,{tier:tier})])}));
+  function remove(tier, index) { edit(tier, groups[tier].filter(function (_, i) { return i !== index; })); }
+  function move(tier, index, delta) { edit(tier, moveRoute(groups[tier], index, delta)); }
+  function add(tier, route) { edit(tier, groups[tier].concat([route])); }
+  // A route moved to another tier joins the end of that tier.
+  function setTier(from, index, to) {
+    var next = Object.assign({}, groups), route = groups[from][index];
+    next[from] = groups[from].filter(function (_, i) { return i !== index; });
+    next[to] = groups[to].concat([route]);
+    change(routesFromGroups(value, next));
   }
   async function save() {
     if (!draft || conflicted || invalid || timeoutsInvalid || busy || !snapshot.writable) return;
@@ -195,25 +230,29 @@ function AutoSettings(props) {
     h('fieldset',{disabled:busy || !snapshot.writable},
       h('label',{className:'ars-settings-toggle'},h('span',null,h('strong',null,t('enabled')),h('small',null,t('routingHint'))),h('input',{type:'checkbox',role:'switch','aria-label':t('enabled'),checked:value.enabled,onChange:function (event) {change(Object.assign({},value,{enabled:event.target.checked}));}})),
       h('div',{className:'ars-settings-section-title'},h('h2',null,t('models')),h('span',{className:'ars-settings-count'},value.allowedModels.length)),
-      value.allowedModels.length > 1 ? h('p',{className:'ars-settings-hint'},t('orderHint')) : null,
-      value.allowedModels.map(function (route,index) {
-        var tier=value.modelTiers.find(function (item) {return item.provider===route.provider && item.model===route.model;});
-        var current=tier?tier.tier:'medium', last=value.allowedModels.length-1;
-        return h('div',{key:route.provider+'\0'+route.model,className:'ars-settings-route'},
-          last>0 ? h('div',{className:'ars-settings-order'},
-            h('button',{type:'button',disabled:index===0,onClick:function () {move(index,-1);},'aria-label':t('moveUp')+' '+route.model,title:t('moveUp')},'\u2191'),
-            h('button',{type:'button',disabled:index===last,onClick:function () {move(index,1);},'aria-label':t('moveDown')+' '+route.model,title:t('moveDown')},'\u2193')) : null,
-          h('div',{className:'ars-settings-identity',dir:'ltr'},h('strong',null,route.model),h('span',null,route.provider)),
-          h('div',{className:'ars-settings-tier'},h('label',null,t('tier'),h('select',{'aria-label':t('tier')+' '+route.model,value:current,onChange:function (event) {setTier(route,event.target.value);}},['strong','medium','light'].map(function (item) {return h('option',{key:item,value:item},t(item));}))),
-            h('small',null,t(current+'Hint'))),
-          h('button',{type:'button',className:'ars-settings-remove',onClick:function () {remove(index);},'aria-label':t('remove')+' '+route.model},t('remove')));
+      h('p',{className:'ars-settings-hint'},t('orderHint')),
+      TIER_ORDER.map(function (tier) {
+        var list = groups[tier], last = list.length - 1;
+        return h('section',{key:tier,className:'ars-settings-group','data-tier':tier,'aria-label':t(tier)},
+          h('div',{className:'ars-settings-group-head'},h('h3',null,t(tier)),h('span',{className:'ars-settings-count'},list.length)),
+          h('p',{className:'ars-settings-group-about'},t(tier+'About')),
+          list.length ? h('div',{className:'ars-settings-routes'},list.map(function (route, index) {
+            return h('div',{key:route.provider+'\0'+route.model,className:'ars-settings-route'},
+              h('span',{className:'ars-settings-rank',title:t('priority',{n:index+1}),'aria-label':t('priority',{n:index+1})},String(index+1)),
+              h('div',{className:'ars-settings-identity',dir:'ltr',title:route.provider+' / '+route.model},h('strong',null,route.model),h('span',null,route.provider)),
+              h('div',{className:'ars-settings-actions-row'},
+                last>0 ? h('button',{type:'button',className:'ars-settings-icon',disabled:index===0,onClick:function () {move(tier,index,-1);},'aria-label':t('moveUp')+' '+route.model,title:t('moveUp')},settingsIcon('up')) : null,
+                last>0 ? h('button',{type:'button',className:'ars-settings-icon',disabled:index===last,onClick:function () {move(tier,index,1);},'aria-label':t('moveDown')+' '+route.model,title:t('moveDown')},settingsIcon('down')) : null,
+                h('button',{type:'button',className:'ars-settings-icon ars-settings-remove',onClick:function () {remove(tier,index);},'aria-label':t('remove')+' '+route.model,title:t('remove')},settingsIcon('trash'))),
+              h('select',{className:'ars-settings-move','aria-label':t('tier')+' '+route.model,title:t('tier'),value:tier,onChange:function (event) {setTier(tier,index,event.target.value);}},TIER_ORDER.map(function (item) {return h('option',{key:item,value:item},t(item));})));
+          })) : h('p',{className:'ars-settings-empty'},t('emptyTier')),
+          h('div',{className:'ars-settings-add'},h('label',null,h('select',{'aria-label':t('addTo',{tier:t(tier)}),value:'',onChange:function (event) {
+            if (event.target.value==='') return;
+            var route=candidates[Number(event.target.value)];
+            if (route) add(tier,route);
+          }},h('option',{value:''},t('addTo',{tier:t(tier)})),candidates.map(function (route,index) {return h('option',{key:route.provider+'\0'+route.model,value:String(index)},route.provider+' / '+route.model);})))));
       }),
-      h('div',{className:'ars-settings-add'},h('label',null,h('span',null,t('add')),h('select',{value:'',onChange:function (event) {
-        if (event.target.value==='') return;
-        var route=candidates[Number(event.target.value)];
-        if (route) change(Object.assign({},value,{allowedModels:value.allowedModels.concat([route]),modelTiers:value.modelTiers.concat([Object.assign({},route,{tier:'medium'})])}));
-      }},h('option',{value:''},t('add')),candidates.map(function (route,index) {return h('option',{key:route.provider+'\0'+route.model,value:String(index)},route.provider+' / '+route.model);}))),
-      h('button',{type:'button',onClick:function () {refreshCatalog(catalogRevision+1);}},t('refresh'))),
+      h('div',{className:'ars-settings-catalog'},h('p',{className:'ars-settings-hint'},t('tiersNote')),h('button',{type:'button',onClick:function () {refreshCatalog(catalogRevision+1);}},t('refresh'))),
       tierWarnings(value).map(function (key) {return h('p',{key:key,role:'status','data-warning':key},t(key));}),
       catalogError ? h('p',{role:'status'},t('unavailable')) : null,
       invalid ? h('p',{role:'alert'},t('empty')) : null,

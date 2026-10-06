@@ -271,16 +271,31 @@ button.ars-chip { cursor: pointer; }
 .ars-settings input[role="switch"]:checked::after { left: 18px; }
 .ars-settings-section-title { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .ars-settings-count { display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding-inline: 6px; border-radius: 7px; background: var(--as-soft); color: var(--as-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
-.ars-settings-route { display: flex; align-items: center; gap: 18px; padding: 18px 20px; border: 1px solid var(--as-line); border-radius: 12px; margin-bottom: 10px; background: var(--as-surface); }
+.ars-settings-routes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 8px; margin-bottom: 10px; }
+.ars-settings-route { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "rank identity actions" "move move move"; column-gap: 10px; row-gap: 8px; align-items: center; padding: 10px 12px; border: 1px solid var(--as-line); border-radius: 12px; background: var(--as-surface); }
+.ars-settings-route .ars-settings-rank { grid-area: rank; }
+.ars-settings-actions-row { grid-area: actions; display: flex; gap: 2px; }
+.ars-settings-route .ars-settings-identity { grid-area: identity; }
+.ars-settings-route .ars-settings-identity strong, .ars-settings-route .ars-settings-identity span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; overflow-wrap: normal; }
+.ars-settings-route .ars-settings-identity strong { font-size: 13px; }
+.ars-settings-route .ars-settings-identity span { font-size: 11px; margin-top: 0; }
+.ars-settings .ars-settings-move { grid-area: move; width: 100%; min-height: 30px; padding: 3px 8px; font-size: 12px; }
+.ars-settings .ars-settings-icon { display: inline-grid; place-items: center; width: 26px; height: 26px; min-height: 26px; padding: 0; border-color: transparent; background: transparent; color: var(--as-muted); }
+.ars-settings .ars-settings-icon:hover:not(:disabled) { color: var(--as-text); }
+.ars-settings .ars-settings-icon:disabled { opacity: .3; }
 .ars-settings-identity { flex: 1; min-width: 0; text-align: start; overflow-wrap: anywhere; }
 .ars-settings-identity strong { display: block; font-size: 14px; font-weight: 600; }
 .ars-settings-identity span { display: block; color: var(--as-muted); font-size: 12px; margin-top: 2px; }
-.ars-settings-route label { color: var(--as-muted); font-size: 12px; }
-.ars-settings-tier { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; max-width: 280px; }
-.ars-settings-tier small { color: var(--as-muted); font-size: 12px; text-align: end; }
-.ars-settings-order { display: flex; flex-direction: column; gap: 4px; }
-.ars-settings .ars-settings-order button { min-height: 28px; padding: 2px 8px; line-height: 1; }
+.ars-settings-rank { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding-inline: 5px; border-radius: 7px; background: var(--as-soft); color: var(--as-text); font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
 .ars-settings-hint { color: var(--as-muted); font-size: 13px; margin: 0 0 12px; }
+.ars-settings-group { padding: 18px 20px 6px; border: 1px solid var(--as-line); border-radius: 14px; background: var(--as-soft); margin-bottom: 16px; }
+.ars-settings-group-head { display: flex; align-items: center; gap: 10px; }
+.ars-settings-group h3 { font: inherit; font-size: 15px; font-weight: 650; margin: 0; }
+.ars-settings-group-about { color: var(--as-muted); font-size: 13px; line-height: 1.5; margin: 6px 0 14px; }
+.ars-settings-group .ars-settings-add { padding-block: 4px 12px; }
+.ars-settings-empty { color: var(--as-muted); font-size: 13px; font-style: italic; margin: 0 0 10px; }
+.ars-settings-catalog { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 26px; }
+.ars-settings-catalog .ars-settings-hint { margin: 0; }
 .ars-settings [data-warning] { margin: 0 0 10px; }
 .ars-settings button, .ars-settings select { font: inherit; font-size: 13px; line-height: 1.5; color: var(--as-text); padding: 9px 13px; min-height: 40px; border: 1px solid var(--as-line); border-radius: 8px; background: var(--as-surface); }
 .ars-settings select { max-width: 100%; cursor: pointer; }
@@ -300,11 +315,7 @@ button.ars-chip { cursor: pointer; }
 .ars-settings :focus-visible { outline: 2px solid var(--as-accent); outline-offset: 3px; }
 .ars-settings [role="alert"], .ars-settings [role="status"] { font-size: 13px; padding: 12px 14px; border-inline-start: 3px solid var(--as-accent); background: var(--as-soft); border-radius: 6px; }
 @media (max-width: 640px) {
-  .ars-settings-route { flex-wrap: wrap; gap: 12px; padding: 16px; }
-  .ars-settings-identity { flex-basis: 100%; }
-  .ars-settings-tier { flex: 1; align-items: stretch; max-width: none; }
-  .ars-settings-tier small { text-align: start; }
-  .ars-settings-order { flex-direction: row; order: 3; }
+  .ars-settings-group { padding: 14px; }
   .ars-settings .ars-settings-toggle { padding: 18px; }
   .ars-settings-add { flex-wrap: wrap; }
   .ars-settings-add label { flex-basis: 100%; }
