@@ -245,16 +245,34 @@ const routesWith = (routes, enabled = true) => ({ t, catalog: async () => ({ ok:
     allowedModels: routes.map(([model]) => ({ provider: 'p', model })),
     modelTiers: routes.filter(([, tier]) => tier).map(([model, tier]) => ({ provider: 'p', model, tier })) } }) });
 
-test('model rows show the selected tier description, priority hint and bounded reorder buttons', () => {
-  const html = renderToStaticMarkup(React.createElement(mod.__test.AutoSettings, routesWith([['a', 'strong'], ['b', 'medium']])));
-  assert.match(html, /<small>strongHint<\/small>/);
-  assert.match(html, /<small>mediumHint<\/small>/);
+test('models render in one section per tier, each with its own priority numbers, reorder buttons and add list', () => {
+  const html = renderToStaticMarkup(React.createElement(mod.__test.AutoSettings, routesWith([['m1', 'medium'], ['s1', 'strong'], ['s2', 'strong']])));
+  const sections = [...html.matchAll(/<section class="ars-settings-group" data-tier="(\w+)"/g)].map(m => m[1]);
+  assert.deepEqual(sections, ['strong', 'medium', 'light']);
+  const section = tier => html.split('data-tier="' + tier + '"')[1].split('<section')[0];
+  assert.deepEqual([...section('strong').matchAll(/<strong>(\w+)<\/strong>/g)].map(m => m[1]), ['s1', 's2']);
+  assert.deepEqual([...section('strong').matchAll(/class="ars-settings-rank"[^>]*>(\d+)</g)].map(m => m[1]), ['1', '2']);
+  assert.deepEqual([...section('medium').matchAll(/class="ars-settings-rank"[^>]*>(\d+)</g)].map(m => m[1]), ['1']);
+  assert.match(section('strong'), /strongAbout/);
+  assert.match(section('light'), /emptyTier/);
+  assert.match(section('light'), /aria-label="addTo tier=light"/);
+  assert.match(html, /disabled=""[^>]*aria-label="moveUp s1"/);
+  assert.match(html, /disabled=""[^>]*aria-label="moveDown s2"/);
+  assert.doesNotMatch(section('medium'), /moveUp/);
   assert.match(html, /orderHint/);
-  assert.match(html, /disabled=""[^>]*aria-label="moveUp a"/);
-  assert.match(html, /disabled=""[^>]*aria-label="moveDown b"/);
-  assert.doesNotMatch(html, /disabled=""[^>]*aria-label="moveDown a"/);
-  const single = renderToStaticMarkup(React.createElement(mod.__test.AutoSettings, routesWith([['a', 'strong']])));
-  assert.doesNotMatch(single, /orderHint|moveUp/);
+});
+
+test('grouped edits save strong, medium, light order with a tier entry per route', () => {
+  const { groupRoutes, routesFromGroups } = mod.__test;
+  const value = { enabled: true, recipeOverrides: { x: {} },
+    allowedModels: [{ provider: 'p', model: 'm1' }, { provider: 'p', model: 's1' }, { provider: 'p', model: 'u' }, { provider: 'p', model: 'l1' }],
+    modelTiers: [{ provider: 'p', model: 'm1', tier: 'medium' }, { provider: 'p', model: 's1', tier: 'strong' }, { provider: 'p', model: 'l1', tier: 'light' }] };
+  const groups = groupRoutes(value);
+  assert.deepEqual(JSON.parse(JSON.stringify(groups)), { strong: [{ provider: 'p', model: 's1' }], medium: [{ provider: 'p', model: 'm1' }, { provider: 'p', model: 'u' }], light: [{ provider: 'p', model: 'l1' }] });
+  const next = JSON.parse(JSON.stringify(routesFromGroups(value, { ...groups, medium: [groups.medium[1], groups.medium[0]] })));
+  assert.deepEqual(next.allowedModels.map(r => r.model), ['s1', 'u', 'm1', 'l1']);
+  assert.deepEqual(next.modelTiers.map(r => r.model + ':' + r.tier), ['s1:strong', 'u:medium', 'm1:medium', 'l1:light']);
+  assert.deepEqual(next.recipeOverrides, { x: {} });
 });
 
 test('tier warnings name missing or single Build & Review routes and a missing Analyze & Plan route', () => {

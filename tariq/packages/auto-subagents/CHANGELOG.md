@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Settings label tiers by job: Build & Review (`strong`), Analyze & Plan (`medium`) and Read & Search (`light`). Saved values, recipe metadata and the delegation `tier` enum keep the `strong`/`medium`/`light` ids. Each model row and recipe role shows its tier description.
-- Model rows have Move up/Move down buttons; `allowedModels` order is the priority among equally loaded routes of one tier. A hint explains that reviews prefer a different model than the writer.
+- Models are listed in one section per tier. Each section explains its tier, numbers its models by priority, has Move up/Move down buttons and its own add list. Model cards sit two per row and use icon buttons for moving and removing. The router compares only routes of one tier, so `allowedModels` is saved as strong, then medium, then light routes. A hint explains that reviews prefer a different model than the writer.
 - Enabled settings warn when no model is Build & Review, when only one is (reviews reuse the writer's model), and when no model is Analyze & Plan (analysis escalates to Build & Review).
 - Scope-only steps run on new medium roles: `audit-scope` (code-audit), `investigation-scope` (investigate) and `plan-evidence` (plan-to-packages). Scanning, gathering, packaging and checking stay strong. The three recipes need re-approval.
 
