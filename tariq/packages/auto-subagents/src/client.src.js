@@ -28,12 +28,13 @@ var ar = {
   "pill.running": "يشتغل", "pill.repair": "يصلّح", "pill.decision": "ينتظر قرارك", "pill.done": "اكتمل", "pill.failed": "توقف",
   "stage.analysis": "التحليل", "stage.decision": "قرارك", "stage.design": "التصميم", "stage.build": "التنفيذ", "stage.review": "المراجعة", "stage.validate": "التحقق",
   "stage.scope": "النطاق", "stage.scans": "الفحص", "stage.gather": "جمع الأدلة", "stage.check": "المراجعة المستقلة", "stage.evidence": "الأدلة", "stage.packages": "حزم العمل", "stage.verify": "التحقق", "stage.baseline": "خط الأساس", "stage.agents": "الوكلاء",
-  "state.done": "خلص", "state.active": "شغّال الحين", "state.pending": "ما بدأ", "state.failed": "فيه رفض", "state.decision": "ينتظر قرارك",
+  "state.stopped": "توقف", "detail.selected": "تفاصيل الوكيل المحدد", "detail.verdict": "قرار المراجعة",
+  "state.done": "خلص", "state.active": "شغّال الحين", "state.pending": "ما بدأ", "state.failed": "توقف", "state.decision": "ينتظر قرارك",
   "node.setup": "الإعداد", "node.analysis": "تحليل النطاق", "node.decision": "قرارك", "node.requirements": "المتطلبات", "node.draft": "مسودة التصميم",
   "node.dreview": "مراجعة التصميم", "node.plan": "الخطة", "node.implement": "التنفيذ", "node.reviewer": "مراجع {n}", "node.aggregate": "القرار", "node.validate": "التحقق النهائي",
   "running.now": "شغّال الحين", "agents": "الوكلاء", "agents.more": "+ {n} وكلاء خلصوا", "agents.all": "عرض الوكلاء ({n})", "agents.hide": "إخفاء",
   "open": "فتح", "read": "قراءة", "open.session": "فتح الجلسة", "read.session": "قراءة الجلسة",
-  "verdict.ok": "وافق", "verdict.no": "رفض",
+  "verdict.ok": "وافق", "verdict.no": "رفض", "verdict.failed": "فشل",
   "decision.title": "يحتاج قرارك قبل ما يكمّل", "decision.current": "الوضع الحالي:", "decision.recommended": "مقترح",
   "decision.decided": "قررته عنك ({n}) · تقدر تغيّره", "decision.send": "أرسل الجواب وكمّل", "decision.note": "يكمّل من بعد التحليل بدون ما يعيده",
   "decision.sent": "انرسل الجواب", "decision.count": "{n} سؤال", "decision.custom": "جواب ثاني…",
@@ -41,7 +42,7 @@ var ar = {
   "foot.error": "خطأ: {e}", "foot.cancelled": "انلغى",
   "loop": "حتى 3 جولات", "parallel": "بالتوازي", "reject": "رفض", "repair": "إصلاح ×{n}", "reject3": "رفض ×{n}",
   "done.n": "{label} خلصت · اعرضها", "done.hide": "إخفاء الخطوات اللي خلصت",
-  "legend.done": "خلص", "legend.active": "شغّال", "legend.decision": "ينتظرك", "legend.failed": "رفض", "legend.pending": "ما بدأ",
+  "legend.done": "خلص", "legend.active": "شغّال", "legend.decision": "ينتظرك", "legend.failed": "توقف", "legend.pending": "ما بدأ",
   "detail.empty": "انقر على أي كرت أو مرحلة لعرض التفاصيل", "detail.stage": "المرحلة", "detail.state": "الحالة", "detail.tier": "الـ tier",
   "detail.role": "الدور", "detail.provider": "المزوّد", "detail.outcome": "النتيجة",
   "detail.model": "الموديل", "detail.round": "الجولة", "detail.duration": "المدة", "detail.rounds": "{n} من 3",
@@ -54,12 +55,13 @@ var en = {
   "pill.running": "Running", "pill.repair": "Repairing", "pill.decision": "Needs your decision", "pill.done": "Done", "pill.failed": "Stopped",
   "stage.analysis": "Analysis", "stage.decision": "Decision", "stage.design": "Design", "stage.build": "Build", "stage.review": "Review", "stage.validate": "Validate",
   "stage.scope": "Scope", "stage.scans": "Scans", "stage.gather": "Gather evidence", "stage.check": "Independent check", "stage.evidence": "Evidence", "stage.packages": "Work packages", "stage.verify": "Verify", "stage.baseline": "Baseline", "stage.agents": "Agents",
-  "state.done": "Done", "state.active": "Running", "state.pending": "Not started", "state.failed": "Rejected", "state.decision": "Waiting for you",
+  "state.stopped": "Stopped", "detail.selected": "Selected agent details", "detail.verdict": "Review verdict",
+  "state.done": "Done", "state.active": "Running", "state.pending": "Not started", "state.failed": "Stopped", "state.decision": "Waiting for you",
   "node.setup": "Setup", "node.analysis": "Scoped analysis", "node.decision": "Your decision", "node.requirements": "Requirements", "node.draft": "Design draft",
   "node.dreview": "Design review", "node.plan": "Plan", "node.implement": "Implement", "node.reviewer": "Reviewer {n}", "node.aggregate": "Verdict", "node.validate": "Final validation",
   "running.now": "Running now", "agents": "Agents", "agents.more": "+ {n} finished agents", "agents.all": "Show agents ({n})", "agents.hide": "Hide",
   "open": "Open", "read": "Read", "open.session": "Open session", "read.session": "Read session",
-  "verdict.ok": "Approved", "verdict.no": "Rejected",
+  "verdict.ok": "Approved", "verdict.no": "Rejected", "verdict.failed": "Failed",
   "decision.title": "Needs your decision before continuing", "decision.current": "Current state:", "decision.recommended": "Recommended",
   "decision.decided": "Decided for you ({n}) · you can override", "decision.send": "Send answer and continue", "decision.note": "Continues after the analysis without redoing it",
   "decision.sent": "Answer sent", "decision.count": "{n} question(s)", "decision.custom": "Other answer…",
@@ -67,7 +69,7 @@ var en = {
   "foot.error": "Error: {e}", "foot.cancelled": "Cancelled",
   "loop": "up to 3 rounds", "parallel": "parallel", "reject": "rejected", "repair": "repair ×{n}", "reject3": "rejected ×{n}",
   "done.n": "{label} done · show", "done.hide": "Hide finished steps",
-  "legend.done": "Done", "legend.active": "Running", "legend.decision": "Waiting", "legend.failed": "Rejected", "legend.pending": "Not started",
+  "legend.done": "Done", "legend.active": "Running", "legend.decision": "Waiting", "legend.failed": "Stopped", "legend.pending": "Not started",
   "detail.empty": "Click a card or stage to see details", "detail.stage": "Stage", "detail.state": "State", "detail.tier": "Tier",
   "detail.role": "Role", "detail.provider": "Provider", "detail.outcome": "Outcome",
   "detail.model": "Model", "detail.round": "Round", "detail.duration": "Duration", "detail.rounds": "{n} of 3",
@@ -158,6 +160,28 @@ function stageTitle(t, id) { return Object.hasOwn(en, 'stage.' + id) ? t('stage.
 function agentTitle(t, agent) {
   return agent.role && agent.role !== 'other' && (en['node.' + agent.role] || /^r\d+$/.test(agent.role)) ? nodeTitle(t, agent.role) : agent.label || agent.role || '';
 }
+function nodeStatusTitle(t, status) {
+  return t('state.' + (status === 'failed' ? 'stopped' : status));
+}
+function verdictTitle(t, verdict) {
+  switch (verdict) {
+    case 'ok': return t('verdict.ok');
+    case 'no': return t('verdict.no');
+    case 'failed': return t('verdict.failed');
+    default: return verdict;
+  }
+}
+function NodeCaption(props) {
+  var key = props.focused || props.selected;
+  // The empty caption retains layout so node blur cannot move a pressed graph control.
+  if (!key) return h('div', { className: 'ars-node-caption', 'data-recipe-node-caption': '', 'aria-hidden': true });
+  var latest = nodesOf(props.state).latest, agent = latest[key];
+  var status = key !== 'decision' ? nodeState(agent) : !isFeatureRecipe(props.state) ? stagesOf(props.state).decision.state
+    : props.state.status === 'needs_decision' ? 'decision' : props.state.resumed || latest.requirements ? 'done' : 'pending';
+  return h('div', { className: 'ars-node-caption', 'data-recipe-node-caption': '' },
+    (agent ? agentTitle(props.t, agent) : nodeTitle(props.t, key)) + ': ' + nodeStatusTitle(props.t, status));
+}
+
 function selectedStage(state, key) {
   var a = nodesOf(state).latest[key];
   return a ? agentStage(state, a) : key === 'decision' ? 'decision' : stageOfNode(key);
@@ -255,19 +279,19 @@ function layoutGraph(latest, reviewerRoles, showDone, presentation) {
   var hiddenList = Object.keys(hidden);
   if (hiddenList.length) delete hidden[hiddenList[hiddenList.length - 1]];
   if (Object.keys(hidden).length < 2) hidden = {};
-  var pos = {}, y = 0, gap = compact ? 24 : 32, pad = compact ? 18 : 26;
+  var pos = {}, y = 0, gap = compact ? 16 : 32, pad = compact ? 16 : 26;
   ["setup", "analysis", "decision", "requirements"].forEach(function (id) { if (!hidden[id]) { pos[id] = { x: NX, y: y, w: NW }; y += NH + gap; } });
   var design = ["draft", "dreview"].filter(function (id) { return !hidden[id]; });
   if (design.length) { y += pad; design.forEach(function (id) { pos[id] = { x: NX, y: y, w: NW }; y += NH + gap; }); y += 14; }
   if (!hidden.plan) { pos.plan = { x: NX, y: y, w: NW }; y += NH + gap; }
-  y += pad; pos.implement = { x: NX, y: y, w: NW }; y += NH + (compact ? 38 : 50);
+  y += pad; pos.implement = { x: NX, y: y, w: NW }; y += NH + (compact ? 28 : 50);
   var rs = reviewerRoles.length ? reviewerRoles : ["r1", "r2"];
   var rw = compact ? NW : rs.length <= 2 ? 210 : Math.floor((GW - 80 - (rs.length - 1) * 16) / rs.length);
   var spacing = compact ? 24 : 16;
   var startX = compact ? (GW - rs.length * rw - (rs.length - 1) * spacing) / 2 : 64;
   rs.forEach(function (r, i) { pos[r] = { x: startX + i * (rw + spacing), y: y, w: rw }; });
   if (!compact && rs.length === 2) pos[rs[1]].x = 290;
-  y += NH + (compact ? 38 : 50);
+  y += NH + (compact ? 28 : 50);
   pos.aggregate = { x: NX, y: y, w: NW }; y += NH + gap + 14;
   pos.validate = { x: NX, y: y, w: NW }; y += NH + 8;
   return { pos: pos, hiddenCount: Object.keys(hidden).length, H: y, reviewers: rs, W: GW, NH: NH, NW: NW, NX: NX, CX: CX };
@@ -287,7 +311,9 @@ function GenericDecisionNode(props) {
   var button = h('button', { type: 'button', className: props.compact ? 'ars-icon-node' : 'ars-generic-node',
     'data-role': 'decision', 'data-state': props.status, 'aria-pressed': props.selected === 'decision',
     'aria-label': nodeTitle(props.t, 'decision') + ': ' + props.t('state.' + props.status),
-    onClick: function () { props.onSelect(props.selected === 'decision' ? null : 'decision'); },
+    onFocus: props.compact ? function () { props.onFocusNode('decision'); } : undefined,
+    onBlur: props.compact ? function () { props.onFocusNode(null); } : undefined,
+    onClick: function (event) { props.onSelect(props.selected === 'decision' ? null : 'decision', event.currentTarget); },
     onKeyDown: function (e) { genericNodeKeyDown(e, props.onSelect); }
   }, props.compact ? h(NodeIcon, { role: 'decision' }) : nodeTitle(props.t, 'decision'));
   return props.compact ? h(HoverCard, { inline: true, anchor: button,
@@ -298,16 +324,19 @@ function GenericDecisionNode(props) {
 function GenericGraph(props) {
   var t = props.t, s = props.state, latest = nodesOf(s).latest, stages = stagesOf(s);
   var compact = props.presentation === 'compact';
-  return h('div', { className: 'ars-graph ars-generic-graph', 'data-presentation': props.presentation || 'full' }, stageOrderOf(s).map(function (id) {
+  return h('div', { className: 'ars-graph ars-generic-graph', 'data-presentation': props.presentation || 'full' },
+    compact ? h(NodeCaption, props) : null, stageOrderOf(s).map(function (id) {
     var keys = nodeKeysForStage(s, id), state = stages[id].state;
     return h('section', { key: id, className: 'ars-phase-group', 'data-stage': id, 'data-hl': props.hlStage === id, 'aria-label': stageTitle(t, id) },
       h('h4', null, stageTitle(t, id), h('span', { className: 'ars-phase-state' }, t('state.' + state))),
-      id === 'decision' ? h(GenericDecisionNode, { t: t, state: s, status: state, selected: props.selected, onSelect: props.onSelect, compact: compact, now: props.now }) : null,
+      id === 'decision' ? h(GenericDecisionNode, { t: t, state: s, status: state, selected: props.selected, onSelect: props.onSelect, compact: compact, now: props.now, onFocusNode: props.onFocusNode }) : null,
       h('div', { className: compact ? 'ars-phase-lane' : undefined }, keys.map(function (key) {
         var a = latest[key], status = nodeState(a);
         var button = h('button', { key: key, type: 'button', className: compact ? 'ars-icon-node' : 'ars-generic-node', 'data-role': key, 'data-state': status,
-          'aria-pressed': props.selected === key, 'aria-label': agentTitle(t, a) + ': ' + t('state.' + status),
-          onClick: function () { props.onSelect(props.selected === key ? null : key); },
+          'aria-pressed': props.selected === key, 'aria-label': agentTitle(t, a) + ': ' + nodeStatusTitle(t, status),
+          onFocus: compact ? function () { props.onFocusNode(key); } : undefined,
+          onBlur: compact ? function () { props.onFocusNode(null); } : undefined,
+          onClick: function (event) { props.onSelect(props.selected === key ? null : key, event.currentTarget); },
           onKeyDown: function (e) { genericNodeKeyDown(e, props.onSelect); } },
           h(NodeIcon, { role: a.role }), compact ? null : h('span', { className: 'ars-generic-title' }, agentTitle(t, a)),
           !compact && a.model ? ltr(shortModel(a.model), 'ars-model') : null,
@@ -320,12 +349,12 @@ function GenericGraph(props) {
 
 function FlowGraph(props) {
   var markerPrefix = 'ars-ah-' + React.useId().replace(/:/g, '') + '-';
-  if (!isFeatureRecipe(props.state)) return h(GenericGraph, props);
+  var focused = useState(null), compact = props.presentation === 'compact';
+  if (!isFeatureRecipe(props.state)) return h(GenericGraph, Object.assign({}, props, { focused: focused[0], onFocusNode: focused[1] }));
   var t = props.t, s = props.state, sel = props.selected;
   var n = nodesOf(s), latest = n.latest;
   var decisionNode = s.status === "needs_decision" ? { state: "decision" } : (s.resumed || latest.requirements) ? { state: "done" } : { state: "pending" };
   var reviewerRoles = Object.keys(latest).filter(function (r) { return /^r\d+$/.test(r); }).sort();
-  var compact = props.presentation === 'compact';
   var L = layoutGraph(latest, reviewerRoles, props.showDone, props.presentation);
   var pos = L.pos, GW = L.W, NH = L.NH, NW = L.NW, NX = L.NX, CX = L.CX;
   var stateOf = function (role) { return role === "decision" ? decisionNode.state : nodeState(latest[role]); };
@@ -370,8 +399,10 @@ function FlowGraph(props) {
     if (a && a.model) chips.push(h("span", { key: "m", className: "ars-chip model" }, shortModel(a.model)));
     var time = a ? (a.outcome === undefined ? fmt(props.now - (a.startedAt || props.now)) : a.endedAt && a.startedAt ? fmt(a.endedAt - a.startedAt) : "") : "";
     var button = h("button", { key: role, type: "button", className: compact ? "ars-icon-node" : "ars-fnode", "data-role": role, "data-state": state, "aria-pressed": sel === role,
-      style: compact ? { width: p.w, height: NH } : { left: p.x, top: p.y, width: p.w, height: NH }, "aria-label": nodeTitle(t, role) + ": " + t("state." + state),
-      onClick: function () { props.onSelect(sel === role ? null : role); },
+      style: compact ? { width: p.w, height: NH } : { left: p.x, top: p.y, width: p.w, height: NH }, "aria-label": nodeTitle(t, role) + ": " + nodeStatusTitle(t, state),
+      onFocus: compact ? function () { focused[1](role); } : undefined,
+      onBlur: compact ? function () { focused[1](null); } : undefined,
+      onClick: function (event) { props.onSelect(sel === role ? null : role, event.currentTarget); },
       onKeyDown: function (e) {
         if (e.key === "ArrowDown" || e.key === "ArrowUp") {
           e.preventDefault();
@@ -388,6 +419,7 @@ function FlowGraph(props) {
       h(HoverCard, { inline: true, anchor: button, content: h(DetailPanel, { t: t, state: s, role: role, now: props.now, preview: true }) })) : button;
   });
   return h("div", { className: "ars-graph", "data-presentation": props.presentation || "full" },
+    compact ? h(NodeCaption, Object.assign({}, props, { focused: focused[0] })) : null,
     h("div", { className: "ars-legend" }, ["done", "active", "decision", "failed", "pending"].map(function (k) { return h("span", { key: k }, h("i", { className: "lg-" + k }), t("legend." + k)); })),
     L.hiddenCount || props.showDone ? h("button", { type: "button", className: "ars-collapsed", "aria-expanded": !!props.showDone, onClick: props.onToggleDone },
       h(Icon, { name: "check" }), props.showDone ? t("done.hide") : t("done.n", { label: steps(t, L.hiddenCount) }), h("span", { className: "ars-chev" }, h(Icon, { name: "chev" }))) : null,
@@ -406,9 +438,10 @@ function DetailPanel(props) {
   var state = role !== "decision" ? nodeState(a) : !isFeatureRecipe(props.state) ? stagesOf(props.state).decision.state
     : props.state.status === "needs_decision" ? "decision"
     : recordedDetails && !(props.state.resumed || n.latest.requirements) ? "pending" : "done";
-  var rows = [[t("detail.stage"), stageTitle(t, selectedStage(props.state, role))], [t("detail.state"), t("state." + state)]];
+  var rows = [[t("detail.stage"), stageTitle(t, selectedStage(props.state, role))], [t("detail.state"), nodeStatusTitle(t, state)]];
   if (recordedDetails && a && a.role) rows.push([t("detail.role"), a.role]);
   if (recordedDetails && a && a.provider) rows.push([t("detail.provider"), ltr(a.provider)]);
+  if (recordedDetails && a && a.verdict) rows.push([t("detail.verdict"), verdictTitle(t, a.verdict)]);
   if (recordedDetails && a && a.outcome) rows.push([t("detail.outcome"), a.outcome]);
   if (a && a.tier) rows.push([t("detail.tier"), ltr(a.tier)]);
   if (a && a.model) rows.push([t("detail.model"), ltr(recordedDetails ? a.model : shortModel(a.model))]);
@@ -424,7 +457,7 @@ function DetailPanel(props) {
     h("dl", { className: "ars-kv" }, rows.map(function (r, i) { return [h("dt", { key: "k" + i }, r[0]), h("dd", { key: "v" + i }, r[1])]; })),
     a && a.summary ? h("p", { className: "ars-summary" }, a.summary) : null,
     findings.length ? h("ul", { className: "ars-findings" }, findings.map(function (f, i) { return h("li", { key: i }, h("span", { className: "ars-sev" }, String(f.severity).toUpperCase()), h("span", null, f.problem)); })) : null,
-    !props.preview && hist.length > 1 ? h("div", { className: "ars-hist" }, hist.map(function (x) { return h("button", { key: x.seq, type: "button", className: "ars-chip", onClick: function () { props.openSession(x.childId); } }, "#" + x.round + (x.verdict ? " · " + t("verdict." + x.verdict) : "")); })) : null,
+    !props.preview && hist.length > 1 ? h("div", { className: "ars-hist" }, hist.map(function (x) { return h("button", { key: x.seq, type: "button", className: "ars-chip", onClick: function () { props.openSession(x.childId); } }, "#" + x.round + (x.verdict ? " · " + verdictTitle(t, x.verdict) : "")); })) : null,
     !props.preview && a && a.childId ? h("div", { className: "ars-dactions" },
       h("button", { type: "button", className: cls("ars-btn", running ? "primary" : ""), onClick: function () { props.openSession(a.childId); } }, h(Icon, { name: running ? "open" : "doc" }), running ? t("open.session") : t("read.session"))) : null);
 }
@@ -520,12 +553,36 @@ function RecipeExecutionGraph(props) {
 function RecipeExecutionMap(props) {
   var s = props.matched.data, t = props.t;
   var selected = useState(null), done = useState(false);
+  var detailRef = useRef(null), selectedAnchor = useRef(null), restoreFocus = useRef(false);
   var now = useNow(s.status === 'running');
+  var select = function (role, anchor) {
+    if (anchor) selectedAnchor.current = anchor;
+    restoreFocus.current = role === null;
+    selected[1](role);
+  };
+  useEffect(function () {
+    if (selected[0] !== null && detailRef.current) {
+      detailRef.current.scrollIntoView({ block: 'nearest' });
+      detailRef.current.focus({ preventScroll: true });
+    }
+    else if (restoreFocus.current && selectedAnchor.current) {
+      restoreFocus.current = false;
+      selectedAnchor.current.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      selectedAnchor.current.focus({ preventScroll: true });
+    }
+  }, [selected[0]]);
   return h('section', { className: 'ars-execution ars-recipe-surface', 'data-recipe-execution': '', 'data-run-id': s.runId },
     h('div', { className: 'ars-execution-title' }, s.title || s.recipe),
+    selected[0] ? h('div', { ref: detailRef, tabIndex: -1, className: 'ars-selected-details', 'data-recipe-selected-details': '', role: 'region', 'aria-label': t('detail.selected'),
+      onKeyDown: function (event) {
+        if (event.key !== 'Escape') return;
+        event.preventDefault();
+        event.stopPropagation();
+        select(null);
+      } },
+      h(DetailPanel, { t: t, state: s, role: selected[0], now: now, recordedDetails: true, openSession: props.openSession, onSelect: select })) : null,
     h(FlowGraph, { presentation: 'compact', t: t, state: s, now: now, selected: selected[0], showDone: done[0],
-      onSelect: selected[1], onToggleDone: function () { done[1](!done[0]); } }),
-    selected[0] ? h(DetailPanel, { t: t, state: s, role: selected[0], now: now, recordedDetails: true, openSession: props.openSession, onSelect: selected[1] }) : null);
+      onSelect: select, onToggleDone: function () { done[1](!done[0]); } }));
 }
 
 /*@@CSS@@*/

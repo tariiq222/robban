@@ -1,4 +1,4 @@
-- text: Recipe flow fixture Done Running Waiting Rejected Not started Design · up to 3 rounds Build + Review · up to 3 rounds rejected rejected parallel
+- text: Recipe flow fixture Done Running Waiting Stopped Not started Design · up to 3 rounds Build + Review · up to 3 rounds rejected rejected parallel
 - 'button "Setup: Not started"'
 - 'button "Scoped analysis: Not started"'
 - 'button "Your decision: Not started"'

@@ -30,6 +30,10 @@
   white-space: nowrap;
 }
 
+.activeChildren {
+  flex-shrink: 0;
+}
+
 .card {
   display: flex;
   flex-wrap: wrap;
@@ -122,6 +126,11 @@
   gap: 8px;
   color: var(--dsw-alias-label-secondary);
   padding: 8px;
+}
+
+.graphNotice {
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .activities {

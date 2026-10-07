@@ -51,6 +51,8 @@ function useExecution(props: ExecutionHooks) {
   const state = props.useSessions(value => value)
   const statuses = props.useSessionStatus(value => value)
   const sessionRunning = props.useSession(value => value.running)
+  const sessionBlank = props.useSession(value => value.blank)
+  const sessionOpen = props.useSession(value => value.openState === 'open' && !value.hasMore)
   const lastAgentError = props.useSession(value => value.lastAgentError)
   const activity = props.useActivity(value => value)
   const rootRunning = statuses.get(props.sessionId)?.running ?? state.byId[props.sessionId]?.running ?? sessionRunning
@@ -81,11 +83,14 @@ function useExecution(props: ExecutionHooks) {
     return result
   }, [state, statuses, props.sessionId, rootRunning, activity.phase, lastAgentError])
   const childRunning = nodes.slice(1).filter(node => node.status === 'running').length
+  const notStarted = sessionBlank && sessionOpen && activity.turn === undefined && nodes[0]?.model?.lastUsed == null
+    && !rootRunning && childRunning === 0 && lastAgentError === null && activity.phase !== 'error'
   const phase: SubagentKey = !rootRunning && (lastAgentError !== null || activity.phase === 'error') ? 'execution.phase.error'
     : rootRunning ? activity.phase === 'tools' ? 'execution.phase.tools'
       : activity.phase === 'responding' ? 'execution.phase.responding' : 'execution.phase.thinking'
-      : activity.phase === 'completed' ? 'execution.phase.completed' : 'execution.phase.inactive'
-  return { state, nodes, activity, phase, rootRunning, childRunning, childrenContinue: !rootRunning && childRunning > 0 }
+      : activity.phase === 'completed' ? 'execution.phase.completed'
+        : notStarted ? 'execution.phase.notStarted' : 'execution.phase.inactive'
+  return { state, nodes, activity, phase, notStarted, rootRunning, childRunning, childrenContinue: !rootRunning && childRunning > 0 }
 }
 
 function modelLabel(model: SessionProjectionMap['modelSelection'] | undefined, t: ExecutionProps['t']): string {
@@ -107,6 +112,7 @@ export function ExecutionSummary(props: ExecutionProps) {
   >
     <StateDot state={value.rootRunning || value.childRunning > 0 ? 'ongoing' : value.phase === 'execution.phase.error' ? 'error' : value.activity.phase === 'completed' ? 'done' : 'idle'} />
     <span>{props.t(value.phase)}</span>
+    {value.childRunning > 0 && <span className={`${css.detail} ${css.activeChildren}`}>{props.t(value.childRunning === 1 ? 'execution.activeChildren.one' : 'execution.activeChildren.other', { count: value.childRunning })}</span>}
     {value.childrenContinue && <span className={css.detail}>{props.t('execution.childrenContinue')}</span>}
   </button>
 }
@@ -121,8 +127,9 @@ export function ExecutionCard(props: ExecutionProps) {
   return <div className={css.card} data-execution-card="">
     <div className={css.cardText}>
       <span>{props.t(value.phase)}</span>
+      {value.childRunning > 0 && <span className={css.detail}>{props.t(value.childRunning === 1 ? 'execution.activeChildren.one' : 'execution.activeChildren.other', { count: value.childRunning })}</span>}
       {value.childrenContinue && <span className={css.detail}>{props.t('execution.childrenContinue')}</span>}
-      <span className={css.detail}>{props.t('execution.lastUsedModel', { model: modelLabel(value.nodes[0]?.model, props.t) })}</span>
+      {!value.notStarted && <span className={css.detail}>{props.t('execution.lastUsedModel', { model: modelLabel(value.nodes[0]?.model, props.t) })}</span>}
     </div>
     <Button variant="ghost" size="sm" onClick={props.openExecution}>{props.t('execution.open')}</Button>
   </div>
@@ -158,8 +165,15 @@ export function ExecutionPanel(props: ExecutionPanelProps) {
   const [tab, setTab] = useState<'activity' | 'agents' | 'graph'>('activity')
   const [selected, setSelected] = useState<SessionId>()
   const id = useId()
+  const panel = useRef<HTMLElement>(null)
+  const focusAgents = useRef(false)
   const requested = useRef(new Set<SessionId>())
   const sessionKey = useRef(props.sessionId)
+  useEffect(() => {
+    if (tab !== 'agents' || !focusAgents.current) return
+    focusAgents.current = false
+    panel.current?.querySelector<HTMLButtonElement>('[role="tab"][aria-selected="true"]')?.focus()
+  }, [tab])
   useEffect(() => {
     if (sessionKey.current !== props.sessionId) {
       sessionKey.current = props.sessionId
@@ -185,12 +199,13 @@ export function ExecutionPanel(props: ExecutionPanelProps) {
   function openMainNode(node: ExecutionNode): void {
     if (node.address !== undefined) props.openChild(node.address)
   }
-  return <section className={css.panel} data-execution-panel="">
+  return <section ref={panel} className={css.panel} data-execution-panel="">
     <div className={css.heading}><IconBranchOutlineRegular /><span>{props.t('execution.title')}</span></div>
     <div className={css.overview}>
       <span>{props.t(value.phase)}</span>
+      {value.childRunning > 0 && <span className={css.detail}>{props.t(value.childRunning === 1 ? 'execution.activeChildren.one' : 'execution.activeChildren.other', { count: value.childRunning })}</span>}
       {value.childrenContinue && <span className={css.detail}>{props.t('execution.childrenContinue')}</span>}
-      <span className={css.detail}>{props.t('execution.lastUsedModel', { model: modelLabel(value.nodes[0]?.model, props.t) })}</span>
+      {!value.notStarted && <span className={css.detail}>{props.t('execution.lastUsedModel', { model: modelLabel(value.nodes[0]?.model, props.t) })}</span>}
     </div>
     <SegmentedTabs items={tabs} value={tab} onChange={setTab} label={props.t('execution.title')} />
     <div role="tabpanel" id={`${id}-panel`} aria-labelledby={`${id}-${tab}`} className={css.content}>
@@ -205,7 +220,13 @@ export function ExecutionPanel(props: ExecutionPanelProps) {
           </li>)}</ol>
         </>}
       </> : tab === 'graph' ? props.renderSlotChain('execution.graph', { nodes: graphNodes }, {
-        fallback: <div className={css.notice}>{props.t('execution.noRecipe')}</div>,
+        fallback: <div className={`${css.notice} ${css.graphNotice}`}>
+          <span>{props.t('execution.noRecipe')}</span>
+          <Button variant="ghost" size="sm" onClick={() => {
+            focusAgents.current = true
+            setTab('agents')
+          }}>{props.t('execution.viewAgents')}</Button>
+        </div>,
       }) : <>
         <div className={css.agents}>
           {value.nodes.map(node => <div key={node.id} className={css.branch}>

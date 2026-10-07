@@ -3,4 +3,6 @@
   - tab "Activity"
   - tab "Agents"
   - tab "Graph" [selected]
-- tabpanel "Graph": No recorded recipe flow in the loaded history. View Agents for session details.
+- tabpanel "Graph":
+  - text: No recorded recipe flow in the loaded history. View Agents for session details.
+  - button "View agents"

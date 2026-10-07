@@ -18,7 +18,7 @@
 - text: 探索未至之境 预览版
 - button "选择工作区": workspace
 - button "标准模式"
-- text: 当前未运行 上次使用的模型：模型未知
+- text: 尚未开始
 - button "查看执行"
 - textbox "描述你想要构建的内容, / 调用指令, @ 文件或对话"
 - button "添加文件或调用指令"

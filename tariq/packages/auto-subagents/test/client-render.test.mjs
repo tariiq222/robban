@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { React, renderToStaticMarkup } from './support/react.mjs';
 
-function loadBundle() {
+function loadBundle(react = React) {
   const read = rel => readFileSync(new URL('../' + rel, import.meta.url), 'utf8');
   const plain = rel => read(rel).replace(/^export\s+(const|function|let)\s/gm, '$1 ');
   const source = read('src/client.src.js')
@@ -18,7 +18,7 @@ function loadBundle() {
   const code = 'window.__ModuleLoader__.load({id:"dsh-auto-subagents",factory:(require)=>{var module={exports:{}};var exports=module.exports;\n' + source + '\nreturn module.exports;}});';
   let exportsOf;
   const sandbox = {
-    window: { __ModuleLoader__: { load: ({ id, factory }) => { assert.equal(id, 'dsh-auto-subagents'); exportsOf = factory(name => { if (name === 'react') return React; if (name === '@deepseek-ai/dsh-client-ui-primitives') return { HoverCard: props => { hoverCards.push(props); return props.anchor; } }; throw new Error(`unexpected require ${name}`); }); } } },
+    window: { __ModuleLoader__: { load: ({ id, factory }) => { assert.equal(id, 'dsh-auto-subagents'); exportsOf = factory(name => { if (name === 'react') return react; if (name === '@deepseek-ai/dsh-client-ui-primitives') return { HoverCard: props => { hoverCards.push(props); return props.anchor; } }; throw new Error(`unexpected require ${name}`); }); } } },
     document: undefined, setInterval, clearInterval, console,
   };
   vm.runInNewContext(process.env.DSH_TEST_BUILT_CLIENT === '1' ? read('lib/client.js') : code, sandbox);
@@ -425,4 +425,108 @@ test('generic Decision hover follows the owning recipe stage after an implementa
   const content = renderToStaticMarkup(card.content);
   assert.match(content, /<dt[^>]*>detail.state<\/dt><dd[^>]*>state.done<\/dd>/);
   assert.doesNotMatch(content, /state.pending/);
+});
+
+
+function withInitialSelection(role) {
+  return loadBundle({ ...React, useState: initial => React.useState(initial === null ? role : initial) });
+}
+
+function registeredEnglishCopy() {
+  const stop = () => {};
+  let copy;
+  mod.apply({
+    configForms: { get: () => ({}), whileServed: () => stop },
+    remote: { session: {} }, uiWorkspace: { openSession: stop },
+    locale: { register: (_namespace, dictionaries) => { copy = dictionaries.en; return stop; } },
+    uiConversation: { events: { register: () => stop } },
+    effect: factory => factory(),
+    slots: { inject: (_name, factory) => factory(), register: () => stop },
+  });
+  return key => { assert.ok(Object.hasOwn(copy, key), `missing locale key ${key}`); return copy[key]; };
+}
+
+test('recorded verdict details localize approved, rejected and failed reviews', () => {
+  const translate = registeredEnglishCopy();
+  for (const [verdict, label] of [['ok', 'Approved'], ['no', 'Rejected'], ['failed', 'Failed']]) {
+    const node = fold([RS, A(8, 'review one', 'r1'), V(8, verdict), E(8)]);
+    const html = renderToStaticMarkup(React.createElement(mod.__test.DetailPanel, {
+      t: translate, state: node.data, role: 'r1', preview: true,
+    }));
+    assert.match(html, new RegExp('Review verdict</dt><dd[^>]*>' + label + '</dd>'));
+  }
+});
+
+test('recorded verdict details and round history retain an unknown verdict as data', () => {
+  const translate = registeredEnglishCopy();
+  const node = fold([RS, A(8, 'review one', 'r1'), V(8, 'future-review'), E(8),
+    A(9, 'review again', 'r1', 2), V(9, 'ok'), E(9)]);
+  const html = renderToStaticMarkup(React.createElement(mod.__test.DetailPanel, {
+    t: translate, state: node.data, role: 'r1', recordedDetails: true, onSelect() {}, openSession() {},
+  }));
+  assert.match(html, /future-review/);
+  const preview = renderToStaticMarkup(React.createElement(mod.__test.DetailPanel, {
+    t: translate, state: fold([RS, A(8, 'review one', 'r1'), V(8, 'future-review'), E(8)]).data,
+    role: 'r1', preview: true,
+  }));
+  assert.match(preview, /Review verdict<\/dt><dd[^>]*>future-review<\/dd>/);
+});
+
+test('selected compact details precede the graph in a bounded region near controls', () => {
+  const selectedMod = withInitialSelection('implement');
+  const node = fold([RS, A(7, 'implement', 'implement')]);
+  const html = renderToStaticMarkup(React.createElement(selectedMod.__test.RecipeExecutionGraph, {
+    sessionId: 's', matched: node, t, openSession() {},
+  }));
+  const details = html.indexOf('data-recipe-selected-details');
+  assert.ok(details >= 0, 'selected details have their owned region');
+  assert.ok(details < html.indexOf('data-presentation="compact"'), 'details precede the long graph');
+  assert.match(html, /aria-label="detail.selected"/);
+  assert.match(html, /tabindex="-1"[^>]*data-recipe-selected-details/);
+  assert.match(html, /aria-label="close"/);
+});
+
+test('selected compact aggregate has a readable stopped caption while its actual negative verdict remains recorded', () => {
+  const node = fold([RS, A(10, 'aggregate', 'aggregate'), V(10, 'no'), E(10, 'error')]);
+  const html = renderToStaticMarkup(React.createElement(mod.__test.FlowGraph, {
+    t, state: node.data, now: 0, presentation: 'compact', selected: 'aggregate', onSelect() {},
+  }));
+  assert.match(html, /aria-label="node.aggregate: state.stopped"/);
+  assert.match(html, /data-recipe-node-caption[^>]*>node.aggregate.*state.stopped/);
+  const details = renderToStaticMarkup(React.createElement(mod.__test.DetailPanel, {
+    t, state: node.data, role: 'aggregate', preview: true,
+  }));
+  assert.match(details, /<dt[^>]*>detail.state<\/dt><dd[^>]*>state.stopped<\/dd>/);
+  assert.match(details, /detail.verdict<\/dt><dd[^>]*>verdict.no<\/dd>/);
+});
+
+test('compact map geometry keeps targets while shortening the inactive prefix and review spacing', () => {
+  const full = mod.__test.layoutGraph({}, ['r1', 'r2'], true);
+  const compact = mod.__test.layoutGraph({}, ['r1', 'r2'], true, 'compact');
+  assert.equal(compact.NH, 40);
+  assert.ok(compact.H < 720, 'compact map fits more stages in the visible pane');
+  assert.equal(full.NH, 64);
+  assert.equal(full.W, 520);
+});
+
+test('execution map reduced-motion scope includes animated connectors and node states', () => {
+  const css = readFileSync(new URL('../src/card.css', import.meta.url), 'utf8');
+  const reduced = css.match(/@media \(prefers-reduced-motion: reduce\)\s*\{([^}]*}[^}]*)\}/g).join('');
+  assert.match(reduced, /\.ars-execution/);
+  assert.match(reduced, /animation:\s*none/);
+});
+
+test('stopped state covers cancelled implementers and errored reviewers while retaining rejected verdicts', () => {
+  const node = fold([RS, A(7, 'implement', 'implement'), E(7, 'cancelled'),
+    A(8, 'review one', 'r1'), V(8, 'no'), E(8, 'error')]);
+  const html = renderToStaticMarkup(React.createElement(mod.__test.FlowGraph, {
+    t, state: node.data, now: 0, presentation: 'compact', selected: 'r1', onSelect() {},
+  }));
+  assert.match(html, /aria-label="node.implement: state.stopped"/);
+  assert.match(html, /aria-label="node.reviewer n=1: state.stopped"/);
+  const details = renderToStaticMarkup(React.createElement(mod.__test.DetailPanel, {
+    t, state: node.data, role: 'r1', preview: true,
+  }));
+  assert.match(details, /<dt[^>]*>detail.state<\/dt><dd[^>]*>state.stopped<\/dd>/);
+  assert.match(details, /detail.verdict<\/dt><dd[^>]*>verdict.no<\/dd>/);
 });

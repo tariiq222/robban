@@ -114,6 +114,85 @@ async function bench() {
 const executionId = '@deepseek-ai/dsh-client-ui-subagent/execution'
 
 describe('execution presentation', () => {
+  it('shows Not started without unknown model metadata before any observed execution', async () => {
+    const b = await bench()
+    b.session.set({ ...b.session.getSnapshot(), blank: true })
+    b.state.set({ ids: [root], phase: 'ready', byId: { [root]: { ...summary(root), blank: true } }, projectionsBySession: {
+      [root]: { state: 'ready', error: null, values: { subagentCatalog: [] } },
+    } })
+    render(<>{b.seat('conversation.session.header.actions', 'execution-summary')}
+      {b.seat('conversation.input.dock', 'execution-card')}{b.seat('sidebar.right.pane.tab', executionId)}</>)
+    expect(screen.getAllByText('Not started')).toHaveLength(3)
+    expect(screen.queryByText(/Model unknown/)).toBeNull()
+    expect(screen.queryByText('Inactive')).toBeNull()
+  })
+
+  it('keeps missing execution metadata unknown for historical or unfinished history reads', async () => {
+    const b = await bench()
+    b.state.set({ ids: [root], phase: 'ready', byId: { [root]: summary(root) }, projectionsBySession: {
+      [root]: { state: 'ready', error: null, values: { subagentCatalog: [] } },
+    } })
+    render(b.seat('conversation.input.dock', 'execution-card'))
+    expect(screen.queryByText('Not started')).toBeNull()
+    expect(screen.getByText('Last used model: Model unknown')).toBeTruthy()
+    act(() => { b.session.set({ ...b.session.getSnapshot(), blank: true, openState: 'loading' }) })
+    expect(screen.queryByText('Not started')).toBeNull()
+    act(() => { b.session.set({ ...b.session.getSnapshot(), openState: 'open', hasMore: true }) })
+    expect(screen.queryByText('Not started')).toBeNull()
+    expect(screen.getByText('Last used model: Model unknown')).toBeTruthy()
+  })
+
+  it('keeps historical execution inactive with honest unknown model metadata', async () => {
+    const b = await bench()
+    b.state.set({ ids: [root], phase: 'ready', byId: { [root]: summary(root) }, projectionsBySession: {
+      [root]: { state: 'ready', error: null, values: { subagentCatalog: [] } },
+    } })
+    b.feed.replace([
+      { type: 'event', event: { type: 'turn/start', seq: SessionSeq(1), time: 1, data: { turn: 1 } } },
+      { type: 'event', event: { type: 'turn/end', seq: SessionSeq(2), time: 2, data: { turn: 1, reason: { kind: 'aborted', reason: { kind: 'user' } } } } },
+    ] satisfies SessionEventLikeEntry[], false)
+    render(<>{b.seat('conversation.input.dock', 'execution-card')}{b.seat('sidebar.right.pane.tab', executionId)}</>)
+    expect(screen.getAllByText('Inactive')).toHaveLength(2)
+    expect(screen.getAllByText('Last used model: Model unknown')).toHaveLength(2)
+    expect(screen.queryByText('Not started')).toBeNull()
+  })
+
+  it('counts active child agents in the summary and retains stopped-coordinator context', async () => {
+    const b = await bench()
+    render(<>{b.seat('conversation.session.header.actions', 'execution-summary')}
+      {b.seat('conversation.input.dock', 'execution-card')}{b.seat('sidebar.right.pane.tab', executionId)}</>)
+    expect(screen.getAllByText('1 active child agent')).toHaveLength(3)
+    expect(screen.getAllByText(/child work continues/i)).toHaveLength(3)
+    act(() => { b.statuses.set(new Map([[leaf, { running: true }]])) })
+    expect(screen.getAllByText('2 active child agents')).toHaveLength(3)
+    act(() => { b.statuses.set(new Map([[worker, { running: false }], [leaf, { running: false }]])) })
+    expect(screen.queryByText(/active child agents?/)).toBeNull()
+    expect(screen.queryByText(/child work continues/i)).toBeNull()
+  })
+
+  it('opens Agents directly from the no-recipe Graph fallback', async () => {
+    const b = await bench()
+    render(b.seat('sidebar.right.pane.tab', executionId))
+    fireEvent.click(screen.getByRole('tab', { name: 'Graph' }))
+    fireEvent.click(screen.getByRole('button', { name: 'View agents' }))
+    expect(screen.getByRole('tab', { name: 'Agents' }).getAttribute('aria-selected')).toBe('true')
+    expect(screen.getByRole('button', { name: /Leaf/ })).toBeTruthy()
+    expect(screen.queryByText('No recorded recipe flow in the loaded history. View Agents for session details.')).toBeNull()
+  })
+
+  it('moves focus from the Graph fallback action to the committed Agents tab', async () => {
+    const b = await bench()
+    render(b.seat('sidebar.right.pane.tab', executionId))
+    fireEvent.click(screen.getByRole('tab', { name: 'Graph' }))
+    const action = screen.getByRole('button', { name: 'View agents' })
+    action.focus()
+    expect(document.activeElement).toBe(action)
+    fireEvent.click(action)
+    const agents = screen.getByRole('tab', { name: 'Agents' })
+    expect(agents.getAttribute('aria-selected')).toBe('true')
+    expect(document.activeElement).toBe(agents)
+  })
+
   it('recipe flow delegates materialized chat updates and keeps no-recipe catalog details in Agents', async () => {
     const b = await bench()
     render(b.seat('sidebar.right.pane.tab', executionId))

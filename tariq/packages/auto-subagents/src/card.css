@@ -246,7 +246,7 @@ button.ars-chip { cursor: pointer; }
 .ars-hist { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .ars-dactions { display: flex; gap: 8px; margin-top: 12px; }
 
-@media (prefers-reduced-motion: reduce) { .ars-card *, .ars-card *::before, .ars-card *::after { animation: none !important; transition: none !important; } }
+@media (prefers-reduced-motion: reduce) { .ars-card *, .ars-card *::before, .ars-card *::after, .ars-execution *, .ars-execution *::before, .ars-execution *::after { animation: none !important; transition: none !important; } }
 @media (max-width: 560px) { .ars-sub { display: none; } .ars-model { display: none; } .ars-kbd { display: none; } }
 
 /* Settings retain theme colors and isolate Latin model identifiers in RTL layouts. */
@@ -404,3 +404,9 @@ button.ars-chip { cursor: pointer; }
 .ars-preview .ars-kv { padding-inline: 0; }
 .ars-preview .ars-summary { overflow-wrap: anywhere; }
 .ars-recipe-surface { --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2); --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2); }
+
+.ars-node-caption { color: var(--ars-text-2); font-size: 13px; line-height: 1.5; min-block-size: 1.5em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-block-end: 8px; }
+.ars-selected-details { max-height: min(260px, 40vh); overflow: auto; margin-block-end: 8px;
+  border: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-sm); background: var(--ars-surface); }
+.ars-selected-details > .ars-detail { padding: 10px; border: 0; overflow: visible; }
