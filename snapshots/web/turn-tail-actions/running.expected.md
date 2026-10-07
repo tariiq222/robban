@@ -1,5 +1,6 @@
 - banner:
   - navigation "Session hierarchy": Begin your reply with the
+  - button "View execution": Working
   - text: Standard mode
   - button "More actions"
   - button "Open right sidebar"
@@ -14,7 +15,8 @@
 - button "Bash Print alpha to stdout"
 - paragraph: partial
 - status: Deep diving
-- text: Deep diving for {{duration}} ···
+- text: "Deep diving for {{duration}} ··· Working Last used model: deepseek-official · deepseek-v4-flash · Effort unknown"
+- button "View execution"
 - textbox "Message or run a task, / commands, @ files or sessions"
 - button "Add files or run commands"
 - 'button "Access mode, current: Workspace Write"': Workspace Write

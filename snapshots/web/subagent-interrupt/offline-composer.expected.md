@@ -3,6 +3,7 @@
     - button "Ask a research subagent to"
     - text: /
     - 'button "Switch subagent: event-sourcing researcher"': event-sourcing researcher
+  - button "View execution": Working
   - text: Standard mode
   - button "More actions"
   - button "Open right sidebar"
@@ -13,7 +14,8 @@
 - button "Copy"
 - paragraph: partial
 - status: Deep diving
-- text: Deep diving for {{duration}} ···
+- text: "Deep diving for {{duration}} ··· Working Last used model: deepseek-official · deepseek-v4-flash · Effort unknown"
+- button "View execution"
 - list:
   - listitem:
     - text: Keep working until I stop you again.

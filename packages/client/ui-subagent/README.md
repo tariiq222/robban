@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-Use this package to browse every subagent conversation beneath a parent session, open any descendant, and see whether it is running together with its token usage and active-turn duration. Completed one-shot conversations open as read-only execution records. Continuable conversations accept follow-up prompts in submission order while they run and provide Stop independently. The ordinary session sidebar omits subagent conversations, so the parent header catalog is their navigation entry point. The separate `@` source inserts a running child's label into a user message without resolving it into a continuation address.
+Use this package to browse every subagent conversation beneath a parent session, open any descendant, and see whether it is running together with its token usage and active-turn duration. Completed one-shot conversations open as read-only execution records. Continuable conversations accept follow-up prompts in submission order while they run and provide Stop independently. The ordinary session sidebar omits subagent conversations, so the parent header catalog and Execution page provide their navigation entries. The separate `@` source inserts a running child's label into a user message without resolving it into a continuation address.
 
 ## Table of Contents
 
@@ -34,6 +34,12 @@ This package registers the `dsh-resource://subagentchat/session/<child>?parent=<
 Hovering a trigger opens its catalog after 150ms; leaving both trigger and catalog closes it after 120ms. Clicking the descendant-count trigger pins its catalog until outside click or Escape from the trigger or tree. Breadcrumb-title clicks navigate to the corresponding conversation.
 
 Rows display mode plus activity and an optional log-backed title; running uses the shared ongoing loader, an inactive child whose latest closed turn completed normally uses the shared success dot, and other inactive children use the shared idle dot. Every row reserves the same 14px status column, centering smaller dots so titles align with the loader state. The compact header trigger vertically centers its activity glyph and count with a 4px gap. The trailing column stacks total durable provider usage above active-turn duration. Keyboard navigation works with ArrowRight/ArrowLeft to expand and collapse branches and ArrowUp/ArrowDown, Home, End, and Escape to navigate or close the tree. An unlabeled one-shot row falls back to its session id. A row is a known leaf only after its own catalog loads empty.
+
+### Execution visibility
+
+The header keeps a compact execution status beside Chat, and the composer dock shows the coordinator phase and last used model. View execution opens the builtin `execution` page in the existing right Sidebar. Activity shows the latest turn found in loaded history, its tool steps and recorded result outcomes; transient text chunks do not update that activity projection. Agents shows known sessions and their live activity; each child opens with its complete direct-parent address, either in the Sidebar or main chat. Graph delegates loaded materialized Chat records through the session-scoped `execution.graph` chain slot. Auto Recipes selects the latest recorded run by start sequence and reuses its compact flow with icon nodes and hover or keyboard-focus details. If no recipe run is loaded or no renderer claims it, Graph points to Agents for session details.
+
+Coordinator completion or error remains separate from continuing child work. Child completion requires `subagentTiming.lastTurnCompleted`; other inactive child outcomes remain Inactive. Models come from `modelSelection.lastUsed`, with unknown model or effort shown explicitly; the next-request selection is never substituted. Opening the page requests the existing projection baseline for each known branch once; ready or in-flight reads are reused, and pushed catalog/status projections keep those branches current. Unknown or loading branches remain visible, failed reads keep retained membership with Retry, and an empty ready root catalog displays No child sessions. A loaded turn tail remains visible when its start or tool calls are outside the history window, with those missing records identified explicitly. Missing turn activity remains unknown rather than reconstructing an unobserved workflow.
 
 ### Continuing a conversation
 

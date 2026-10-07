@@ -3,6 +3,8 @@
 - text: Into the Unknown Preview
 - button "Choose workspace": workspace
 - button "Standard mode"
+- text: "Inactive Last used model: Model unknown"
+- button "View execution"
 - textbox "Describe what you want to build, / commands, @ files or sessions":
   - paragraph: "Use the bash tool to run exactly: echo WEB_E2E_OK. Then reply with the single word DONE and stop."
 - button "Add files or run commands"

@@ -1,5 +1,6 @@
 - banner:
   - navigation "Session hierarchy": Use the ask_user_question tool to
+  - button "View execution": Using tools
   - text: Standard mode
   - button "More actions"
   - button "Open right sidebar"

@@ -14857,6 +14857,9 @@ importers:
       '@deepseek-ai/dsh-agent-loop':
         specifier: workspace:*
         version: link:../../../packages/core/agent-loop
+      '@deepseek-ai/dsh-client-ui-primitives':
+        specifier: workspace:*
+        version: link:../../../packages/client/ui-primitives
       '@deepseek-ai/dsh-fs-local':
         specifier: workspace:*
         version: link:../../../packages/fs/fs-local

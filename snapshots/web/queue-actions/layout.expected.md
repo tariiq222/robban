@@ -1,5 +1,6 @@
 - banner:
   - navigation "Session hierarchy": workspace
+  - button "View execution": Working
   - text: Standard mode
   - button "More actions"
   - button "Open right sidebar"
@@ -13,7 +14,8 @@
   - time: {{clock}}
 - paragraph: partial
 - status: Deep diving
-- text: Deep diving for {{duration}} ···
+- text: "Deep diving for {{duration}} ··· Working Last used model: deepseek-official · deepseek-v4-flash · Effort unknown"
+- button "View execution"
 - region "To-dos":
   - button "To-dos 1 completed · 1 in progress"
 - text: Ongoing Goal Keep the composer context panels aligned

@@ -2,6 +2,7 @@
 
 - banner:
   - navigation "Session hierarchy": {{workspace}}
+  - button "View execution": Turn completed
   - button "More actions"
   - button "Open right sidebar"
   - tablist:
@@ -17,6 +18,8 @@
 - button "Code Catch an Auto-denied inner call"
 - text: Failed
 - button "Bash Rejected by Auto review"
+- text: "Turn completed Last used model: Model unknown"
+- button "View execution"
 - textbox "Message or run a task, / commands, @ files or sessions"
 - button "Add files or run commands"
 - 'button "Access mode, current: Auto review EXP"':
@@ -30,6 +33,7 @@
 
 - banner:
   - navigation "Session hierarchy": {{workspace}}
+  - button "View execution": Turn completed
   - button "More actions"
   - button "Open right sidebar"
   - tablist:
@@ -49,6 +53,8 @@
 - button "Bash Rejected by Auto review" [expanded]
 - text: "OUT Tool was not executed. Reason: ptc raw reason"
 - button "Inspect"
+- text: "Turn completed Last used model: Model unknown"
+- button "View execution"
 - textbox "Message or run a task, / commands, @ files or sessions"
 - button "Add files or run commands"
 - 'button "Access mode, current: Auto review EXP"':
@@ -62,6 +68,7 @@
 
 - banner:
   - navigation "Session hierarchy": {{workspace}}
+  - button "View execution": Turn completed
   - button "More actions"
   - button "Open right sidebar"
   - tablist:
@@ -108,6 +115,8 @@
     - tab "Schema"
     - tab "Timing"
   - tabpanel "Result": "AutoReviewDeniedError: AUTO_REVIEW_DENIED Error: Auto review rejected tool \"bash\"; its body was not executed"
+- text: "Turn completed Last used model: Model unknown"
+- button "View execution"
 - textbox "Message or run a task, / commands, @ files or sessions"
 - button "Add files or run commands"
 - 'button "Access mode, current: Auto review EXP"':

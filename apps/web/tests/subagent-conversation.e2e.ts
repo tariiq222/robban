@@ -32,6 +32,8 @@ const SIDEBAR_EXPECTED = fileURLToPath(new URL('../../../snapshots/web/subagent-
 const SIDEBAR_CHAT_EXPECTED = fileURLToPath(new URL('../../../snapshots/web/subagent-conversation/sidebar-chat.expected.md', import.meta.url))
 const UNAVAILABLE_GRANDCHILD_EXPECTED = fileURLToPath(new URL('../../../snapshots/web/subagent-conversation/nested.expected.md', import.meta.url))
 const FORK_EXPECTED = fileURLToPath(new URL('../../../snapshots/web/subagent-conversation/fork.expected.md', import.meta.url))
+const EXECUTION_AGENTS_EXPECTED = fileURLToPath(new URL('../../../snapshots/web/subagent-conversation/execution-agents.expected.md', import.meta.url))
+const EXECUTION_GRAPH_EXPECTED = fileURLToPath(new URL('../../../snapshots/web/subagent-conversation/execution-graph.expected.md', import.meta.url))
 const MODE = webSnapshotMode()
 const LABEL = 'event-sourcing researcher'
 const ONE_SHOT_LABEL = 'event-sourcing reviewer'
@@ -358,6 +360,57 @@ describe('web e2e: persisted subagent conversation and human continuation', () =
     expect(await menu.getByRole('option', { name: new RegExp(CHILD_TITLE) }).count()).toBe(0)
     await page.keyboard.press('Escape')
     await writeComposerDraft(page, input, '')
+  })
+
+  it('shows recorded routes and nested delegation beside the parent conversation', async () => {
+    onTestFailed(() => saveFailureShot(page, 'web-e2e-execution-panel'))
+    await page.locator('[data-execution-summary]').waitFor()
+    await page.getByRole('button', { name: 'View execution', exact: true }).first().click()
+    const panel = page.locator('[data-execution-panel]')
+    await panel.waitFor()
+    await panel.getByRole('tab', { name: 'Activity', exact: true }).focus()
+    await page.keyboard.press('ArrowRight')
+    const agentsTab = panel.getByRole('tab', { name: 'Agents', exact: true })
+    await expect.poll(() => agentsTab.getAttribute('aria-selected')).toBe('true')
+    expect(await agentsTab.evaluate(node => document.activeElement === node)).toBe(true)
+    await panel.getByText(LABEL, { exact: true }).waitFor()
+    await panel.getByText(NESTED_LABEL, { exact: true }).waitFor()
+    expect(await panel.getByText(/deepseek-v4-flash/).count()).toBeGreaterThan(0)
+    await compareOrRefreshGolden(
+      EXECUTION_AGENTS_EXPECTED,
+      await captureStableAria(page, '[data-execution-panel]', scaffold.workspaceCwd),
+      MODE,
+    )
+    await panel.getByRole('tab', { name: 'Graph', exact: true }).click()
+    await panel.getByText(/No recorded recipe/).waitFor()
+    expect(await panel.locator('[data-execution-child]').count()).toBe(0)
+    await compareOrRefreshGolden(
+      EXECUTION_GRAPH_EXPECTED,
+      await captureStableAria(page, '[data-execution-panel]', scaffold.workspaceCwd),
+      MODE,
+    )
+    const screenshotPath = process.env.DSH_EXECUTION_SCREENSHOT
+    if (screenshotPath !== undefined) await page.screenshot({ path: screenshotPath, fullPage: true, animations: 'disabled' })
+    await page.emulateMedia({ colorScheme: 'dark' })
+    await expect.poll(() => panel.getByRole('tab', { name: 'Graph', exact: true }).evaluate((node) => {
+      const executionPanel = node.closest('[data-execution-panel]')
+      return executionPanel !== null && getComputedStyle(node).color === getComputedStyle(executionPanel).color
+    })).toBe(true)
+    if (screenshotPath !== undefined) await page.screenshot({ path: screenshotPath.replace(/\.png$/, '-dark.png'), fullPage: true, animations: 'disabled' })
+    const viewport = page.viewportSize()
+    if (viewport === null) throw new Error('execution layout requires a viewport')
+    await page.setViewportSize({ ...viewport, width: 480 })
+    await expect.poll(() => panel.evaluate(element => element.scrollWidth <= element.clientWidth + 1)).toBe(true)
+    if (screenshotPath !== undefined) await page.screenshot({ path: screenshotPath.replace(/\.png$/, '-narrow.png'), fullPage: true, animations: 'disabled' })
+    await page.setViewportSize(viewport)
+    await page.emulateMedia({ colorScheme: 'light' })
+    await panel.getByRole('tab', { name: 'Activity', exact: true }).click()
+    expect(await panel.getByText(/deepseek-v4-flash/).count()).toBeGreaterThan(0)
+    if (screenshotPath !== undefined) await page.screenshot({ path: screenshotPath.replace(/\.png$/, '-activity.png'), fullPage: true, animations: 'disabled' })
+    expect(scaffold.ctx.agents.get(childId)).toBeUndefined()
+    expect(scaffold.ctx.agents.get(grandchildId)).toBeUndefined()
+    await page.locator('[data-sidebar-right-panel] [data-dockkit-tab-close]').click()
+    await panel.waitFor({ state: 'detached' })
   })
 
   it('expands a persisted grandchild progressively without activating either level', async () => {

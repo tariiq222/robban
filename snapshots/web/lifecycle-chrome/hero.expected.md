@@ -18,6 +18,8 @@
 - text: Into the Unknown Preview
 - button "Choose workspace": workspace
 - button "Standard mode"
+- text: "Inactive Last used model: Model unknown"
+- button "View execution"
 - textbox "Describe what you want to build, / commands, @ files or sessions":
   - paragraph
 - button "Add files or run commands"

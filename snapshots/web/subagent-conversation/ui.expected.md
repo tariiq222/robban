@@ -4,6 +4,7 @@
     - text: /
     - 'button "Switch subagent: event-sourcing researcher"': event-sourcing researcher
     - button "1 subagent"
+  - button "View execution": Turn completed
   - text: Standard mode
   - button "More actions"
   - button "Open right sidebar"
@@ -31,7 +32,8 @@
 - button "Good response"
 - button "Bad response"
 - button "Branch into a new conversation"
-- text: {{clock}}
+- text: "{{clock}} Turn completed Last used model: deepseek-official · deepseek-v4-flash · Effort unknown"
+- button "View execution"
 - textbox "Message or run a task, / commands, @ files or sessions"
 - button "Add files or run commands"
 - 'button "Access mode, current: Custom"': Custom

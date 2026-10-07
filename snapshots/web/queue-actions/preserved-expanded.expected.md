@@ -1,5 +1,6 @@
 - banner:
   - navigation "Session hierarchy": Reply with a one-sentence description
+  - button "View execution": Inactive
   - text: Standard mode
   - button "More actions"
   - button "Open right sidebar"
@@ -16,7 +17,8 @@
 - button "Good response"
 - button "Bad response"
 - button "Branch into a new conversation"
-- text: {{clock}}
+- text: "{{clock}} Inactive Last used model: deepseek-official · deepseek-v4-flash · Effort unknown"
+- button "View execution"
 - button "2 queued messages" [expanded]
 - list:
   - listitem:

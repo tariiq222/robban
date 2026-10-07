@@ -1,5 +1,6 @@
 - banner:
   - navigation "Session hierarchy": workspace
+  - button "View execution": Turn completed
   - text: Standard mode
   - button "More actions"
   - button "Open right sidebar"
@@ -140,6 +141,8 @@
 - button "Branch into a new conversation"
 - text: {{clock}}
 - button "Back to bottom"
+- text: "Turn completed Last used model: deepseek-official · deepseek-v4-flash · Effort unknown"
+- button "View execution"
 - textbox "Message or run a task, / commands, @ files or sessions"
 - button "Add files or run commands"
 - 'button "Access mode, current: Workspace Write"': Workspace Write

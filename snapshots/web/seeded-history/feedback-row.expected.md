@@ -1,5 +1,6 @@
 - banner:
   - navigation "Session hierarchy": Use the read tool twice
+  - button "View execution": Turn completed
   - button "More actions"
   - button "Open right sidebar"
   - tablist:
@@ -31,7 +32,8 @@
 - status: Completed
 - button "Completed in {{duration}}" [disabled]
 - 'button "feedback Feedback recorded for session {{seededId}} Anonymous user: {{uuid}}." [expanded]'
-- text: "Feedback recorded for session {{seededId}} Anonymous user: {{uuid}}."
+- text: "Feedback recorded for session {{seededId}} Anonymous user: {{uuid}}. Turn completed Last used model: deepseek-official · deepseek-v4-flash · Effort unknown"
+- button "View execution"
 - textbox "Message or run a task, / commands, @ files or sessions"
 - button "Add files or run commands"
 - 'button "Access mode, current: Read Only"': Read Only

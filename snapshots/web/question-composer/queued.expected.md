@@ -1,5 +1,6 @@
 - banner:
   - navigation "Session hierarchy": Use the ask_user_question tool to
+  - button "View execution": Turn completed
   - button "More actions"
   - button "Open right sidebar"
   - tablist:
@@ -17,6 +18,8 @@
 - term: Which color do you prefer?
 - definition: Green Answered after the timeout
 - button "Inspect"
+- text: "Turn completed Last used model: deepseek-official · deepseek-v4-flash · Effort unknown"
+- button "View execution"
 - list:
   - listitem:
     - text: "{\"kind\":\"answer_to_pending_question\",\"tool\":\"ask_user_question\",\"callId\":\"call_00_Cijldc88LYmVPCXYUsRq1617\",\"questions\":[{\"id\":\"color\",\"question\":\"Which color do you prefer?\",\"header\":\"Pick one\",\"mult…"

@@ -7,10 +7,11 @@
 //     (in an in-card drawer) and the per-node detail panel;
 //   - English UI copy; full application localization is deferred.
 //
-// Dependencies are only the shared platform modules: react and @deepseek-ai/dsh-client-store is
-// NOT needed. Styles use DSH theme variables (--dsw-alias-*), with fallbacks.
+// Shared React and HoverCard come from the platform module table.
+// Styles use DSH theme variables (--dsw-alias-*), with fallbacks.
 
 var React = require("react");
+var HoverCard = require("@deepseek-ai/dsh-client-ui-primitives").HoverCard;
 var h = React.createElement;
 var useState = React.useState, useEffect = React.useEffect, useMemo = React.useMemo, useRef = React.useRef;
 
@@ -42,6 +43,7 @@ var ar = {
   "done.n": "{label} خلصت · اعرضها", "done.hide": "إخفاء الخطوات اللي خلصت",
   "legend.done": "خلص", "legend.active": "شغّال", "legend.decision": "ينتظرك", "legend.failed": "رفض", "legend.pending": "ما بدأ",
   "detail.empty": "انقر على أي كرت أو مرحلة لعرض التفاصيل", "detail.stage": "المرحلة", "detail.state": "الحالة", "detail.tier": "الـ tier",
+  "detail.role": "الدور", "detail.provider": "المزوّد", "detail.outcome": "النتيجة",
   "detail.model": "الموديل", "detail.round": "الجولة", "detail.duration": "المدة", "detail.rounds": "{n} من 3",
   "kbd": "↑↓ تنقّل · Enter تفاصيل · Esc إغلاق",
   "steps.1": "خطوة وحدة", "steps.2": "خطوتين", "steps.few": "{n} خطوات", "steps.many": "{n} خطوة"
@@ -67,6 +69,7 @@ var en = {
   "done.n": "{label} done · show", "done.hide": "Hide finished steps",
   "legend.done": "Done", "legend.active": "Running", "legend.decision": "Waiting", "legend.failed": "Rejected", "legend.pending": "Not started",
   "detail.empty": "Click a card or stage to see details", "detail.stage": "Stage", "detail.state": "State", "detail.tier": "Tier",
+  "detail.role": "Role", "detail.provider": "Provider", "detail.outcome": "Outcome",
   "detail.model": "Model", "detail.round": "Round", "detail.duration": "Duration", "detail.rounds": "{n} of 3",
   "kbd": "↑↓ move · Enter details · Esc close",
   "steps.1": "1 step", "steps.2": "2 steps", "steps.few": "{n} steps", "steps.many": "{n} steps"
@@ -240,9 +243,11 @@ function DecisionBox(props) {
 }
 
 // ───────────────────────── flow graph ─────────────────────────
-var GW = 520, CX = 280, NW = 300, NH = 64, NX = CX - NW / 2;
 
-function layoutGraph(latest, reviewerRoles, showDone) {
+function layoutGraph(latest, reviewerRoles, showDone, presentation) {
+  var compact = presentation === 'compact';
+  var GW = compact ? Math.max(280, reviewerRoles.length * 64 + 40) : 520;
+  var CX = compact ? GW / 2 : 280, NW = compact ? 40 : 300, NH = compact ? 40 : 64, NX = CX - NW / 2;
   var prefix = ["setup", "analysis", "decision", "requirements", "draft", "dreview", "plan"];
   var done = function (r) { return r === "decision" ? latest.requirements !== undefined : nodeState(latest[r]) === "done"; };
   var hidden = {};
@@ -250,76 +255,94 @@ function layoutGraph(latest, reviewerRoles, showDone) {
   var hiddenList = Object.keys(hidden);
   if (hiddenList.length) delete hidden[hiddenList[hiddenList.length - 1]];
   if (Object.keys(hidden).length < 2) hidden = {};
-  var pos = {}, y = 0, gap = 32, pad = 26;
+  var pos = {}, y = 0, gap = compact ? 24 : 32, pad = compact ? 18 : 26;
   ["setup", "analysis", "decision", "requirements"].forEach(function (id) { if (!hidden[id]) { pos[id] = { x: NX, y: y, w: NW }; y += NH + gap; } });
   var design = ["draft", "dreview"].filter(function (id) { return !hidden[id]; });
   if (design.length) { y += pad; design.forEach(function (id) { pos[id] = { x: NX, y: y, w: NW }; y += NH + gap; }); y += 14; }
   if (!hidden.plan) { pos.plan = { x: NX, y: y, w: NW }; y += NH + gap; }
-  y += pad; pos.implement = { x: NX, y: y, w: NW }; y += NH + 50;
+  y += pad; pos.implement = { x: NX, y: y, w: NW }; y += NH + (compact ? 38 : 50);
   var rs = reviewerRoles.length ? reviewerRoles : ["r1", "r2"];
-  var rw = rs.length <= 2 ? 210 : Math.floor((GW - 80 - (rs.length - 1) * 16) / rs.length);
-  var startX = rs.length <= 2 ? 64 : 64;
-  rs.forEach(function (r, i) { pos[r] = { x: startX + i * (rw + 16), y: y, w: rw }; });
-  if (rs.length === 2) pos[rs[1]].x = 290;
-  y += NH + 50;
+  var rw = compact ? NW : rs.length <= 2 ? 210 : Math.floor((GW - 80 - (rs.length - 1) * 16) / rs.length);
+  var spacing = compact ? 24 : 16;
+  var startX = compact ? (GW - rs.length * rw - (rs.length - 1) * spacing) / 2 : 64;
+  rs.forEach(function (r, i) { pos[r] = { x: startX + i * (rw + spacing), y: y, w: rw }; });
+  if (!compact && rs.length === 2) pos[rs[1]].x = 290;
+  y += NH + (compact ? 38 : 50);
   pos.aggregate = { x: NX, y: y, w: NW }; y += NH + gap + 14;
   pos.validate = { x: NX, y: y, w: NW }; y += NH + 8;
-  return { pos: pos, hiddenCount: Object.keys(hidden).length, H: y, reviewers: rs };
+  return { pos: pos, hiddenCount: Object.keys(hidden).length, H: y, reviewers: rs, W: GW, NH: NH, NW: NW, NX: NX, CX: CX };
+}
+
+function genericNodeKeyDown(event, onSelect) {
+  if (event.key === 'Escape') onSelect(null);
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    event.preventDefault();
+    var list = event.currentTarget.closest('.ars-generic-graph').querySelectorAll('button');
+    var index = Array.prototype.indexOf.call(list, event.currentTarget) + (event.key === 'ArrowDown' ? 1 : -1);
+    if (list[index]) list[index].focus();
+  }
+}
+
+function GenericDecisionNode(props) {
+  var button = h('button', { type: 'button', className: props.compact ? 'ars-icon-node' : 'ars-generic-node',
+    'data-role': 'decision', 'data-state': props.status, 'aria-pressed': props.selected === 'decision',
+    'aria-label': nodeTitle(props.t, 'decision') + ': ' + props.t('state.' + props.status),
+    onClick: function () { props.onSelect(props.selected === 'decision' ? null : 'decision'); },
+    onKeyDown: function (e) { genericNodeKeyDown(e, props.onSelect); }
+  }, props.compact ? h(NodeIcon, { role: 'decision' }) : nodeTitle(props.t, 'decision'));
+  return props.compact ? h(HoverCard, { inline: true, anchor: button,
+    content: h(DetailPanel, { t: props.t, state: props.state, role: 'decision', now: props.now, preview: true }) }) : button;
 }
 
 // Ordered phase groups expose the real workers; no arrows claim unsupported dependencies.
 function GenericGraph(props) {
   var t = props.t, s = props.state, latest = nodesOf(s).latest, stages = stagesOf(s);
-  return h('div', { className: 'ars-graph ars-generic-graph' }, stageOrderOf(s).map(function (id) {
+  var compact = props.presentation === 'compact';
+  return h('div', { className: 'ars-graph ars-generic-graph', 'data-presentation': props.presentation || 'full' }, stageOrderOf(s).map(function (id) {
     var keys = nodeKeysForStage(s, id), state = stages[id].state;
     return h('section', { key: id, className: 'ars-phase-group', 'data-stage': id, 'data-hl': props.hlStage === id, 'aria-label': stageTitle(t, id) },
       h('h4', null, stageTitle(t, id), h('span', { className: 'ars-phase-state' }, t('state.' + state))),
-      id === 'decision' ? h('button', { type: 'button', className: 'ars-generic-node', 'data-state': state, 'aria-pressed': props.selected === 'decision', onClick: function () { props.onSelect('decision'); } }, nodeTitle(t, 'decision')) : null,
-      keys.map(function (key) {
+      id === 'decision' ? h(GenericDecisionNode, { t: t, state: s, status: state, selected: props.selected, onSelect: props.onSelect, compact: compact, now: props.now }) : null,
+      h('div', { className: compact ? 'ars-phase-lane' : undefined }, keys.map(function (key) {
         var a = latest[key], status = nodeState(a);
-        return h('button', { key: key, type: 'button', className: 'ars-generic-node', 'data-role': key, 'data-state': status,
+        var button = h('button', { key: key, type: 'button', className: compact ? 'ars-icon-node' : 'ars-generic-node', 'data-role': key, 'data-state': status,
           'aria-pressed': props.selected === key, 'aria-label': agentTitle(t, a) + ': ' + t('state.' + status),
           onClick: function () { props.onSelect(props.selected === key ? null : key); },
-          onKeyDown: function (e) {
-            if (e.key === 'Escape') props.onSelect(null);
-            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-              e.preventDefault();
-              var list = e.currentTarget.closest('.ars-generic-graph').querySelectorAll('button');
-              var index = Array.prototype.indexOf.call(list, e.currentTarget) + (e.key === 'ArrowDown' ? 1 : -1);
-              if (list[index]) list[index].focus();
-            }
-          } },
-          h(NodeIcon, { role: a.role }), h('span', { className: 'ars-generic-title' }, agentTitle(t, a)),
-          a.model ? ltr(shortModel(a.model), 'ars-model') : null,
-          h('span', { className: 'ars-chip' }, t('state.' + status)),
-          a.verdict ? h('span', { className: cls('ars-chip', a.verdict === 'ok' ? 'ok' : 'no') }, t('verdict.' + (a.verdict === 'ok' ? 'ok' : 'no'))) : null);
-      }));
+          onKeyDown: function (e) { genericNodeKeyDown(e, props.onSelect); } },
+          h(NodeIcon, { role: a.role }), compact ? null : h('span', { className: 'ars-generic-title' }, agentTitle(t, a)),
+          !compact && a.model ? ltr(shortModel(a.model), 'ars-model') : null,
+          compact ? null : h('span', { className: 'ars-chip' }, t('state.' + status)),
+          !compact && a.verdict ? h('span', { className: cls('ars-chip', a.verdict === 'ok' ? 'ok' : 'no') }, t('verdict.' + (a.verdict === 'ok' ? 'ok' : 'no'))) : null);
+        return compact ? h(HoverCard, { key: key, inline: true, anchor: button, content: h(DetailPanel, { t: t, state: s, role: key, now: props.now, preview: true }) }) : button;
+      })));
   }));
 }
 
 function FlowGraph(props) {
+  var markerPrefix = 'ars-ah-' + React.useId().replace(/:/g, '') + '-';
   if (!isFeatureRecipe(props.state)) return h(GenericGraph, props);
   var t = props.t, s = props.state, sel = props.selected;
   var n = nodesOf(s), latest = n.latest;
   var decisionNode = s.status === "needs_decision" ? { state: "decision" } : (s.resumed || latest.requirements) ? { state: "done" } : { state: "pending" };
   var reviewerRoles = Object.keys(latest).filter(function (r) { return /^r\d+$/.test(r); }).sort();
-  var L = layoutGraph(latest, reviewerRoles, props.showDone);
-  var pos = L.pos;
+  var compact = props.presentation === 'compact';
+  var L = layoutGraph(latest, reviewerRoles, props.showDone, props.presentation);
+  var pos = L.pos, GW = L.W, NH = L.NH, NW = L.NW, NX = L.NX, CX = L.CX;
   var stateOf = function (role) { return role === "decision" ? decisionNode.state : nodeState(latest[role]); };
   var edgesList = [["setup", "analysis"], ["analysis", "decision"], ["decision", "requirements"], ["requirements", "draft"], ["draft", "dreview"], ["dreview", "plan"], ["plan", "implement"]];
   L.reviewers.forEach(function (r) { edgesList.push(["implement", r]); edgesList.push([r, "aggregate"]); });
   edgesList.push(["aggregate", "validate"]);
   var est = function (a, b) { var sa = stateOf(a), sb = stateOf(b); if (sb === "active") return "active"; if (sb === "failed" && sa !== "pending") return "failed"; if (sa === "done" && sb !== "pending") return "done"; return ""; };
   var path = function (a, b) { var A = pos[a], B = pos[b]; var ax = A.x + A.w / 2, ay = A.y + NH, bx = B.x + B.w / 2, by = B.y; return ax === bx ? "M" + ax + " " + ay + "V" + (by - 6) : "M" + ax + " " + ay + "V" + (by - 22) + "H" + bx + "V" + (by - 6); };
-  var paths = edgesList.filter(function (e) { return pos[e[0]] && pos[e[1]]; }).map(function (e) { var c = est(e[0], e[1]); return h("path", { key: e.join(">"), className: cls("ars-edge", c), d: path(e[0], e[1]), markerEnd: "url(#ars-ah-" + (c || "idle") + ")" }); });
+  var paths = edgesList.filter(function (e) { return pos[e[0]] && pos[e[1]]; }).map(function (e) { var c = est(e[0], e[1]); return h("path", { key: e.join(">"), className: cls("ars-edge", c), d: path(e[0], e[1]), markerEnd: "url(#" + markerPrefix + (c || "idle") + ")" }); });
   var rounds = codeRounds(s), backCode = rounds > 1, ab = s.status === "aborted";
   var bcls = backCode ? (ab ? "failed" : "warn") : "";
   var labels = [];
   if (pos.draft && pos.dreview) {
-    paths.push(h("path", { key: "back-d", className: "ars-edge back", d: "M" + NX + " " + (pos.dreview.y + NH / 2) + "H" + (NX - 30) + "V" + (pos.draft.y + NH / 2) + "H" + (NX - 6), markerEnd: "url(#ars-ah-idle)" }));
+    paths.push(h("path", { key: "back-d", className: "ars-edge back", d: "M" + NX + " " + (pos.dreview.y + NH / 2) + "H" + (NX - 30) + "V" + (pos.draft.y + NH / 2) + "H" + (NX - 6), markerEnd: "url(#" + markerPrefix + "idle)" }));
     labels.push(h("span", { key: "l-d", className: "ars-elbl", style: { left: NX - 30, top: (pos.dreview.y + pos.draft.y) / 2 + NH / 2 } }, t("reject")));
   }
-  paths.push(h("path", { key: "back-c", className: cls("ars-edge back", bcls), d: "M" + NX + " " + (pos.aggregate.y + NH / 2) + "H36V" + (pos.implement.y + NH / 2) + "H" + (NX - 6), markerEnd: "url(#ars-ah-" + (bcls || "idle") + ")" }));
+  paths.push(h("path", { key: "back-c", className: cls("ars-edge back", bcls), d: "M" + NX + " " + (pos.aggregate.y + NH / 2) + "H36V" + (pos.implement.y + NH / 2) + "H" + (NX - 6), markerEnd: "url(#" + markerPrefix + (bcls || "idle") + ")" }));
   labels.push(h("span", { key: "l-c", className: cls("ars-elbl", backCode ? (ab ? "bad" : "warn") : ""), style: { left: (36 + NX) / 2 - 2, top: pos.implement.y + NH / 2 - 15 } }, backCode ? (ab ? t("reject3", { n: rounds }) : t("repair", { n: rounds - 1 })) : t("reject")));
   labels.push(h("span", { key: "l-p", className: "ars-elbl", style: { left: CX, top: pos[L.reviewers[0]].y - 22 } }, t("parallel")));
 
@@ -332,7 +355,7 @@ function FlowGraph(props) {
       h("span", { className: "ars-glbl" }, h("span", { className: "ars-stag" }, stageIds.map(function (x) { return t("stage." + x); }).join(" + ")), " · " + t("loop")));
   };
   var markers = [["idle", "var(--ars-line-strong)"], ["done", "var(--ars-ok-line)"], ["active", "var(--ars-run)"], ["failed", "var(--ars-bad)"], ["warn", "var(--ars-warn)"]].map(function (m) {
-    return h("marker", { key: m[0], id: "ars-ah-" + m[0], viewBox: "0 0 10 10", refX: 7, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" },
+    return h("marker", { key: m[0], id: markerPrefix + m[0], viewBox: "0 0 10 10", refX: 7, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" },
       h("path", { d: "M1 1l7 4-7 4", fill: "none", stroke: m[1], strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" }));
   });
   var order = ["setup", "analysis", "decision", "requirements", "draft", "dreview", "plan", "implement"].concat(L.reviewers, ["aggregate", "validate"]);
@@ -346,29 +369,31 @@ function FlowGraph(props) {
     if (a && a.tier && p.w === NW) chips.push(h("span", { key: "t", className: cls("ars-chip", "tier-" + a.tier) }, a.tier));
     if (a && a.model) chips.push(h("span", { key: "m", className: "ars-chip model" }, shortModel(a.model)));
     var time = a ? (a.outcome === undefined ? fmt(props.now - (a.startedAt || props.now)) : a.endedAt && a.startedAt ? fmt(a.endedAt - a.startedAt) : "") : "";
-    return h("button", { key: role, type: "button", className: "ars-fnode", "data-role": role, "data-state": state, "aria-pressed": sel === role,
-      style: { left: p.x, top: p.y, width: p.w, height: NH }, "aria-label": nodeTitle(t, role) + ": " + t("state." + state),
+    var button = h("button", { key: role, type: "button", className: compact ? "ars-icon-node" : "ars-fnode", "data-role": role, "data-state": state, "aria-pressed": sel === role,
+      style: compact ? { width: p.w, height: NH } : { left: p.x, top: p.y, width: p.w, height: NH }, "aria-label": nodeTitle(t, role) + ": " + t("state." + state),
       onClick: function () { props.onSelect(sel === role ? null : role); },
       onKeyDown: function (e) {
         if (e.key === "ArrowDown" || e.key === "ArrowUp") {
           e.preventDefault();
-          var list = e.currentTarget.parentNode.querySelectorAll(".ars-fnode");
+          var list = e.currentTarget.closest(".ars-flow").querySelectorAll("button[data-role]");
           var idx = Array.prototype.indexOf.call(list, e.currentTarget) + (e.key === "ArrowDown" ? 1 : -1);
           if (list[idx]) list[idx].focus();
         } else if (e.key === "Escape") props.onSelect(null);
       } },
       h("span", { className: "ars-ico", "aria-hidden": true }, h(NodeIcon, { role: role }), h("span", { className: "ars-st" }, ST_ICON[state] ? h(Icon, { name: ST_ICON[state], w: 3, size: 9 }) : null)),
-      h("span", { className: "ars-t" }, nodeTitle(t, role)),
-      h("span", { className: "ars-time" }, time),
-      h("span", { className: "ars-chips" }, chips));
+      compact ? null : h("span", { className: "ars-t" }, nodeTitle(t, role)),
+      compact ? null : h("span", { className: "ars-time" }, time),
+      compact ? null : h("span", { className: "ars-chips" }, chips));
+    return compact ? h('div', { key: role, className: 'ars-node-anchor', style: { left: p.x, top: p.y } },
+      h(HoverCard, { inline: true, anchor: button, content: h(DetailPanel, { t: t, state: s, role: role, now: props.now, preview: true }) })) : button;
   });
-  return h("div", { className: "ars-graph" },
+  return h("div", { className: "ars-graph", "data-presentation": props.presentation || "full" },
     h("div", { className: "ars-legend" }, ["done", "active", "decision", "failed", "pending"].map(function (k) { return h("span", { key: k }, h("i", { className: "lg-" + k }), t("legend." + k)); })),
     L.hiddenCount || props.showDone ? h("button", { type: "button", className: "ars-collapsed", "aria-expanded": !!props.showDone, onClick: props.onToggleDone },
       h(Icon, { name: "check" }), props.showDone ? t("done.hide") : t("done.n", { label: steps(t, L.hiddenCount) }), h("span", { className: "ars-chev" }, h(Icon, { name: "chev" }))) : null,
-    // The canvas keeps its absolute 520px layout; the viewport scrolls horizontally when narrower.
-    h("div", { className: "ars-flow-scroll", dir: "ltr" }, h("div", { className: "ars-flow", style: { height: L.H } },
-      [group(["draft", "dreview"], ["design"], NX - 60, NW + 94), group(["implement"].concat(L.reviewers, ["aggregate"]), ["build", "review"], 6, GW - 12)],
+    // Geometry and connectors share one plane; a narrower viewport scrolls horizontally.
+    h("div", { className: "ars-flow-scroll", dir: "ltr" }, h("div", { className: "ars-flow", style: { height: L.H, width: GW, minWidth: GW } },
+      [group(["draft", "dreview"], ["design"], NX - (compact ? 42 : 60), NW + (compact ? 84 : 94)), group(["implement"].concat(L.reviewers, ["aggregate"]), ["build", "review"], 6, GW - 12)],
       h("svg", { className: "ars-edges", viewBox: "0 0 " + GW + " " + L.H, "aria-hidden": true }, h("defs", null, markers), paths),
       labels, nodes)));
 }
@@ -377,23 +402,30 @@ function DetailPanel(props) {
   var t = props.t, role = props.role;
   if (!role) return h("div", { className: "ars-detail" }, h("div", { className: "ars-detail-empty" }, t("detail.empty")));
   var n = nodesOf(props.state), a = n.latest[role], hist = n.history[role] || [];
-  var state = role === "decision" ? (props.state.status === "needs_decision" ? "decision" : "done") : nodeState(a);
+  var recordedDetails = props.preview || props.recordedDetails;
+  var state = role !== "decision" ? nodeState(a) : !isFeatureRecipe(props.state) ? stagesOf(props.state).decision.state
+    : props.state.status === "needs_decision" ? "decision"
+    : recordedDetails && !(props.state.resumed || n.latest.requirements) ? "pending" : "done";
   var rows = [[t("detail.stage"), stageTitle(t, selectedStage(props.state, role))], [t("detail.state"), t("state." + state)]];
+  if (recordedDetails && a && a.role) rows.push([t("detail.role"), a.role]);
+  if (recordedDetails && a && a.provider) rows.push([t("detail.provider"), ltr(a.provider)]);
+  if (recordedDetails && a && a.outcome) rows.push([t("detail.outcome"), a.outcome]);
   if (a && a.tier) rows.push([t("detail.tier"), ltr(a.tier)]);
-  if (a && a.model) rows.push([t("detail.model"), ltr(shortModel(a.model))]);
+  if (a && a.model) rows.push([t("detail.model"), ltr(recordedDetails ? a.model : shortModel(a.model))]);
   if (a && a.round) rows.push([t("detail.round"), t("detail.rounds", { n: a.round })]);
   if (a && a.endedAt && a.startedAt) rows.push([t("detail.duration"), ltr(fmt(a.endedAt - a.startedAt))]);
+  if (a && a.outcome === undefined && a.startedAt && props.now) rows.push([t("detail.duration"), ltr(fmt(props.now - a.startedAt))]);
   var findings = a && a.findings && a.findings.length ? a.findings : [];
   var running = a && a.outcome === undefined;
-  return h("div", { className: "ars-detail" },
+  return h("div", { className: props.preview ? "ars-detail ars-preview ars-recipe-surface" : "ars-detail", "data-recipe-node-details": props.preview ? "" : undefined },
     h("div", { className: "ars-dhead" }, h("span", { className: "ars-ico" }, h(NodeIcon, { role: role })),
       h("div", null, h("h4", null, a ? agentTitle(t, a) : nodeTitle(t, role)), a ? h("div", { className: "ars-dsub" }, ltr(a.label)) : null),
-      h("button", { type: "button", className: "ars-iconbtn", "aria-label": t("close"), onClick: function () { props.onSelect(null); } }, h(Icon, { name: "close" }))),
+      props.preview ? null : h("button", { type: "button", className: "ars-iconbtn", "aria-label": t("close"), onClick: function () { props.onSelect(null); } }, h(Icon, { name: "close" }))),
     h("dl", { className: "ars-kv" }, rows.map(function (r, i) { return [h("dt", { key: "k" + i }, r[0]), h("dd", { key: "v" + i }, r[1])]; })),
     a && a.summary ? h("p", { className: "ars-summary" }, a.summary) : null,
     findings.length ? h("ul", { className: "ars-findings" }, findings.map(function (f, i) { return h("li", { key: i }, h("span", { className: "ars-sev" }, String(f.severity).toUpperCase()), h("span", null, f.problem)); })) : null,
-    hist.length > 1 ? h("div", { className: "ars-hist" }, hist.map(function (x) { return h("button", { key: x.seq, type: "button", className: "ars-chip", onClick: function () { props.openSession(x.childId); } }, "#" + x.round + (x.verdict ? " · " + t("verdict." + x.verdict) : "")); })) : null,
-    a && a.childId ? h("div", { className: "ars-dactions" },
+    !props.preview && hist.length > 1 ? h("div", { className: "ars-hist" }, hist.map(function (x) { return h("button", { key: x.seq, type: "button", className: "ars-chip", onClick: function () { props.openSession(x.childId); } }, "#" + x.round + (x.verdict ? " · " + t("verdict." + x.verdict) : "")); })) : null,
+    !props.preview && a && a.childId ? h("div", { className: "ars-dactions" },
       h("button", { type: "button", className: cls("ars-btn", running ? "primary" : ""), onClick: function () { props.openSession(a.childId); } }, h(Icon, { name: running ? "open" : "doc" }), running ? t("open.session") : t("read.session"))) : null);
 }
 
@@ -474,6 +506,28 @@ function RecipeRunPanel(props) {
     h("footer", { className: "ars-foot" }, foot, result));
 }
 
+// Select only Conversation-owned materialized runs; anchor order is durable start order.
+function latestRecipeRun(owner) {
+  var latest = null;
+  owner.nodes.forEach(function (node) {
+    if (node.kind === KIND && (!latest || node.anchorSeq > latest.anchorSeq)) latest = node;
+  });
+  return latest;
+}
+function RecipeExecutionGraph(props) {
+  return h(RecipeExecutionMap, Object.assign({}, props, { key: JSON.stringify([props.sessionId, props.matched.id, props.matched.anchorSeq]) }));
+}
+function RecipeExecutionMap(props) {
+  var s = props.matched.data, t = props.t;
+  var selected = useState(null), done = useState(false);
+  var now = useNow(s.status === 'running');
+  return h('section', { className: 'ars-execution ars-recipe-surface', 'data-recipe-execution': '', 'data-run-id': s.runId },
+    h('div', { className: 'ars-execution-title' }, s.title || s.recipe),
+    h(FlowGraph, { presentation: 'compact', t: t, state: s, now: now, selected: selected[0], showDone: done[0],
+      onSelect: selected[1], onToggleDone: function () { done[1](!done[0]); } }),
+    selected[0] ? h(DetailPanel, { t: t, state: s, role: selected[0], now: now, recordedDetails: true, openSession: props.openSession, onSelect: selected[1] }) : null);
+}
+
 /*@@CSS@@*/
 
 function ensureCss() {
@@ -498,6 +552,11 @@ function apply(ctx) {
   var readLocale = function () { try { var snap = locale.getSnapshot ? locale.getSnapshot() : locale.getLocale(); return snap && snap.active; } catch (e) { return undefined; } };
   var subscribeLocale = function (fn) { return locale.subscribe ? locale.subscribe(fn) : function () {}; };
   var useLocaleId = function () { return React.useSyncExternalStore ? React.useSyncExternalStore(subscribeLocale, readLocale, readLocale) : readLocale(); };
+  ctx.slots.inject('execution.graph', function () {
+    return ctx.slots.register({ name: 'execution.graph', locale: NS, select: latestRecipeRun,
+      inject: function () { return { openSession: function (id) { ctx.uiWorkspace.openSession(id); } }; }
+    }, RecipeExecutionGraph);
+  });
   ctx.slots.inject("conversation.chat.node", function () {
     return ctx.slots.register({
       name: "conversation.chat.node", key: KIND, locale: NS,
@@ -509,4 +568,4 @@ var name = "dsh-auto-subagents";
 exports.apply = apply;
 exports.inject = inject;
 exports.name = name;
-exports.__test = { definition: definition, RecipeRunPanel: RecipeRunPanel, layoutGraph: layoutGraph, FlowGraph: FlowGraph, AutoSettings: AutoSettings, optionKey: optionKey, RecipeCanvas: RecipeCanvas, setRecipeEntry: setRecipeEntry, setRoleOverride: setRoleOverride, recipeOverridesInvalid: recipeOverridesInvalid, tierWarnings: tierWarnings, moveRoute: moveRoute, groupRoutes: groupRoutes, routesFromGroups: routesFromGroups };
+exports.__test = { latestRecipeRun: latestRecipeRun, RecipeExecutionGraph: RecipeExecutionGraph, DetailPanel: DetailPanel, definition: definition, RecipeRunPanel: RecipeRunPanel, layoutGraph: layoutGraph, FlowGraph: FlowGraph, AutoSettings: AutoSettings, optionKey: optionKey, RecipeCanvas: RecipeCanvas, setRecipeEntry: setRecipeEntry, setRoleOverride: setRoleOverride, recipeOverridesInvalid: recipeOverridesInvalid, tierWarnings: tierWarnings, moveRoute: moveRoute, groupRoutes: groupRoutes, routesFromGroups: routesFromGroups };

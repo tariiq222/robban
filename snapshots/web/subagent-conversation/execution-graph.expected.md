@@ -1,0 +1,6 @@
+- text: "Execution Execution stopped with an error Last used model: deepseek-official · deepseek-v4-flash · Effort unknown"
+- tablist "Execution":
+  - tab "Activity"
+  - tab "Agents"
+  - tab "Graph" [selected]
+- tabpanel "Graph": No recorded recipe flow in the loaded history. View Agents for session details.

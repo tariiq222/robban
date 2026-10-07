@@ -1,5 +1,6 @@
 - banner:
   - navigation "Session hierarchy": Reply with a one-sentence description
+  - button "View execution": Execution stopped with an error
   - text: Standard mode
   - button "More actions"
   - button "Open right sidebar"
@@ -15,6 +16,8 @@
 - status:
   - text: This turn failedupstream 503
   - code: SERVER
+- text: "Execution stopped with an error Last used model: deepseek-official · deepseek-v4-flash · Effort unknown"
+- button "View execution"
 - textbox "Message or run a task, / commands, @ files or sessions"
 - button "Add files or run commands"
 - 'button "Access mode, current: Workspace Write"': Workspace Write

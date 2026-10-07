@@ -1,5 +1,6 @@
 - banner:
   - navigation "会话层级": 只回复 MESSAGES_WEB_READY，不调用
+  - button "查看执行": 本轮已完成
   - text: 标准模式
   - button "更多操作"
   - button "打开右侧边栏"
@@ -16,7 +17,8 @@
 - button "有问题的回答"
 - button "在新对话中分支"
 - button "用量 8.2K tok"
-- text: {{clock}}
+- text: {{clock}} 本轮已完成 上次使用的模型：deepseek-messages · deepseek-v4-flash · high
+- button "查看执行"
 - textbox "发消息或创建任务, / 调用指令, @ 文件或对话"
 - button "添加文件或调用指令"
 - button "访问模式，当前：工作区内修改": 工作区内修改

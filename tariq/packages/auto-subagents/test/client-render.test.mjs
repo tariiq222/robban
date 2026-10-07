@@ -18,13 +18,14 @@ function loadBundle() {
   const code = 'window.__ModuleLoader__.load({id:"dsh-auto-subagents",factory:(require)=>{var module={exports:{}};var exports=module.exports;\n' + source + '\nreturn module.exports;}});';
   let exportsOf;
   const sandbox = {
-    window: { __ModuleLoader__: { load: ({ id, factory }) => { assert.equal(id, 'dsh-auto-subagents'); exportsOf = factory(name => { if (name === 'react') return React; throw new Error(`unexpected require ${name}`); }); } } },
+    window: { __ModuleLoader__: { load: ({ id, factory }) => { assert.equal(id, 'dsh-auto-subagents'); exportsOf = factory(name => { if (name === 'react') return React; if (name === '@deepseek-ai/dsh-client-ui-primitives') return { HoverCard: props => { hoverCards.push(props); return props.anchor; } }; throw new Error(`unexpected require ${name}`); }); } } },
     document: undefined, setInterval, clearInterval, console,
   };
   vm.runInNewContext(process.env.DSH_TEST_BUILT_CLIENT === '1' ? read('lib/client.js') : code, sandbox);
   return exportsOf;
 }
 
+const hoverCards = [];
 const mod = loadBundle();
 const { definition, RecipeRunPanel } = mod.__test;
 const t = (key, vars) => { let s = key; if (vars) for (const [k, v] of Object.entries(vars)) s += ` ${k}=${v}`; return s; };
@@ -296,4 +297,132 @@ test('moveRoute swaps neighbours and ignores moves past either end', () => {
   assert.deepEqual([...moveRoute(list, 1, 1)], ['a', 'c', 'b']);
   assert.equal(moveRoute(list, 0, -1), list);
   assert.equal(moveRoute(list, 2, 1), list);
+});
+
+
+test('execution map selects the latest materialized recipe anchor and declines absent starts', () => {
+  assert.equal(typeof mod.__test.latestRecipeRun, 'function');
+  const older = { ...fold([RS]), anchorSeq: 3, id: 'z' };
+  const latest = { ...fold([RS]), anchorSeq: 12, id: 'a' };
+  assert.equal(mod.__test.latestRecipeRun({ nodes: [latest, { kind: 'assistant', anchorSeq: 20 }, older] }), latest);
+  assert.equal(mod.__test.latestRecipeRun({ nodes: [] }), null);
+  assert.equal(definition.buildViewNode({ key: 'tail', id: 'tail', state: {}, matches: [] }), null);
+});
+
+test('execution map compact geometry preserves non-overlap and both reviewer lanes', () => {
+  const full = mod.__test.layoutGraph({}, ['r1', 'r2', 'r3'], true);
+  const compact = mod.__test.layoutGraph({}, ['r1', 'r2', 'r3'], true, 'compact');
+  assert.ok(compact.W < 520);
+  assert.ok(compact.NH < 64);
+  assert.ok(compact.H < full.H);
+  assert.deepEqual(Object.keys(compact.pos), Object.keys(full.pos));
+  const boxes = Object.values(compact.pos);
+  for (const box of boxes) assert.ok(box.x >= 0 && box.x + box.w <= compact.W);
+  for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+    const a = boxes[i], b = boxes[j];
+    assert.ok(!(a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + compact.NH && a.y + compact.NH > b.y));
+  }
+});
+
+test('execution map and in-card flow use disjoint marker ids and keep return and parallel paths', () => {
+  const node = fold([RS, A(7, 'implement', 'implement'), A(8, 'review one', 'r1'), A(9, 'review two', 'r2')]);
+  const html = renderToStaticMarkup(React.createElement(React.Fragment, null,
+    React.createElement(mod.__test.FlowGraph, { t, state: node.data, now: 0, onSelect() {} }),
+    React.createElement(mod.__test.FlowGraph, { t, state: node.data, now: 0, presentation: 'compact', onSelect() {} })));
+  const markers = [...html.matchAll(/<marker[^>]*id="([^"]+)"/g)].map(m => m[1]);
+  assert.equal(new Set(markers).size, markers.length);
+  assert.equal(markers.length, 10);
+  for (const [, target] of html.matchAll(/marker-end="url\(#([^)]*)\)"/g)) assert.ok(markers.includes(target));
+  assert.match(html, /parallel/);
+  assert.match(html, /ars-edge back/);
+});
+
+test('execution map icons provide shared hover details from recorded agent data', () => {
+  hoverCards.length = 0;
+  const node = fold([RS, ['auto-recipe/agent-start', { seq: 7, label: 'worker seven', role: 'implement', childId: 'child-seven', provider: 'recorded-provider', model: 'recorded-model', tier: 'strong', round: 2 }],
+    ['auto-recipe/agent-end', { seq: 7, outcome: 'completed', summary: 'Recorded result' }]]);
+  const html = renderToStaticMarkup(React.createElement(mod.__test.FlowGraph, { t, state: node.data, now: 0, presentation: 'compact', onSelect() {} }));
+  assert.match(html, /aria-label="node.implement: state.done"/);
+  assert.doesNotMatch(html, /class="ars-t"|class="ars-chips"/);
+  assert.ok(hoverCards.length > 0);
+  const details = hoverCards.map(card => renderToStaticMarkup(card.content)).join('');
+  for (const text of ['worker seven', 'recorded-provider', 'recorded-model', 'strong', 'Recorded result', 'detail.round']) assert.ok(details.includes(text), text);
+  assert.ok(hoverCards.every(card => card.inline === true));
+});
+
+test('execution map generic recipes retain ordered stage lanes without invented arrows', () => {
+  const node = fold([['auto-recipe/run-start', { recipe: 'bug-fix' }],
+    ['auto-recipe/agent-start', { seq: 1, label: 'custom-worker', role: 'other', phase: 'analysis', childId: 'custom-child' }]]);
+  const html = renderToStaticMarkup(React.createElement(mod.__test.FlowGraph, { t, state: node.data, now: 0, presentation: 'compact', onSelect() {} }));
+  assert.match(html, /data-presentation="compact"/);
+  assert.match(html, /aria-label="custom-worker: state.active"/);
+  const phases = [...html.matchAll(/data-stage="([^"]+)"/g)].map(m => m[1]);
+  assert.deepEqual(phases, ['analysis', 'decision', 'build', 'review', 'validate']);
+  assert.doesNotMatch(html, /ars-edges|stage.design/);
+});
+
+
+test('execution map registration selects materialized runs and releases its slot with the plugin', () => {
+  const entries = new Map(), disposers = [];
+  const stop = () => {};
+  const ctx = {
+    configForms: { get: () => ({}), whileServed: () => stop },
+    remote: { session: {} }, uiWorkspace: { openSession: stop },
+    locale: { register: () => stop }, uiConversation: { events: { register: () => stop } },
+    effect: factory => { disposers.push(factory()); },
+    slots: {
+      inject: (_name, factory) => { const dispose = factory(); disposers.push(dispose); return dispose; },
+      register: (options, component) => { entries.set(options.name, { options, component }); return () => entries.delete(options.name); },
+    },
+  };
+  mod.apply(ctx);
+  const entry = entries.get('execution.graph');
+  assert.ok(entry);
+  const node = fold([RS]);
+  assert.equal(entry.options.select({ nodes: [node] }), node);
+  assert.equal(entry.component, mod.__test.RecipeExecutionGraph);
+  assert.equal(entry.options.locale, 'autoRecipe');
+  assert.equal(typeof entry.options.inject('s').openSession, 'function');
+  for (const dispose of disposers.reverse()) dispose();
+  assert.equal(entries.has('execution.graph'), false);
+});
+
+test('execution map keeps its mounted state identity on live updates and resets it for another run or session', () => {
+  const node = fold([RS]);
+  const element = (sessionId, matched) => mod.__test.RecipeExecutionGraph({ sessionId, matched, t, openSession() {} });
+  const first = element('session-a', node);
+  assert.equal(element('session-a', { ...node, data: { ...node.data, status: 'completed' } }).key, first.key);
+  assert.notEqual(element('session-b', node).key, first.key);
+  assert.notEqual(element('session-a', { ...node, id: 'second', anchorSeq: 99 }).key, first.key);
+});
+
+test('generic Decision keyboard continues through adjacent nodes in both directions', () => {
+  hoverCards.length = 0;
+  const node = fold([['auto-recipe/run-start', { recipe: 'bug-fix' }], A(1, 'analysis', 'analysis')]);
+  renderToStaticMarkup(React.createElement(mod.__test.FlowGraph, {
+    t, state: node.data, now: 0, presentation: 'compact', onSelect() {},
+  }));
+  const button = hoverCards.find(card => card.anchor.props['data-role'] === 'decision').anchor;
+  let focused = null, prevented = 0;
+  const before = { focus() { focused = 'before'; } }, after = { focus() { focused = 'after'; } };
+  const currentTarget = { closest: () => ({ querySelectorAll: () => [before, currentTarget, after] }) };
+  const key = key => button.props.onKeyDown({ key, currentTarget, preventDefault() { prevented += 1; } });
+  key('ArrowDown');
+  assert.equal(focused, 'after');
+  key('ArrowUp');
+  assert.equal(focused, 'before');
+  assert.equal(prevented, 2);
+});
+
+test('generic Decision hover follows the owning recipe stage after an implementation round', () => {
+  hoverCards.length = 0;
+  const node = fold([['auto-recipe/run-start', { recipe: 'bug-fix' }], A(7, 'implement', 'implement')]);
+  renderToStaticMarkup(React.createElement(mod.__test.FlowGraph, {
+    t, state: node.data, now: 0, presentation: 'compact', onSelect() {},
+  }));
+  const card = hoverCards.find(card => card.anchor.props['data-role'] === 'decision');
+  assert.equal(card.anchor.props['data-state'], 'done');
+  const content = renderToStaticMarkup(card.content);
+  assert.match(content, /<dt[^>]*>detail.state<\/dt><dd[^>]*>state.done<\/dd>/);
+  assert.doesNotMatch(content, /state.pending/);
 });

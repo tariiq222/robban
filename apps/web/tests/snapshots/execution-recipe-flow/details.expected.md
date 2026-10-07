@@ -1,0 +1,21 @@
+- heading "Implement" [level=4]
+- text: Implementation fixture
+- term: Stage
+- definition: Build
+- term: State
+- definition: Done
+- term: Role
+- definition: implement
+- term: Provider
+- definition: fixture-provider
+- term: Outcome
+- definition: completed
+- term: Tier
+- definition: strong
+- term: Model
+- definition: fixture-sol-model
+- term: Round
+- definition: 1 of 3
+- term: Duration
+- definition: 0:00
+- paragraph: Implementation fixture completed

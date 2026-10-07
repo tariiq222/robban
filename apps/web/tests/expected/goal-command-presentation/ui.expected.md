@@ -1,5 +1,6 @@
 - banner:
   - navigation "Session hierarchy": workspace
+  - button "View execution": Inactive
   - text: Standard mode
   - button "More actions"
   - button "Open right sidebar"
@@ -8,6 +9,8 @@
     - tab "Trajectory"
 - group "Command input": /goal
 - 'button "goal No goal is currently set. Usage: /goal [<objective>|clear|edit <objective>|pause|resume]"'
+- text: "Inactive Last used model: Model unknown"
+- button "View execution"
 - textbox "Message or run a task, / commands, @ files or sessions"
 - button "Add files or run commands"
 - 'button "Access mode, current: Workspace Write"': Workspace Write

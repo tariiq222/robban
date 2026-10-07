@@ -10,6 +10,7 @@
 
 - banner:
   - navigation "Session hierarchy": Review deepseek-ai/deepseek-harness#314
+  - button "View execution": Turn completed
   - text: Standard mode
   - button "More actions"
   - button "Open right sidebar"
@@ -26,7 +27,8 @@
 - button "Good response"
 - button "Bad response"
 - button "Branch into a new conversation"
-- text: {{clock}}
+- text: "{{clock}} Turn completed Last used model: github-webhook-review-test · reply · Effort unknown"
+- button "View execution"
 - textbox "Message or run a task, / commands, @ files or sessions"
 - button "Add files or run commands"
 - 'button "Access mode, current: Read Only"': Read Only

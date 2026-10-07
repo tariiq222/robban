@@ -1,6 +1,7 @@
 /* dsh-auto-subagents run card. Every color comes from DSH theme aliases (--dsw-alias-*);
    the plugin only defines a few derived tokens the theme does not provide (readable state text). */
-.ars-card {
+.ars-card,
+.ars-recipe-surface {
   --ars-text: var(--dsw-alias-label-primary, #0f1115);
   --ars-text-2: var(--dsw-alias-label-secondary, #61666b);
   --ars-text-3: var(--dsw-alias-label-tertiary, #6b7076);
@@ -28,6 +29,8 @@
   --ars-btn: color-mix(in srgb, var(--ars-accent) 82%, #000);
   --ars-mono: ui-monospace, "SF Mono", Menlo, monospace;
   --ars-ease: cubic-bezier(.2, .8, .2, 1);
+}
+.ars-card {
   position: relative; width: 100%; min-width: 0; color: var(--ars-text); background: var(--ars-surface);
   border: 1px solid var(--ars-line); border-radius: 12px; overflow: hidden; font-size: 14px; line-height: 1.6; text-align: start;
 }
@@ -371,3 +374,33 @@ button.ars-chip { cursor: pointer; }
 [data-plugin-detail="dsh-auto-subagents"]:has(.ars-settings[dir="rtl"]) { direction: rtl; text-align: right; }
 [data-plugin-detail="dsh-auto-subagents"] h3 { font-size: 24px; font-weight: 650; letter-spacing: -.3px; }
 .ars-settings[dir="rtl"] .ars-settings-identity { text-align: right; }
+
+/* Sidebar reuses the run graph with icon geometry; details escape its scroll viewport. */
+.ars-execution { min-width: 0; color: var(--ars-text); font-size: 13px; line-height: 1.5; }
+.ars-execution-title { font-weight: 500; overflow-wrap: anywhere; margin-block-end: 8px; }
+.ars-execution button { font: inherit; color: inherit; }
+.ars-execution :focus-visible { outline: 2px solid var(--ars-accent); outline-offset: 2px; }
+.ars-execution .ars-graph { padding: 8px 0; max-height: none; overflow: visible; }
+.ars-execution .ars-glbl, .ars-execution .ars-elbl, .ars-execution .ars-collapsed,
+.ars-execution .ars-detail h4, .ars-preview h4 { font-weight: 500; }
+.ars-execution .ars-legend { gap: 8px; padding-inline: 0; }
+.ars-node-anchor { position: absolute; }
+.ars-icon-node { box-sizing: border-box; position: relative; display: grid; place-items: center; width: 40px; height: 40px; padding: 0;
+  border: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-sm); background: var(--ars-surface); cursor: pointer; }
+.ars-icon-node .ars-ico { width: 30px; height: 30px; background: transparent; color: inherit; }
+.ars-icon-node .ars-st { border: 0; }
+.ars-icon-node[data-state="done"] .ars-st { background: var(--ars-ok); }
+.ars-icon-node[data-state="failed"] .ars-st { background: var(--ars-bad); }
+.ars-icon-node[data-state="decision"] .ars-st { background: var(--ars-warn); }
+.ars-icon-node:hover, .ars-icon-node[aria-pressed="true"] { background: var(--ars-hover); border-color: var(--ars-accent); }
+.ars-icon-node[data-state="active"] { border-color: var(--ars-run); background: var(--ars-run-soft); }
+.ars-icon-node[data-state="done"] { color: var(--ars-ok-text); }
+.ars-icon-node[data-state="failed"] { border-color: var(--ars-bad); color: var(--ars-bad-text); }
+.ars-icon-node[data-state="decision"] { border-color: var(--ars-warn); color: var(--ars-warn-text); }
+.ars-phase-lane { display: flex; flex-wrap: wrap; gap: 12px; }
+.ars-execution .ars-phase-group h4 { font-weight: 500; }
+.ars-preview { max-width: 280px; padding: 0; color: var(--ars-text); font-size: 13px; line-height: 1.5; }
+.ars-preview .ars-dhead { padding: 0; }
+.ars-preview .ars-kv { padding-inline: 0; }
+.ars-preview .ars-summary { overflow-wrap: anywhere; }
+.ars-recipe-surface { --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2); --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2); }

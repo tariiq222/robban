@@ -1,5 +1,6 @@
 - banner:
   - navigation "Session hierarchy": Use one run_code program to
+  - button "View execution": Turn completed
   - text: PTC mode
   - button "More actions"
   - button "Open right sidebar"
@@ -48,7 +49,8 @@
 - button "Bad response"
 - button "Branch into a new conversation"
 - button "Usage 19K tok"
-- text: {{clock}}
+- text: "{{clock}} Turn completed Last used model: deepseek-official · deepseek-v4-flash · Effort unknown"
+- button "View execution"
 - textbox "Message or run a task, / commands, @ files or sessions"
 - button "Add files or run commands"
 - 'button "Access mode, current: Workspace Write"': Workspace Write

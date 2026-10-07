@@ -1,5 +1,6 @@
 - banner:
   - navigation "Session hierarchy": Reference order target
+  - button "View execution": Turn completed
   - button "More actions"
   - button "Open right sidebar"
   - tablist:
@@ -9,6 +10,8 @@
 - button "Copy"
 - status: Completed
 - button "Completed in {{duration}}" [disabled]
+- text: "Turn completed Last used model: Model unknown"
+- button "View execution"
 - textbox "Message or run a task, / commands, @ files or sessions"
 - button "Add files or run commands"
 - 'button "Access mode, current: Workspace Write"': Workspace Write

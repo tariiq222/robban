@@ -1,0 +1,17 @@
+- text: "Execution Execution stopped with an error Last used model: deepseek-official · deepseek-v4-flash · Effort unknown"
+- tablist "Execution":
+  - tab "Activity"
+  - tab "Agents" [selected]
+  - tab "Graph"
+- tabpanel "Agents":
+  - button "Coordinator Error"
+  - text: "Last used model: deepseek-official · deepseek-v4-flash · Effort unknown"
+  - button "event-sourcing researcher Completed"
+  - text: "Last used model: deepseek-official · deepseek-v4-flash · Effort unknown"
+  - button "Open chat"
+  - button "example editor Completed"
+  - text: "Last used model: Model unknown"
+  - button "Open chat"
+  - button "event-sourcing reviewer Completed"
+  - text: "Last used model: Model unknown"
+  - button "Open chat"

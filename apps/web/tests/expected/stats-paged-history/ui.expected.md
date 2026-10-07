@@ -1,5 +1,6 @@
 - banner:
   - navigation "Session hierarchy": {{workspace}}
+  - button "View execution": Turn completed
   - button "More actions"
   - button "Open right sidebar"
   - tablist:
@@ -288,6 +289,8 @@
 - button "Branch into a new conversation"
 - text: 7/25 {{clock}}
 - button "Back to bottom"
+- text: "Turn completed Last used model: Model unknown"
+- button "View execution"
 - textbox "Message or run a task, / commands, @ files or sessions"
 - button "Add files or run commands"
 - 'button "Access mode, current: Workspace Write"': Workspace Write

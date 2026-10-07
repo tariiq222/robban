@@ -20,8 +20,6 @@ import { connectFreshWorkspace, newEnglishPage, saveFailureShot } from './suppor
 const SNAPSHOT_DIR = fileURLToPath(new URL('../../../snapshots/web/feedback-release', import.meta.url))
 // Both routes borrow the same settled turn; this manifest references its owner.
 const FIXTURE = fileURLToPath(new URL('../../../snapshots/web/feedback-command/session.v3.jsonl', import.meta.url))
-const ACK_EXPECTED = join(SNAPSHOT_DIR, 'ack.expected.md')
-const ACK_EXPANDED_EXPECTED = join(SNAPSHOT_DIR, 'ack-expanded.expected.md')
 const RELEASE_EXPECTED = join(SNAPSHOT_DIR, 'feedback-release.expected.json')
 const MODE = webSnapshotMode()
 
@@ -36,6 +34,8 @@ const PROMPT = 'Reply with the single word LIGHTHOUSE and stop.'
 
 describe.each(MODE === 'record' ? ['deepseek-official'] : ['deepseek-official', 'feedback-mock'])('web e2e: feedback release for %s', (provider) => {
   const official = provider === 'deepseek-official'
+  const ackExpected = join(SNAPSHOT_DIR, official ? 'ack.expected.md' : 'ack-mock.expected.md')
+  const ackExpandedExpected = join(SNAPSHOT_DIR, official ? 'ack-expanded.expected.md' : 'ack-mock-expanded.expected.md')
   let scaffold: WebScaffold
   let browser: Browser
   let page: Page
@@ -192,13 +192,13 @@ describe.each(MODE === 'record' ? ['deepseek-official'] : ['deepseek-official', 
     await expectFeedbackRelease('feedback/record', 1)
 
     const snapshot = await captureStableAria(page, '[class*="centerCol"]', scaffold.workspaceCwd)
-    await compareOrRefreshGolden(ACK_EXPECTED, snapshot, MODE)
+    await compareOrRefreshGolden(ackExpected, snapshot, MODE)
     const expanded = await captureExpandedTurnProcessAria(
       page,
       '[class*="centerCol"]',
       scaffold.workspaceCwd,
     )
-    await compareOrRefreshGolden(ACK_EXPANDED_EXPECTED, expanded, MODE)
+    await compareOrRefreshGolden(ackExpandedExpected, expanded, MODE)
     expect(tripwire.pageErrors).toEqual([])
     expect(tripwire.warnings).toEqual([])
   }, 60_000)
@@ -315,6 +315,9 @@ describe.each(MODE === 'record' ? ['deepseek-official'] : ['deepseek-official', 
   })
 
   it.skipIf(MODE === 'record')('keeps the fixture inventory closed', async () => {
-    await assertFixtureInventory(SNAPSHOT_DIR, ['ack.expected.md', 'ack-expanded.expected.md', 'feedback-release.expected.json'])
+    await assertFixtureInventory(SNAPSHOT_DIR, [
+      'ack.expected.md', 'ack-expanded.expected.md', 'ack-mock.expected.md', 'ack-mock-expanded.expected.md',
+      'feedback-release.expected.json',
+    ])
   })
 })

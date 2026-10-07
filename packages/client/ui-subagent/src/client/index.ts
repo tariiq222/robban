@@ -15,6 +15,10 @@ import type {} from '@deepseek-ai/dsh-client-ui-session/client'
 import type {} from '@deepseek-ai/dsh-client-ui-sidebar-right/client'
 import type {} from '@deepseek-ai/dsh-client-ui-workspace/client'
 import { en, NS, zh, type SubagentKey } from './locales.ts'
+import { ExecutionCard, ExecutionPanel, ExecutionSummary, ExecutionTitle, type ExecutionInjected } from './ExecutionView.tsx'
+import { createExecutionActivitySource } from './execution-activity.ts'
+import type { SessionEventSource } from '@deepseek-ai/dsh-api-session-controller/client'
+import { IconBranchOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface LocaleNamespaceMap {
@@ -70,6 +74,45 @@ export function apply(ctx: ClientContext): void {
     refreshProjection(parentSessionId: SessionId) {
       void ctx.sessions.refreshProjections(parentSessionId)
     },
+  })
+  const activitySources = new WeakMap<SessionEventSource, ReturnType<typeof createExecutionActivitySource>>()
+  const absentActivity = createExecutionActivitySource(undefined)
+  const activitySourceOf = (source: SessionEventSource | undefined): ReturnType<typeof createExecutionActivitySource> => {
+    if (source === undefined) return absentActivity
+    let activity = activitySources.get(source)
+    if (activity === undefined) {
+      activity = createExecutionActivitySource(source)
+      activitySources.set(source, activity)
+    }
+    return activity
+  }
+  const executionActions = (sessionId: SessionId): ExecutionInjected => ({
+    ...catalogActions(sessionId),
+    hooks: { activity: activitySourceOf(ctx.sessions.binding(sessionId)?.eventSource) },
+    openExecution: () => { ctx.sidebarRight.openTab('execution') },
+  })
+  ctx.slots.inject('conversation.session.header.actions', () => ctx.slots.register({
+    name: 'conversation.session.header.actions', id: 'execution-summary', order: -25,
+    locale: NS, inject: executionActions,
+  }, ExecutionSummary))
+  ctx.slots.inject('conversation.input.dock', () => ctx.slots.register({
+    name: 'conversation.input.dock', id: 'execution-card', order: -20,
+    locale: NS, inject: executionActions,
+  }, ExecutionCard))
+  ctx.inject(['sidebarRightTabs'], (scope) => {
+    const id = '@deepseek-ai/dsh-client-ui-subagent/execution'
+    const t = ctx.locale.bind(NS)
+    scope.effect(() => scope.sidebarRightTabs.register({
+      id, kind: 'execution', priority: 'builtin', title: () => t('execution.title'),
+      guide: [{ id: 'execution', order: 30, title: () => t('execution.title'), icon: IconBranchOutlineRegular }],
+    }), 'ui-subagent: Execution page')
+    scope.slots.inject('sidebar.right.pane.tab', () => scope.slots.register({
+      name: 'sidebar.right.pane.tab', key: id, locale: NS, inject: executionActions,
+      children: { 'execution.graph': { kind: 'chain', scope: 'session' } },
+    }, ExecutionPanel))
+    scope.slots.inject('sidebar.right.pane.tab.title', () => scope.slots.register({
+      name: 'sidebar.right.pane.tab.title', key: id, locale: NS,
+    }, ExecutionTitle))
   })
   ctx.slots.inject(
     'conversation.session.header.lineage',
